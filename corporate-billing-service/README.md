@@ -1,6 +1,6 @@
 # Corporate Billing Service (`corporate-billing-service`)
 
-> **Consumo y consulta de facturas corporativas ya emitidas por Siigo desde una carpeta compartida del servidor.**  
+> **Recepción de facturas y cartera de Siigo desde el panel web, consulta y registro trazable de recaudos corporativos.**
 > *Sistemas Palacios — Soluciones Corporativas de Telecomunicaciones.*
 
 ---
@@ -9,7 +9,9 @@
 
 El servicio recibe **PDF y archivos de datos** que Siigo publica en una carpeta del servidor de la empresa. Incorpora las facturas a la base de datos, conserva copias de los PDF y permite consultarlas sin duplicar documentos. Soporta varias facturas de un mismo NIT en un mes y lectura automática cada hora o manual bajo demanda.
 
-La gestión de pagos y la pasarela **no pertenecen a este alcance**, confirmado el 28 de septiembre de 2026. Los módulos anteriores de generación, órdenes, tributos y recaudo permanecen en el código; las secciones históricas de este README no amplían el alcance actual.
+El alcance se amplió el 15 de octubre de 2026 para preparar el microservicio para datos y cobros reales desde el panel. La pasarela web **permanece simulada por instrucción del usuario**: una aprobación en ese portal no acredita un ingreso bancario. El registro manual y las confirmaciones de servicios técnicos requieren sus permisos correspondientes.
+
+**Contrato vigente de carga, controles y preparación del despliegue:** [Cobros y cartera desde el panel](Docs/COBROS_Y_CARTERA_DESDE_PANEL.md).
 
 **Configuración, formatos compatibles, rutas y pendientes de acceso:** [Guía de consumo desde el servidor](Docs/CONSUMO_FACTURAS_SERVIDOR.md).
 

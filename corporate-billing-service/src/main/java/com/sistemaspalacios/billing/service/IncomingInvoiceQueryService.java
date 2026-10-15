@@ -185,11 +185,8 @@ public class IncomingInvoiceQueryService {
                 if (!officialReplacesInternal) return;
                 invoicesByKey.remove(key);
                 total = total.subtract(existing.serviceValue());
-                if ("PAGADA".equalsIgnoreCase(existing.estadoPago())) {
-                    paidTotal = paidTotal.subtract(existing.serviceValue());
-                } else {
-                    pendingTotal = pendingTotal.subtract(existing.serviceValue());
-                }
+                paidTotal = paidTotal.subtract(existing.serviceValue().subtract(existing.pendingBalance()).max(BigDecimal.ZERO));
+                pendingTotal = pendingTotal.subtract(existing.pendingBalance());
             }
             BigDecimal value = (row.total() == null ? BigDecimal.ZERO : row.total()).setScale(2, RoundingMode.HALF_UP);
 
@@ -207,14 +204,11 @@ public class IncomingInvoiceQueryService {
             invoicesByKey.put(key, new GroupedInvoice(row.id(), row.billingType(), row.invoiceNumber(), key,
                     value, row.issueDate(), row.dueDate(), row.pdfAvailable(), row.cufe(), qr,
                     estadoPago, row.fechaPago(), row.referenciaPago(), row.transactionId(),
-                    row.origen() != null ? row.origen() : "SIIGO"));
+                    row.origen() != null ? row.origen() : "SIIGO", row.pendingBalance(), row.officialDetailConfirmed(), row.creditBalance()));
 
             total = total.add(value);
-            if ("PAGADA".equalsIgnoreCase(estadoPago)) {
-                paidTotal = paidTotal.add(value);
-            } else {
-                pendingTotal = pendingTotal.add(value);
-            }
+            paidTotal = paidTotal.add(value.subtract(row.pendingBalance()).max(BigDecimal.ZERO));
+            pendingTotal = pendingTotal.add(row.pendingBalance());
         }
 
         ClientInvoiceGroup toGroup() {
@@ -270,7 +264,7 @@ public class IncomingInvoiceQueryService {
             }
         }
 
-        String estadoPago = i.getStatus() == InvoiceStatus.PAID ? "PAGADA" :
+        String estadoPago = i.hasSiigoBalance() && i.getSiigoBalance().isNegative() ? "SALDO_A_FAVOR" : i.getStatus() == InvoiceStatus.PAID ? "PAGADA" :
                 (i.getStatus() == InvoiceStatus.VOIDED ? "ANULADA" : "PENDIENTE");
         LocalDate fechaPago = null;
         String referenciaPago = null;
@@ -304,8 +298,7 @@ public class IncomingInvoiceQueryService {
                 i.getIssueDate(),
                 i.getDueDate(),
                 i.getTotalAmount().amount(),
-                // Toda factura tiene PDF: el recibido si existe o el que genera el backend con sus datos.
-                true,
+                i.getPdfPath() != null && !i.getPdfPath().isBlank(),
                 i.getCufe(),
                 qrContent,
                 qrImagePath,
@@ -316,7 +309,10 @@ public class IncomingInvoiceQueryService {
                 transactionId,
                 valorPagado,
                 proveedorPago,
-                i.getDocumentOrigin()
+                i.getDocumentOrigin(),
+                i.getPendingBalance().amount(),
+                !i.hasCarteraPlaceholderDetail(),
+                i.hasSiigoBalance() && i.getSiigoBalance().isNegative() ? i.getSiigoBalance().amount().negate() : BigDecimal.ZERO
         );
     }
 
@@ -493,7 +489,19 @@ public class IncomingInvoiceQueryService {
             @JsonProperty("transaction_id") String transactionId,
             @JsonProperty("valor_pagado") BigDecimal valorPagado,
             @JsonProperty("proveedor_pago") String proveedorPago,
-            @JsonProperty("origen") String origen) {
+            @JsonProperty("origen") String origen,
+            @JsonProperty("saldo_pendiente") BigDecimal pendingBalance,
+            @JsonProperty("detalle_oficial_confirmado") boolean officialDetailConfirmed,
+            @JsonProperty("saldo_a_favor") BigDecimal creditBalance) {
+
+        public InvoiceRow(UUID id, String invoiceNumber, String clientNit, String businessName, BillingType billingType,
+                LocalDate issueDate, LocalDate dueDate, BigDecimal total, boolean pdfAvailable, String cufe,
+                String qrContent, String qrImagePath, String estado, String estadoPago, LocalDate fechaPago,
+                String referenciaPago, String transactionId, BigDecimal valorPagado, String proveedorPago, String origen) {
+            this(id, invoiceNumber, clientNit, businessName, billingType, issueDate, dueDate, total, pdfAvailable, cufe,
+                    qrContent, qrImagePath, estado, estadoPago, fechaPago, referenciaPago, transactionId, valorPagado,
+                    proveedorPago, origen, "PAGADA".equals(estadoPago) || "ANULADA".equals(estadoPago) ? BigDecimal.ZERO : total, true, BigDecimal.ZERO);
+        }
 
         public InvoiceRow(UUID id, String invoiceNumber, String clientNit, String businessName, BillingType billingType,
                 LocalDate issueDate, LocalDate dueDate, BigDecimal total, boolean pdfAvailable, String cufe,
@@ -604,7 +612,19 @@ public class IncomingInvoiceQueryService {
             @JsonProperty("fecha_pago") LocalDate fechaPago,
             @JsonProperty("referencia_pago") String referenciaPago,
             @JsonProperty("transaction_id") String transactionId,
-            @JsonProperty("origen") String origen) {
+            @JsonProperty("origen") String origen,
+            @JsonProperty("saldo_pendiente") BigDecimal pendingBalance,
+            @JsonProperty("detalle_oficial_confirmado") boolean officialDetailConfirmed,
+            @JsonProperty("saldo_a_favor") BigDecimal creditBalance) {
+
+        public GroupedInvoice(UUID id, BillingType billingType, String invoiceNumber, String documentKey,
+                BigDecimal serviceValue, LocalDate issueDate, LocalDate dueDate, boolean pdfAvailable,
+                String cufe, QrDto qr, String estadoPago, LocalDate fechaPago, String referenciaPago,
+                String transactionId, String origen) {
+            this(id, billingType, invoiceNumber, documentKey, serviceValue, issueDate, dueDate, pdfAvailable,
+                    cufe, qr, estadoPago, fechaPago, referenciaPago, transactionId, origen,
+                    "PAGADA".equals(estadoPago) || "ANULADA".equals(estadoPago) ? BigDecimal.ZERO : serviceValue, true, BigDecimal.ZERO);
+        }
 
         public GroupedInvoice(UUID id, BillingType billingType, String invoiceNumber, String documentKey,
                 BigDecimal serviceValue, LocalDate issueDate, LocalDate dueDate, boolean pdfAvailable,

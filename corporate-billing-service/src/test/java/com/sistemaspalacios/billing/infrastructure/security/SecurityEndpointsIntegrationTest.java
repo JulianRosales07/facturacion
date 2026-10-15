@@ -298,4 +298,15 @@ class SecurityEndpointsIntegrationTest {
                         .with(jwt().authorities(new SimpleGrantedAuthority("SYNC_VIEW"))))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void onlyTrustedGatewayMayConfirmMoneyReceived() throws Exception {
+        for (String endpoint : List.of("/api/v1/pagos/confirmar", "/api/v1/pagos/webhook")) {
+            mockMvc.perform(post(endpoint).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                    .andExpect(status().isUnauthorized());
+            mockMvc.perform(post(endpoint).contentType(MediaType.APPLICATION_JSON).content("{}")
+                            .with(jwt().authorities(new SimpleGrantedAuthority("INVOICES_VIEW"))))
+                    .andExpect(status().isForbidden());
+        }
+    }
 }

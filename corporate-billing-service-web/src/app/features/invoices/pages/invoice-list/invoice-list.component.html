@@ -4,8 +4,12 @@
     <p>Documentos emitidos por Siigo. Consulta sus datos, estado de pago y descarga el PDF oficial.</p>
   </div>
   <div class="head-actions">
+    <label *hasPermission="'IMPORTS_EXECUTE'">
+      <span>Fecha y hora del corte (Colombia)</span>
+      <input type="datetime-local" [(ngModel)]="portfolioCutoff" [disabled]="importing()" aria-label="Fecha y hora de generación del corte de cartera en Colombia" />
+    </label>
     <input #fileInput hidden type="file" accept=".xlsx,.xls,.xlsm,.json" (change)="importFile($event)" />
-    <button type="button" class="btn btn-secondary" (click)="fileInput.click()" [disabled]="importing()">
+    <button type="button" class="btn btn-secondary" *hasPermission="'IMPORTS_EXECUTE'" (click)="fileInput.click()" [disabled]="importing()">
       <mat-icon class="btn-icon">upload_file</mat-icon>
       <span>{{ importing() ? 'Importando…' : 'Importar archivo' }}</span>
     </button>
@@ -58,11 +62,11 @@
       </div>
     </div>
     <div class="kpi-card">
-      <span class="kpi-label">Total facturado</span>
+      <span class="kpi-label">Total oficial con detalle confirmado</span>
       <div class="kpi-value">{{ stats.totalFacturado | copCurrency }}</div>
     </div>
     <div class="kpi-card">
-      <span class="kpi-label">Total recaudado</span>
+      <span class="kpi-label">Valor saldado o cruzado</span>
       <div class="kpi-value text-success">{{ stats.totalPagado | copCurrency }}</div>
     </div>
     <div class="kpi-card">
@@ -184,7 +188,7 @@
                 <th>PDF</th>
                 <th class="number">Total pagado</th>
                 <th class="number">Saldo pendiente</th>
-                <th class="number">Total facturado</th>
+                <th class="number">Total oficial confirmado</th>
                 <th class="actions-col">Acciones</th>
               </tr>
             </thead>
@@ -271,7 +275,12 @@
                                 </td>
                                 <td>{{ inv.fecha_emision | appDate }}</td>
                                 <td>{{ inv.fecha_vencimiento ? (inv.fecha_vencimiento | appDate) : '—' }}</td>
-                                <td class="number">{{ inv.valor_servicio | copCurrency }}</td>
+                                <td class="number">
+                                  @if(inv.detalle_oficial_confirmado === false){<span>Detalle oficial pendiente</span>}
+                                  @else {<span>Total: {{ inv.valor_servicio | copCurrency }}</span>}
+                                  <div>Saldo: {{ (inv.saldo_pendiente ?? inv.valor_servicio) | copCurrency }}</div>
+                                  @if(inv.saldo_a_favor){<div>Saldo a favor: {{ inv.saldo_a_favor | copCurrency }}</div>}
+                                </td>
                                 <td>
                                   @if(inv.estado_pago === 'PAGADA'){
                                     <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
@@ -508,7 +517,12 @@
                     </td>
                     <td>{{ inv.fecha_emision | appDate }}</td>
                     <td>{{ inv.fecha_vencimiento ? (inv.fecha_vencimiento | appDate) : '—' }}</td>
-                    <td class="number">{{ inv.valor_servicio | copCurrency }}</td>
+                    <td class="number">
+                      @if(inv.detalle_oficial_confirmado === false){<span>Detalle oficial pendiente</span>}
+                      @else {<span>Total: {{ inv.valor_servicio | copCurrency }}</span>}
+                      <div>Saldo: {{ (inv.saldo_pendiente ?? inv.valor_servicio) | copCurrency }}</div>
+                      @if(inv.saldo_a_favor){<div>Saldo a favor: {{ inv.saldo_a_favor | copCurrency }}</div>}
+                    </td>
                     <td>
                       @if(inv.estado_pago === 'PAGADA'){
                         <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
@@ -538,186 +552,23 @@
           </div>
         </div>
       } @else if(activeModalTab() === 'factura'){
-        <p class="modal-hint">Resumen corporativo del total acumulado del NIT. No reemplaza las facturas individuales emitidas por Siigo.</p>
-        <div class="siigo-invoice-wrapper">
-          <div class="siigo-invoice-sheet" id="printable-invoice">
-            <div class="siigo-vertical-sidebar">Software:SIIGO, Desarrollado por: SIIGO SAS Nit 830.048.145-8, PT: SIIGO SAS Nit: 830.048.145-8</div>
-
-            <!-- Cabecera Oficial Siigo: 3 columnas -->
-            <div class="siigo-head-grid">
-              <div class="siigo-head-logo">
-                <img src="/assets/layout/images/Sp.png" alt="Sistemas Palacios" class="siigo-logo-img" />
-              </div>
-              <div class="siigo-head-company">
-                <div class="comp-name">SP SISTEMAS PALACIOS LTDA</div>
-                <div>NIT : 900,163,149 - 2</div>
-                <div>CL 2 22 75 BRR BACHUE</div>
-                <div>PASTO-NARIÑO - COLOMBIA</div>
-                <div>3104005873</div>
-                <div>contabilidad@sistemaspalacios.com</div>
-                <div>E</div>
-                <div>Actividad Económica 313 Tarifa Ica 6 por mil</div>
-              </div>
-              <div class="siigo-head-qr-box">
-                @if (group.facturas && group.facturas.length > 0 && group.facturas[0].qr?.imagen) {
-                  <img [src]="group.facturas[0].qr?.imagen" alt="QR DIAN Oficial" class="siigo-qr" style="width:48px; height:48px; object-fit:contain; background:#fff; border:1px solid #000; padding:1px; margin-bottom:2px;" />
-                } @else {
-                  <svg width="48" height="48" viewBox="0 0 33 33" fill="#000" class="siigo-qr">
-                    <rect width="33" height="33" fill="#fff"/>
-                    <rect x="2" y="2" width="7" height="7"/><rect x="3" y="3" width="5" height="5" fill="#fff"/><rect x="4" y="4" width="3" height="3"/>
-                    <rect x="24" y="2" width="7" height="7"/><rect x="25" y="3" width="5" height="5" fill="#fff"/><rect x="26" y="4" width="3" height="3"/>
-                    <rect x="2" y="24" width="7" height="7"/><rect x="3" y="25" width="5" height="5" fill="#fff"/><rect x="4" y="26" width="3" height="3"/>
-                    <rect x="10" y="4" width="2" height="1"/><rect x="14" y="4" width="3" height="1"/><rect x="19" y="4" width="2" height="1"/>
-                    <rect x="11" y="6" width="1" height="2"/><rect x="15" y="6" width="2" height="1"/><rect x="18" y="7" width="2" height="1"/>
-                    <rect x="10" y="14" width="3" height="1"/><rect x="15" y="13" width="2" height="2"/><rect x="20" y="14" width="3" height="2"/>
-                  </svg>
-                }
-                <div class="siigo-box-title">
-                  <div class="fe-label">FACTURA ELECTRÓNICA DE VENTA</div>
-                  <div class="fe-num">{{ getConsolidatedConsecutive(group) }}</div>
-                  <div class="fe-sublabel">Fecha y Hora de Factura</div>
-                  <div class="fe-dates">Generación {{ getConsolidatedIssueDate(group) }} 10:06:35</div>
-                  <div class="fe-dates">Expedición {{ getConsolidatedIssueDate(group) }} 10:09:34</div>
-                  <div class="fe-dates">Vencimiento {{ getConsolidatedDueDate(group) }}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tabla de Datos del Cliente -->
-            <table class="siigo-table siigo-client-table">
-              <tbody>
+        <p class="modal-hint">Estado de cuenta del NIT {{ group.nit }}. Los conceptos, bases e impuestos se consultan en cada factura oficial.</p>
+        <div class="table-wrap" id="printable-invoice">
+          <table class="data-table">
+            <thead><tr><th>Documento</th><th>Total original</th><th>Saldo pendiente</th><th>Saldo a favor</th><th>Documento oficial</th></tr></thead>
+            <tbody>
+              @for(inv of group.facturas; track inv.clave_documento){
                 <tr>
-                  <td class="siigo-label-cell" style="width:14%;">Cliente</td>
-                  <td colspan="5" class="bold">{{ group.razon_social || ('NIT ' + group.nit) }}</td>
+                  <td>{{ inv.tipo }} · {{ inv.consecutivo }}</td>
+                  <td>@if(inv.detalle_oficial_confirmado === false){Detalle pendiente}@else {<span>{{ inv.valor_servicio | copCurrency }}</span>}</td>
+                  <td>{{ (inv.saldo_pendiente ?? inv.valor_servicio) | copCurrency }}</td>
+                  <td>{{ (inv.saldo_a_favor || 0) | copCurrency }}</td>
+                  <td>@if(inv.pdf_disponible){<button type="button" class="btn-row btn-row--secondary" (click)="openPdfModal(inv)">Ver PDF</button>}@else {Pendiente de recibir}</td>
                 </tr>
-                <tr>
-                  <td class="siigo-label-cell">Nit / Ced.</td>
-                  <td style="width:25%;" class="bold">{{ group.nit }}</td>
-                  <td class="siigo-label-cell" style="width:18%;">/Id. Extranjero :</td>
-                  <td style="width:14%;"></td>
-                  <td class="siigo-label-cell" style="width:14%;">Teléfono</td>
-                  <td style="width:15%;">3135963672</td>
-                </tr>
-                <tr>
-                  <td class="siigo-label-cell">Dirección</td>
-                  <td colspan="3">LA CRUZ - NUEVO PUNTO CORPORATIVO</td>
-                  <td class="siigo-label-cell">Vendedor</td>
-                  <td>VEN.PASTO-NARIÑO</td>
-                </tr>
-                <tr>
-                  <td class="siigo-label-cell">Ciudad</td>
-                  <td colspan="3">LA CRUZ-NARIÑO - COLOMBIA</td>
-                  <td class="siigo-label-cell">Centro Costo</td>
-                  <td>10</td>
-                </tr>
-                <tr>
-                  <td class="siigo-label-cell">Correo</td>
-                  <td colspan="3">contabilidad@sistemaspalacios.com</td>
-                  <td class="siigo-label-cell">Estrato</td>
-                  <td>PYMES</td>
-                </tr>
-                <tr>
-                  <td class="siigo-label-cell">Order Reference Prefijo</td>
-                  <td colspan="3" class="siigo-label-cell"></td>
-                  <td class="siigo-label-cell">Número</td>
-                  <td>{{ group.facturas[0]?.consecutivo }}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Tabla de Items / Facturas Reunidas -->
-            <table class="siigo-table siigo-items-table">
-              <thead>
-                <tr class="siigo-label-cell center">
-                  <th style="width:4%;">Item</th>
-                  <th style="width:14%;">Codigo</th>
-                  <th style="width:37%; text-align:left;">Descripcion</th>
-                  <th style="width:5%;">Cant</th>
-                  <th style="width:5%;">Und</th>
-                  <th style="width:11%; text-align:right;">V. Unit.</th>
-                  <th style="width:5%;">%Iva</th>
-                  <th style="width:9%; text-align:right;">Vr.Iva</th>
-                  <th style="width:15%; text-align:right;">Vr.Total incluido Iva</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for(inv of group.facturas; track inv.clave_documento; let idx = $index){
-                  <tr>
-                    <td class="center">{{ idx + 1 }}</td>
-                    <td class="center mono">{{ idx % 2 === 0 ? '0100040000021' : '0100040000008' }}</td>
-                    <td>
-                      Factura {{ inv.tipo }} {{ inv.consecutivo }} - Servicios corporativos y conectividad
-                      @if (inv.qr?.contenido) {
-                        <span style="display:inline-block; margin-left:6px; font-size:9px; background:#e2e8f0; color:#334155; padding:1px 5px; border-radius:3px; font-weight:bold;" title="QR Oficial DIAN extraído">
-                          ✓ QR DIAN
-                        </span>
-                      }
-                    </td>
-                    <td class="center">1</td>
-                    <td class="center">UN</td>
-                    <td class="right">{{ getInvoiceGross(inv.valor_servicio) | copCurrency }}</td>
-                    <td class="center">19</td>
-                    <td class="right">{{ getInvoiceIva(inv.valor_servicio) | copCurrency }}</td>
-                    <td class="right bold">{{ inv.valor_servicio | copCurrency }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-
-            <div class="siigo-items-count bold">Total Items : {{ group.cantidad_facturas }}</div>
-
-            <!-- Totales a la derecha -->
-            <div class="siigo-totals-container">
-              <table class="siigo-table siigo-totals-table">
-                <tbody>
-                  <tr>
-                    <td class="bold" style="width:52%;">Total Bruto</td>
-                    <td class="right bold">{{ getTotalGross(group) | copCurrency }}</td>
-                  </tr>
-                  <tr>
-                    <td class="bold">IVA Tarifa 19%</td>
-                    <td class="right bold">{{ getTotalIva(group) | copCurrency }}</td>
-                  </tr>
-                  <tr class="siigo-label-cell">
-                    <td class="bold" style="font-size:9.5px;">Total A Pagar $</td>
-                    <td class="right bold" style="font-size:10.5px;">{{ group.valor_total_servicio | copCurrency }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Forma de pago y letras -->
-            <div class="siigo-footer-line">
-              <span class="bold">FORMA DE PAGO</span> &nbsp; Credito Cr-Cartera Zona Pasto Medio de Pago : Otro* {{ group.valor_total_servicio | copCurrency }} Cuota 1 Vence el {{ getConsolidatedDueDate(group) }}
-            </div>
-            <div class="siigo-footer-line">
-              <span class="bold">VALOR EN LETRAS</span> &nbsp; <span class="bold">{{ getWords(group.valor_total_servicio) }} Pesos M/Cte</span>
-            </div>
-
-            <div class="siigo-observations">
-              OBSERVACIONES: Realice su pago oportuno por medio de los siguientes canales de pago: convenio Bancolombia #31689 o transferencia bancaria a la cuenta de ahorros Bancolombia #99784883228 a nombre de SP SISTEMAS PALACIOS LTDA y envie su soporte al correo cartera@sistemaspalacios.com
-            </div>
-
-            <!-- Firmas -->
-            <div class="siigo-signatures">
-              <div class="sig-box"><div>Digitado por : LUZ MARY CORDOB</div></div>
-              <div class="sig-box"><div>Firma Recibido</div></div>
-            </div>
-
-            <div class="siigo-notice">
-              En caso de requerir retiro de sus servicios, tenga en cuenta que su solicitud la debe realizar como mínimo con tres días hábiles a su ultimo periodo facturado, esta misma debe ser enviada al correo contabilidad@sistemaspalacios.com
-            </div>
-            <div class="siigo-legal-box">
-              A esta factura de venta aplican las normas relativas a la letra de cambio (artículo 5 Ley 1231 de 2008). Con esta el Comprador declara haber recibido real y materialmente las mercancías o prestación de servicios descritos en este título - Valor. Autorización de facturación No. 18764093952604 aprobado en 2025-06-03 vigente 2 Años, prefijo FESP desde el número 35001 al 70000
-            </div>
-            <div class="siigo-cufe mono">
-              CUFE: {{ group.facturas[0]?.cufe || '720377e072ca996f78d1f873a16899a51af08fc5ca705c4ebdfa9841c2320214396cd348fac2e601082dce87023b26e3' }}
-            </div>
-            <div class="siigo-bottom-bar">
-              <span>Representación Gráfica de la Factura Electrónica de Venta</span>
-              <span>Pagina : 1 de 1</span>
-            </div>
-          </div>
+              }
+            </tbody>
+            <tfoot><tr><td>Deuda del cliente</td><td></td><td>{{ (group.valor_pendiente ?? group.valor_total_servicio) | copCurrency }}</td><td>Sin compensación automática</td><td></td></tr></tfoot>
+          </table>
         </div>
       } @else if(activeModalTab() === 'pagos'){
         @if(loadingInvoiceDetail()){
@@ -893,7 +744,7 @@
         <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('factura')">Resumen consolidado</button>
       } @else if(activeModalTab() === 'factura'){
         <button type="button" class="btn btn-primary btn-sm" (click)="downloadConsolidatedPdf(group)">Descargar PDF consolidado</button>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="printConsolidated()">Imprimir factura</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="printConsolidated()">Imprimir estado de cuenta</button>
         <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('pagos')">Control y trazabilidad</button>
       } @else if(activeModalTab() === 'pagos'){
         <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('servicios')">Facturas por servicio</button>

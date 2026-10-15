@@ -155,7 +155,7 @@ class PoiXlsxCarteraReaderTest {
 
         SiigoCarteraReader.CarteraSnapshotData data = reader.read(file);
 
-        assertEquals(LocalDate.of(2026, 9, 10), data.cutoffDate());
+        assertNull(data.cutoffDate(), "La fecha de una factura no acredita la generación del corte");
     }
 
     @Test

@@ -251,10 +251,7 @@ public record FacturaSpPagosDto(
         String htmlUrl = "/api/v1/facturas/" + invoice.getId() + "/representacion-grafica";
         EnlacesSpPagosDto enlacesDto = new EnlacesSpPagosDto(tienePdf, pdfUrl, htmlUrl);
 
-        boolean isPayable = invoice.isCurrentVersion()
-                && invoice.getStatus() != InvoiceStatus.VOIDED
-                && invoice.getStatus() != InvoiceStatus.SUPERSEDED
-                && pendingBalance.isPositive();
+        boolean isPayable = invoice.isPayable() && pendingBalance.isPositive();
 
         String resolvedPeriod = (periodCode != null && !periodCode.isBlank())
                 ? periodCode

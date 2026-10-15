@@ -51,17 +51,40 @@ public class OfficialInvoiceImportService {
 
     @Transactional
     public ImportResult importDetailed(String name, InputStream stream) {
-        List<UUID> result = new ArrayList<>();
-        int created = 0, repeated = 0;
-        for (OfficialInvoiceData data : reader.read(name, stream)) {
-            boolean exists = data.billingType() != null && data.invoiceNumber() != null
-                    && invoices.findByExternalDocumentKey(data.billingType().name() + ":" + data.invoiceNumber().replaceFirst("^0+(?!$)", "")).isPresent();
-            result.add(importDocument(data).getId());
-            if (exists) repeated++; else created++;
-        }
-        return new ImportResult(List.copyOf(result), created, repeated);
+        return importDetailed(name, stream, null);
     }
-    public record ImportResult(List<UUID> invoiceIds, int created, int repeated) {}
+
+    @Transactional
+    public ImportResult importDetailed(String name, InputStream stream, java.time.Instant cutoffAt) {
+        List<UUID> result = new ArrayList<>();
+        int created = 0, repeated = 0, updated = 0;
+        Money importedBalance = Money.ZERO;
+        var documents = reader.read(name, stream, cutoffAt);
+        // Orden de bloqueos compartido con pagos: primero clientes, después documentos.
+        documents.stream().map(OfficialInvoiceData::nit).filter(Objects::nonNull).map(String::trim)
+                .distinct().sorted().forEach(clients::findByNitForUpdate);
+        for (OfficialInvoiceData data : documents) {
+            var previous = data.billingType() != null && data.invoiceNumber() != null
+                    ? invoices.findByExternalDocumentKey(data.billingType().name() + ":" + data.invoiceNumber().replaceFirst("^0+(?!$)", ""))
+                    : Optional.<Invoice>empty();
+            boolean exists = previous.isPresent();
+            boolean unchanged = exists && data.outstandingBalance() != null
+                    && data.outstandingBalance().equals(previous.get().getSiigoBalance())
+                    && Objects.equals(data.balanceCutoffAt(), previous.get().getSiigoBalanceCutoffAt())
+                    && (data.dueDate() == null || data.dueDate().equals(previous.get().getDueDate()));
+            result.add(importDocument(data).getId());
+            if (!exists) created++;
+            else if (data.outstandingBalance() != null && !unchanged) updated++;
+            else repeated++;
+            if (data.outstandingBalance() != null) importedBalance = importedBalance.plus(data.outstandingBalance());
+        }
+        return new ImportResult(List.copyOf(result), created, repeated, updated, importedBalance);
+    }
+    public record ImportResult(List<UUID> invoiceIds, int created, int repeated, int updated, Money importedBalance) {
+        public ImportResult(List<UUID> invoiceIds, int created, int repeated) {
+            this(invoiceIds, created, repeated, 0, Money.ZERO);
+        }
+    }
 
     private boolean sameItems(Invoice invoice, OfficialInvoiceData data) {
         var stored = invoice.getItems().stream().map(i -> Arrays.asList(i.getProductCode(), i.getDescription(),
@@ -80,8 +103,14 @@ public class OfficialInvoiceImportService {
     public Invoice importDocument(OfficialInvoiceData data, java.time.LocalDate importDate, java.time.Instant availableAt) {
         if (data.nit() == null || data.nit().isBlank() || data.billingType() == null || data.issueDate() == null
                 || data.invoiceNumber() == null || !data.invoiceNumber().matches("[0-9]+")
-                || data.items() == null || data.items().isEmpty() || data.total() == null || !data.total().isPositive()) {
+                || data.items() == null || data.items().isEmpty() || data.total() == null
+                || (data.outstandingBalance() == null && !data.total().isPositive())) {
             throw new IllegalArgumentException("Factura oficial incompleta: requiere NIT, tipo, consecutivo numérico, fecha, total e ítems");
+        }
+        if (data.outstandingBalance() != null && (data.balanceCutoffAt() == null
+                || data.balanceCutoffAt().isAfter(java.time.Instant.now())
+                || !isCarteraRow(data) || !data.total().isZero())) {
+            throw new IllegalArgumentException("Cartera inválida: requiere saldo separado, fecha del corte y detalle pendiente");
         }
         Money total = Money.ZERO;
         for (var item : data.items()) {
@@ -94,14 +123,31 @@ public class OfficialInvoiceImportService {
         if (!total.equals(data.total())) throw new IllegalArgumentException("El detalle no cuadra con el total de la factura " + data.invoiceNumber());
         String number = data.invoiceNumber().replaceFirst("^0+(?!$)", "");
         String key = data.billingType().name() + ":" + number;
-        Optional<Invoice> existing = invoices.findByExternalDocumentKey(key);
+        clients.findByNitForUpdate(data.nit().trim());
+        Optional<Invoice> existing = invoices.findByExternalDocumentKeyForUpdate(key);
         if (existing.isPresent()) {
             Invoice invoice = existing.get();
             // Una fila del corte de cartera trae el SALDO, no el detalle: cambia con cada abono y no
             // modifica el documento (su detalle pudo llegar después desde el PDF). El saldo lo
             // concilia la sincronización de cartera; aquí solo se reconoce el mismo documento.
-            if (isCarteraRow(data) && invoice.getClientNit().equals(data.nit().trim())
+            if (data.outstandingBalance() != null && invoice.getClientNit().equals(data.nit().trim())
                     && invoice.getIssueDate().equals(data.issueDate())) {
+                if (!invoice.isCurrentVersion() || invoice.getStatus() == InvoiceStatus.VOIDED
+                        || invoice.getStatus() == InvoiceStatus.SUPERSEDED) {
+                    throw new IllegalArgumentException("La cartera referencia un documento anulado o histórico: " + key);
+                }
+                if (!invoice.applySiigoBalance(data.outstandingBalance(), data.balanceCutoffAt(), null)) {
+                    throw new IllegalArgumentException("Corte de cartera obsoleto para " + key);
+                }
+                if (data.dueDate() != null) invoice.setDueDate(data.dueDate());
+                return invoice;
+            }
+            if (data.outstandingBalance() == null && invoice.hasCarteraPlaceholderDetail()
+                    && invoice.getClientNit().equals(data.nit().trim()) && invoice.getIssueDate().equals(data.issueDate())) {
+                if (invoice.getPaidAmount().isPositive()) throw new IllegalArgumentException("Documento con pagos requiere conciliación: " + key);
+                invoice.applyOfficialDetail(data.items().stream().map(item -> InvoiceItem.fromOfficialAmounts(
+                        invoice.getId(), item.code(), item.description(), item.quantity(), item.subtotal(), item.iva())).toList());
+                invoice.setCufe(data.cufe());
                 return invoice;
             }
             if (!invoice.getClientNit().equals(data.nit().trim()) || !invoice.getTotalAmount().equals(total)
@@ -139,7 +185,7 @@ public class OfficialInvoiceImportService {
 
         java.time.LocalDate effectiveImportDate = importDate != null ? importDate : java.time.LocalDate.now();
         java.time.Instant effectiveAvailableAt = availableAt != null ? availableAt : java.time.Instant.now();
-        invoice.markAvailableForPayment(effectiveAvailableAt);
+        if (data.outstandingBalance() == null) invoice.markAvailableForPayment(effectiveAvailableAt);
 
         // Control de disponibilidad y retraso según tipo de regla
         java.time.LocalDate cutoffDate = null;
@@ -158,7 +204,8 @@ public class OfficialInvoiceImportService {
                     number, client.getNit(), resolvedServiceMonth, effectiveImportDate, cutoffDate);
         }
 
-        invoice.consolidate();
+        if (data.outstandingBalance() != null) invoice.initializeReceivable(data.outstandingBalance(), data.balanceCutoffAt());
+        else invoice.consolidate();
         Invoice saved = invoices.saveAndFlush(invoice);
 
         // Resolución automática de incidencias de facturas faltantes si la factura llegó

@@ -100,6 +100,22 @@ public class Invoice {
                 && CARTERA_PLACEHOLDER_DESCRIPTION.equals(items.get(0).getDescription());
     }
 
+    /** La cartera informa deuda; no acredita el detalle tributario necesario para cobrar. */
+    public boolean isPayable() {
+        return isCurrentVersion() && status == InvoiceStatus.CONSOLIDATED
+                && !hasCarteraPlaceholderDetail() && !items.isEmpty()
+                && totalAmount.isPositive() && getPendingBalance().isPositive()
+                && getPendingBalance().compareTo(totalAmount) <= 0;
+    }
+
+    public void initializeReceivable(Money balance, Instant cutoffAt) {
+        if (!hasCarteraPlaceholderDetail() || status != InvoiceStatus.DRAFT) {
+            throw new IllegalStateException("Solo una obligación de cartera nueva puede inicializarse sin detalle");
+        }
+        changeStatus(InvoiceStatus.CONSOLIDATED);
+        applySiigoBalance(balance, cutoffAt, null);
+    }
+
     /**
      * Reemplaza el concepto genérico del corte de cartera por el detalle oficial que Siigo
      * imprimió en la factura. Solo para documentos de Siigo que aún tienen el genérico: un
@@ -276,6 +292,12 @@ public class Invoice {
      */
     @Column(name = "saldo_siigo", precision = 14, scale = 2)
     private Money siigoBalance;
+
+    @Column(name = "cruce_local_pendiente_siigo", nullable = false, precision = 14, scale = 2)
+    private Money unreconciledLocalSettlement = Money.ZERO;
+
+    @Column(name = "ultimo_cruce_local_en")
+    private Instant lastLocalSettlementAt;
 
     @Column(name = "saldo_siigo_actualizado_en")
     private Instant siigoBalanceUpdatedAt;
@@ -714,7 +736,8 @@ public class Invoice {
             return Money.ZERO;
         }
         if (hasSiigoBalance()) {
-            return siigoBalance.isPositive() ? siigoBalance : Money.ZERO;
+            Money effective = siigoBalance.minus(getUnreconciledLocalSettlement());
+            return effective.isPositive() ? effective : Money.ZERO;
         }
         return getComputedPendingBalance();
     }
@@ -745,6 +768,24 @@ public class Invoice {
     public Instant getSiigoBalanceCutoffAt() { return siigoBalanceCutoffAt; }
     public UUID getSiigoBalanceSnapshotId() { return siigoBalanceSnapshotId; }
 
+    public Money getUnreconciledLocalSettlement() {
+        return unreconciledLocalSettlement != null ? unreconciledLocalSettlement : Money.ZERO;
+    }
+
+    /** Un recaudo local reduce la deuda sin falsificar el saldo ni la fecha que informó Siigo. */
+    public void recordLocalSettlement(Money amount, Instant settledAt) {
+        Objects.requireNonNull(amount);
+        Objects.requireNonNull(settledAt);
+        if (!amount.isPositive() || amount.compareTo(getPendingBalance()) > 0) {
+            throw new IllegalArgumentException("El cruce debe ser positivo y no superar el saldo pendiente");
+        }
+        if (hasSiigoBalance()) {
+            unreconciledLocalSettlement = getUnreconciledLocalSettlement().plus(amount);
+            lastLocalSettlementAt = settledAt;
+        }
+        paidAmount = getPaidAmount().plus(amount);
+    }
+
     /**
      * Diferencia entre lo que dice Siigo y lo que calcula el microservicio.
      * Positiva = Siigo reporta más saldo del que el sistema conoce (probable pago no
@@ -773,12 +814,26 @@ public class Invoice {
     public boolean applySiigoBalance(Money balance, Instant cutoffAt, UUID snapshotId) {
         Objects.requireNonNull(balance, "balance cannot be null");
         Objects.requireNonNull(cutoffAt, "cutoffAt cannot be null");
+        if (cutoffAt.equals(this.siigoBalanceCutoffAt) && this.siigoBalance != null && !balance.equals(this.siigoBalance)) {
+            throw new IllegalArgumentException("El mismo corte informa saldos contradictorios; requiere conciliación");
+        }
 
         if (this.siigoBalanceCutoffAt != null && cutoffAt.isBefore(this.siigoBalanceCutoffAt)) {
             return false;
         }
 
-        this.siigoBalance = balance.isPositive() ? balance : Money.ZERO;
+        if (getUnreconciledLocalSettlement().isPositive() && !balance.equals(this.siigoBalance)) {
+            Money expected = this.siigoBalance.minus(getUnreconciledLocalSettlement());
+            if (!balance.equals(expected) || lastLocalSettlementAt == null || !cutoffAt.isAfter(lastLocalSettlementAt)) {
+                throw new IllegalArgumentException("El corte no concilia los pagos locales pendientes de reflejar en Siigo");
+            }
+            unreconciledLocalSettlement = Money.ZERO;
+        }
+        if (status == InvoiceStatus.PAID && balance.isPositive() && getUnreconciledLocalSettlement().isZero()) {
+            throw new IllegalArgumentException("El corte intenta reabrir una factura pagada; requiere conciliación");
+        }
+
+        this.siigoBalance = balance;
         this.siigoBalanceCutoffAt = cutoffAt;
         this.siigoBalanceUpdatedAt = Instant.now();
         this.siigoBalanceSnapshotId = snapshotId;

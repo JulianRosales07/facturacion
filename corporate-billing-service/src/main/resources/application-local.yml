@@ -1,0 +1,3 @@
+# Activación explícita para desarrollo: SPRING_PROFILES_ACTIVE=postgres,local
+auth:
+  enabled: false

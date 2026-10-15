@@ -28,7 +28,7 @@ class SiigoOfficialInvoiceReaderTest {
         assertTrue(file.exists(), "El archivo saldos_de_cartera.xlsx debe existir");
 
         try (var stream = new FileInputStream(file)) {
-            List<OfficialInvoiceData> invoices = reader.read(file.getName(), stream);
+            List<OfficialInvoiceData> invoices = reader.read(file.getName(), stream, java.time.Instant.parse("2026-09-11T15:00:00Z"));
             assertNotNull(invoices);
             assertFalse(invoices.isEmpty(), "Debe extraer facturas desde saldos_de_cartera.xlsx");
 
@@ -41,7 +41,8 @@ class SiigoOfficialInvoiceReaderTest {
             OfficialInvoiceData inv51993 = inv51993Opt.get();
             assertEquals("1088970617", inv51993.nit());
             assertEquals(BillingType.F1, inv51993.billingType());
-            assertEquals(Money.of("5694150.00"), inv51993.total());
+            assertEquals(Money.ZERO, inv51993.total());
+            assertEquals(Money.of("5694150.00"), inv51993.outstandingBalance());
             assertNotNull(inv51993.issueDate());
             assertEquals("2026-09-10", inv51993.issueDate().toString());
             assertNotNull(inv51993.dueDate());

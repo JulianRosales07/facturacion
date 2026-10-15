@@ -69,9 +69,8 @@ public interface SiigoCarteraReader {
 
     /**
      * @param sourceFileName nombre del archivo leído
-     * @param cutoffDate     fecha de generación del corte. Se deriva de la fecha de
-     *                       documento más reciente del archivo, no de la fecha del sistema,
-     *                       para que un archivo viejo no se confunda con uno nuevo.
+     * @param cutoffDate     fecha de generación del productor, si existe. Nunca se infiere
+     *                       de las fechas de las facturas. Sin ella no se aplican saldos.
      * @param rows           filas válidas
      * @param errors         filas descartadas por formato
      */

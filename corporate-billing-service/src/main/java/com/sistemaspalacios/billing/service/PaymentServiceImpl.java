@@ -304,6 +304,10 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = repositorioPago.findByIdForUpdate(paymentId)
                 .orElseThrow(() -> new NoSuchElementException("Pago no encontrado con id: " + paymentId));
         ProviderPaymentStatus outcome = ProviderPaymentStatus.fromProvider(command.status());
+        if (outcome == ProviderPaymentStatus.APPROVED && (command.totalAmount() == null
+                || Money.of(command.totalAmount()).compareTo(payment.getNetPaidAmount()) != 0)) {
+            throw new PaymentConflictException("La aprobación requiere el importe exacto del checkout");
+        }
         String txId = command.transactionId() != null && !command.transactionId().isBlank() ? command.transactionId().trim() : null;
         CorporateClient client = repositorioCliente.findById(payment.getClientId())
                 .orElseThrow(() -> new NoSuchElementException("Cliente no encontrado para el pago: " + paymentId));
@@ -538,6 +542,12 @@ public class PaymentServiceImpl implements PaymentService {
         for (Invoice invoice : invoices) {
             enrichInvoiceBalances(invoice);
             Money pending = requirePayable(invoice);
+            boolean selectedWithholdings = !plan.consolidatedConcepts().isEmpty()
+                    || !plan.conceptsByInvoice().getOrDefault(invoice.getId(), List.of()).isEmpty()
+                    || (deductions != null && !deductions.isEmpty());
+            if (!pending.equals(invoice.getTotalAmount()) && selectedWithholdings) {
+                throw new PaymentConflictException("Las retenciones sobre un saldo parcial requieren bases conciliadas; no se liquidan con una estimación proporcional");
+            }
             Money base;
             Money iva;
             if (pending.equals(invoice.getTotalAmount())) {
@@ -668,12 +678,7 @@ public class PaymentServiceImpl implements PaymentService {
     private void markInvoicePaid(Invoice invoice, Money applied, UUID paymentId, String transactionId) {
         // enrichInvoiceBalances() dejó en paidAmount solo los pagos previos; se suma el cruce de
         // este pago (neto recaudado + retenciones válidas cubren la obligación completa, CA-9).
-        invoice.setPaidAmount(invoice.getPaidAmount().plus(applied));
-        if (invoice.hasSiigoBalance()) {
-            Money newSiigo = invoice.getSiigoBalance().minus(applied);
-            if (!newSiigo.isPositive()) newSiigo = Money.ZERO;
-            invoice.applySiigoBalance(newSiigo, Instant.now(), invoice.getSiigoBalanceSnapshotId());
-        }
+        invoice.recordLocalSettlement(applied, Instant.now());
         if (invoice.getComputedPendingBalance().isZero() || invoice.getPendingBalance().isZero()) {
             invoice.markAsPaid(paymentId, transactionId);
             log.info("{}-{} -> PAGADA (aplicado {})", invoice.getBillingType(), invoice.getInvoiceNumber(), applied);
@@ -710,9 +715,15 @@ public class PaymentServiceImpl implements PaymentService {
         }
         String cleanNit = command.clientNit().trim().replaceAll("\\s+", "");
 
-        String txId = command.transactionId() != null && !command.transactionId().isBlank()
-                ? command.transactionId().trim()
-                : (command.idempotencyKey() != null ? command.idempotencyKey().trim() : UUID.randomUUID().toString());
+        if (command.transactionId() == null || command.transactionId().isBlank() || command.transactionId().length() > 100
+                || command.totalAmount() == null || command.totalAmount().signum() <= 0) {
+            throw new IllegalArgumentException("La confirmación requiere referencia de transacción e importe positivo del proveedor");
+        }
+        String txId = command.transactionId().trim();
+        String confirmationFingerprint = hash(cleanNit + "|" + Money.of(command.totalAmount()) + "|"
+                + (command.invoiceIds() == null ? List.of() : command.invoiceIds().stream().map(UUID::toString).sorted().toList()) + "|"
+                + (command.invoiceKeys() == null ? List.of() : command.invoiceKeys().stream().sorted().toList()) + "|"
+                + command.paymentMethod() + "|" + command.bankAccount());
         String idemKey = command.idempotencyKey() != null && !command.idempotencyKey().isBlank()
                 ? command.idempotencyKey().trim()
                 : txId;
@@ -724,6 +735,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
         if (existing.isPresent()) {
             Payment prev = existing.get();
+            if (!confirmationFingerprint.equals(prev.getRequestFingerprint())) throw new PaymentConflictException("La transacción ya existe con datos diferentes");
             log.info("Transacción {} ya procesada previamente (Idempotencia). Retornando resultado existente sin duplicar.", txId);
             CorporateClient client = repositorioCliente.findById(prev.getClientId()).orElse(null);
             return paymentResult(prev, client);
@@ -739,6 +751,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
         if (existing.isPresent()) {
             Payment prev = existing.get();
+            if (!confirmationFingerprint.equals(prev.getRequestFingerprint())) throw new PaymentConflictException("La transacción ya existe con datos diferentes");
             log.info("Transacción {} ya procesada concurrentemente. Retornando resultado existente sin duplicar.", txId);
             return paymentResult(prev, client);
         }
@@ -796,6 +809,9 @@ public class PaymentServiceImpl implements PaymentService {
                     if (candidates.isEmpty()) {
                         throw new NoSuchElementException("Factura no encontrada para NIT " + cleanNit + " con clave: " + key);
                     }
+                    String expectedNumber = cleanNum;
+                    candidates = candidates.stream().filter(i -> expectedNumber.equals(IncomingInvoiceQueryService.normalizedNumber(i.getInvoiceNumber()))).toList();
+                    if (candidates.size() != 1) throw new PaymentConflictException("La clave de factura es ambigua o no coincide exactamente: " + key);
                     Invoice locked = repositorioFactura.findByIdForUpdate(candidates.get(0).getId())
                             .orElse(candidates.get(0));
                     invoicesToPay.add(locked);
@@ -833,6 +849,9 @@ public class PaymentServiceImpl implements PaymentService {
         if (isExplicit && invoicesToPay.isEmpty()) {
             throw new IllegalArgumentException("No se especificaron facturas válidas para confirmar el pago");
         }
+        if (invoicesToPay.stream().map(Invoice::getId).distinct().count() != invoicesToPay.size()) {
+            throw new IllegalArgumentException("La confirmación repite una factura");
+        }
         log.info("=== FACTURAS LOCALIZADAS === transactionId={} explicit={} facturas={}", txId, isExplicit, invoicesToPay.stream()
                 .map(inv -> inv.getBillingType() + "-" + inv.getInvoiceNumber() + " [" + inv.getStatus().getDbValue() + "]")
                 .toList());
@@ -845,6 +864,8 @@ public class PaymentServiceImpl implements PaymentService {
             } else if (inv.getStatus() == InvoiceStatus.VOIDED || inv.getStatus() == InvoiceStatus.SUPERSEDED) {
                 log.warn("Factura {} en estado {}, se omite", inv.getInvoiceNumber(), inv.getStatus());
             } else {
+                enrichInvoiceBalances(inv);
+                requirePayable(inv);
                 pendingInvoices.add(inv);
             }
         }
@@ -893,7 +914,7 @@ public class PaymentServiceImpl implements PaymentService {
         Money totalGross = Money.ZERO;
         for (Invoice inv : invoicesToPay) {
             enrichInvoiceBalances(inv);
-            Money pending = inv.getPendingBalance().isPositive() ? inv.getPendingBalance() : inv.getTotalAmount();
+            Money pending = requirePayable(inv);
             totalGross = totalGross.plus(pending);
         }
 
@@ -929,7 +950,7 @@ public class PaymentServiceImpl implements PaymentService {
                 obs,
                 "PASARELA_RECAUDO"
         );
-        payment.identifyRequest(idemKey, txId);
+        payment.identifyRequest(idemKey, confirmationFingerprint);
 
         // 6. Aplicar importe a las obligaciones y registrar trazabilidad exacta
         log.info("=== APLICANDO PAGO A FACTURAS === transactionId={} facturasCount={}", txId, invoicesToPay.size());
@@ -940,7 +961,7 @@ public class PaymentServiceImpl implements PaymentService {
             if (remainingToApply.isZero() || !remainingToApply.isPositive()) {
                 break;
             }
-            Money pending = invoice.getPendingBalance().isPositive() ? invoice.getPendingBalance() : invoice.getTotalAmount();
+            Money pending = requirePayable(invoice);
             Money applied = remainingToApply.compareTo(pending) >= 0 ? pending : remainingToApply;
             if (applied.isPositive()) {
                 PaymentInvoice crossing = new PaymentInvoice(
@@ -1311,6 +1332,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     private Money requirePayable(Invoice invoice) {
         String label = invoice.getBillingType() + "-" + invoice.getInvoiceNumber();
+        if (invoice.hasCarteraPlaceholderDetail()) {
+            throw new PaymentConflictException("La factura " + label + " requiere detalle oficial confirmado antes de cobrar");
+        }
         if (invoice.getStatus() == InvoiceStatus.PAID) {
             throw new PaymentConflictException("La factura " + label + " ya está PAGADA");
         }
@@ -1320,6 +1344,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (!invoice.getPendingBalance().isPositive() || !invoice.getTotalAmount().isPositive()) {
             throw new PaymentConflictException("La factura " + label + " no tiene saldo pagable");
         }
+        if (!invoice.isPayable()) throw new PaymentConflictException("La factura " + label + " requiere conciliación antes de cobrar");
         return invoice.getPendingBalance();
     }
 

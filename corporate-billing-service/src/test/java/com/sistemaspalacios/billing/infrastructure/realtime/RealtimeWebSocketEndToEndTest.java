@@ -147,7 +147,7 @@ class RealtimeWebSocketEndToEndTest {
     void approvedPaymentPublishesInvoiceAndPaymentEvents() throws Exception {
         var checkout = paymentService.checkout(new PaymentService.CheckoutCommand(client.getNit(), List.of(invoice.getId()), List.of()));
         paymentService.confirmPayment(new PaymentService.PaymentConfirmationCommand(client.getNit(), "CUS-RT-1", List.of(), List.of(),
-                null, LocalDate.now(), "PSE", "PSE - Bancolombia", null, null, null, null, checkout.paymentId(), "APPROVED"));
+                checkout.netPayable().amount(), LocalDate.now(), "PSE", "PSE - Bancolombia", null, null, null, null, checkout.paymentId(), "APPROVED"));
 
         Map<String, Object> event = awaitEvent(nitEvents, RealtimeEvent.INVOICE_STATUS_CHANGED, 5);
         assertNotNull(event, "el portal del NIT recibe el cambio sin recargar");

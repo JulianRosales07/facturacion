@@ -141,10 +141,14 @@ class SiigoPdfDetalleIntegrationTest {
         detailService.applyPdfDetail(doc, pdfExtractor.extractMetadata(PDF_REAL), PDF_REAL.getName());
         entityManager.flush();
 
-        Invoice otraVez = desdeCartera("88995", 3_000_000); // el saldo cambió con un abono
+        Invoice otraVez = officialImport.importDocument(new OfficialInvoiceData(NIT, null, BillingType.F1, "88995",
+                doc.getIssueDate(), doc.getDueDate(), null, Money.ZERO,
+                List.of(new OfficialInvoiceData.Item(Invoice.CARTERA_PLACEHOLDER_CODE, Invoice.CARTERA_PLACEHOLDER_DESCRIPTION,
+                        BigDecimal.ONE, Money.ZERO, Money.ZERO)), Money.of(3_000_000), java.time.Instant.now()));
 
         assertEquals(doc.getId(), otraVez.getId(), "Es el mismo documento");
         assertEquals(5, releer(doc.getId()).getItems().size(), "El detalle oficial se conserva");
+        assertEquals(Money.of(3_000_000), otraVez.getPendingBalance(), "La reimportación sí actualiza el saldo");
     }
 
     @Test
@@ -246,19 +250,17 @@ class SiigoPdfDetalleIntegrationTest {
     }
 
     @Test
-    @DisplayName("Con saldo parcial de cartera, se liquida el saldo repartido en la proporción base/IVA del documento oficial")
+    @DisplayName("Con saldo parcial no se calculan retenciones reales sobre bases proporcionales sin conciliar")
     void retencionesSobreSaldoParcial() {
         Invoice doc = desdeCartera("89000", 2_000_000);
         detailService.applyPdfDetail(doc, pdfExtractor.extractMetadata(PDF_REAL), PDF_REAL.getName());
         entityManager.flush();
 
-        var sim = paymentService.simulate(new PaymentService.PaymentSimulationCommand(NIT, List.of(doc.getId()), retencionesDePrueba()));
-
-        assertEquals(Money.of(2_000_000), sim.totalInvoices(), "Se liquida el saldo, no el total oficial");
-        assertEquals(Money.of(new BigDecimal("319327.73")), sim.totalIva(), "2.000.000 × 909.150 / 5.694.150");
-        assertEquals(Money.of(new BigDecimal("1680672.27")), sim.taxableBase());
-        var settled = sim.invoices().get(0);
-        assertEquals(Money.of(5_694_150), settled.officialTotal(), "El total oficial no cambia");
+        assertThrows(PaymentConflictException.class, () -> paymentService.simulate(
+                new PaymentService.PaymentSimulationCommand(NIT, List.of(doc.getId()), retencionesDePrueba())));
+        var withoutWithholdings = paymentService.simulate(new PaymentService.PaymentSimulationCommand(NIT, List.of(doc.getId()), List.of()));
+        assertEquals(Money.of(2_000_000), withoutWithholdings.totalInvoices());
+        assertEquals(Money.of(5_694_150), doc.getTotalAmount(), "El documento oficial se conserva");
     }
 
     @Test

@@ -29,7 +29,6 @@ public class AccountingAccountMapping {
     @Column(name = "tipo_facturacion")
     private BillingType billingType;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_item")
     private BillableItemType itemType;
 

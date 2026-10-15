@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Generador de la representación gráfica oficial de la factura electrónica de venta
- * con diseño 100% fiel al documento PDF de referencia Siigo (F001000000519930000.PDF).
+ * Representación de los datos registrados de una factura y estados de cuenta agrupados.
  */
 @Component
 public class SiigoInvoiceGraphicRenderer {
@@ -51,11 +50,12 @@ public class SiigoInvoiceGraphicRenderer {
 
     /** Igual que {@link #renderHtml(Invoice)} más la sección "Conoce los cobros a detalle" si se informa. */
     public String renderHtml(Invoice invoice, com.sistemaspalacios.billing.service.dto.ChargeBreakdownDto breakdown) {
+        if (invoice.hasCarteraPlaceholderDetail()) {
+            throw new IllegalStateException("El saldo de cartera aún no tiene detalle oficial; consulte el estado de cuenta");
+        }
         String numFactura = documentNumber(invoice);
-        LocalDate emision = invoice.getIssueDate() != null ? invoice.getIssueDate() : LocalDate.now();
-        LocalDate vencimiento = invoice.getDueDate() != null ? invoice.getDueDate() : emision.plusDays(15);
-        String emisionStr = emision.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        String vencimientoStr = vencimiento.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        String emisionStr = invoice.getIssueDate() != null ? invoice.getIssueDate().format(DateTimeFormatter.ISO_LOCAL_DATE) : NOT_INFORMED;
+        String vencimientoStr = invoice.getDueDate() != null ? invoice.getDueDate().format(DateTimeFormatter.ISO_LOCAL_DATE) : NOT_INFORMED;
 
         String clientNit = invoice.getClientNit();
         String clientName = invoice.getClientBusinessName() != null ? invoice.getClientBusinessName() : "-";
@@ -157,73 +157,20 @@ public class SiigoInvoiceGraphicRenderer {
     }
 
     public String renderGroupHtml(IncomingInvoiceQueryService.ClientInvoiceGroup group) {
-        String numFactura;
-        if (group.invoices().size() == 1) {
-            var f = group.invoices().get(0);
-            numFactura = (f.billingType() == com.sistemaspalacios.billing.domain.model.BillingType.F20 ? "FEMG " : "FESP ") + f.invoiceNumber();
-        } else if (!group.invoices().isEmpty()) {
-            var f = group.invoices().get(0);
-            numFactura = (f.billingType() == com.sistemaspalacios.billing.domain.model.BillingType.F20 ? "FEMG " : "FESP ") + f.invoiceNumber()
-                    + " (+" + (group.invoiceCount() - 1) + " Facturas)";
-        } else {
-            numFactura = "FESP CONSOLIDADO";
+        StringBuilder html = new StringBuilder("<!doctype html><html lang=\"es\"><meta charset=\"utf-8\"><title>Estado de cuenta</title><body>");
+        html.append("<h1>Estado de cuenta — Sistemas Palacios</h1><p>NIT ")
+                .append(escapeHtml(group.nit())).append(" — ").append(escapeHtml(group.businessName()))
+                .append("</p><p>Los conceptos e impuestos se consultan en las facturas oficiales individuales.</p>")
+                .append("<table><thead><tr><th>Documento</th><th>Total original</th><th>Saldo pendiente</th><th>Saldo a favor</th></tr></thead><tbody>");
+        for (var invoice : group.invoices()) {
+            html.append("<tr><td>").append(escapeHtml(invoice.billingType() + " " + invoice.invoiceNumber())).append("</td><td>")
+                    .append(invoice.officialDetailConfirmed() ? formatMoney(invoice.serviceValue()) : "Detalle oficial pendiente")
+                    .append("</td><td>").append(formatMoney(invoice.pendingBalance()))
+                    .append("</td><td>").append(formatMoney(invoice.creditBalance())).append("</td></tr>");
         }
-
-        LocalDate emision = (!group.invoices().isEmpty() && group.invoices().get(0).issueDate() != null)
-                ? group.invoices().get(0).issueDate() : LocalDate.now();
-        LocalDate vencimiento = (!group.invoices().isEmpty() && group.invoices().get(0).dueDate() != null)
-                ? group.invoices().get(0).dueDate() : emision.plusDays(15);
-        String emisionStr = emision.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        String vencimientoStr = vencimiento.format(DateTimeFormatter.ISO_LOCAL_DATE);
-
-        String clientNit = group.nit();
-        String clientName = group.businessName() != null ? group.businessName() : ("NIT " + group.nit());
-        String clientAddress = NOT_INFORMED;
-        String clientEmail = NOT_INFORMED;
-        String cufe = (!group.invoices().isEmpty() && group.invoices().get(0).cufe() != null)
-                ? group.invoices().get(0).cufe()
-                : CUFE_PENDING;
-
-        String firstQrContent = group.invoices().stream()
-                .filter(inv -> inv.qr() != null && inv.qr().content() != null && !inv.qr().content().isBlank())
-                .map(inv -> inv.qr().content())
-                .findFirst()
-                .orElse(null);
-        String qrBase64 = generateQrBase64(firstQrContent);
-
-        StringBuilder itemsRows = new StringBuilder();
-        BigDecimal totalBruto = BigDecimal.ZERO;
-        BigDecimal totalIva = BigDecimal.ZERO;
-        var facturas = group.invoices();
-        for (int i = 0; i < facturas.size(); i++) {
-            var inv = facturas.get(i);
-            String codigo = "";
-            BigDecimal totalItem = inv.serviceValue() != null ? inv.serviceValue() : BigDecimal.ZERO;
-            BigDecimal unitPrice = totalItem.divide(new BigDecimal("1.19"), 2, java.math.RoundingMode.HALF_UP);
-            BigDecimal ivaVal = totalItem.subtract(unitPrice);
-            totalBruto = totalBruto.add(unitPrice);
-            totalIva = totalIva.add(ivaVal);
-
-            String desc = "Factura " + inv.billingType() + " " + inv.invoiceNumber() + " - Servicios corporativos y conectividad";
-            itemsRows.append("<tr>")
-                    .append("<td style=\"text-align:center;\">").append(i + 1).append("</td>")
-                    .append("<td style=\"text-align:center; font-family:monospace;\">").append(codigo).append("</td>")
-                    .append("<td style=\"word-break:break-word;\">").append(escapeHtml(desc)).append("</td>")
-                    .append("<td style=\"text-align:center;\">1</td>")
-                    .append("<td style=\"text-align:center;\">UN</td>")
-                    .append("<td style=\"text-align:right;\">").append(formatMoney(unitPrice)).append("</td>")
-                    .append("<td style=\"text-align:center;\">19</td>")
-                    .append("<td style=\"text-align:right;\">").append(formatMoney(ivaVal)).append("</td>")
-                    .append("<td style=\"text-align:right; font-weight:bold;\">").append(formatMoney(totalItem)).append("</td>")
-                    .append("</tr>");
-        }
-
-        BigDecimal totalPagar = group.totalServiceValue() != null ? group.totalServiceValue() : BigDecimal.ZERO;
-        String totalPagarStr = "$ " + formatMoney(totalPagar);
-        String valorEnLetras = numberToSpanishWords(totalPagar.longValue());
-
-        return buildHtmlDocument(numFactura, emisionStr, vencimientoStr, clientName, clientNit, clientAddress, clientEmail,
-                cufe, itemsRows.toString(), facturas.size(), totalBruto, totalIva, totalPagar, totalPagarStr, valorEnLetras, qrBase64, "");
+        html.append("</tbody></table><p>Saldo pendiente total: ").append(formatMoney(group.totalPendingValue()))
+                .append("</p><p>Los saldos a favor se presentan por separado, sin compensación automática.</p></body></html>");
+        return html.toString();
     }
 
     private String generateQrBase64(String payload) {

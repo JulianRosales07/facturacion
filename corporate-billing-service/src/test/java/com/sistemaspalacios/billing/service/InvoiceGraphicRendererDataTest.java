@@ -20,6 +20,16 @@ class InvoiceGraphicRendererDataTest {
 
     private final SiigoInvoiceGraphicRenderer renderer = new SiigoInvoiceGraphicRenderer();
 
+    @Test
+    void portfolioBalanceCannotBeRenderedAsAnOfficialInvoice() {
+        var invoice = new Invoice(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "123",
+                LocalDate.of(2026, 9, 8), null, BillingType.F1, InvoiceStatus.CONSOLIDATED);
+        invoice.markImportedFromSiigo("F1:123");
+        invoice.addItem(InvoiceItem.fromOfficialAmounts(invoice.getId(), Invoice.CARTERA_PLACEHOLDER_CODE,
+                Invoice.CARTERA_PLACEHOLDER_DESCRIPTION, BigDecimal.ONE, Money.ZERO, Money.ZERO));
+        assertThrows(IllegalStateException.class, () -> renderer.renderHtml(invoice));
+    }
+
     private Invoice invoice(String number, BillingType type, long unitPrice) {
         Invoice invoice = new Invoice(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), number,
                 LocalDate.of(2026, 9, 8), LocalDate.of(2026, 9, 23), type, InvoiceStatus.CONSOLIDATED);

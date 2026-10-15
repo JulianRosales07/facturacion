@@ -24,13 +24,23 @@ public class OfficialInvoiceImportController {
     }
     @PostMapping(value = "/importar", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyAuthority('IMPORTS_EXECUTE', 'ROL_SISTEMA', 'ROLE_SISTEMA')")
-    public List<UUID> importFile(@RequestParam("archivo") MultipartFile file) throws IOException {
+    public List<UUID> importFile(@RequestParam("archivo") MultipartFile file,
+            @RequestParam(required = false) java.time.Instant fechaCorte) throws IOException {
         if (file.isEmpty()) throw new IllegalArgumentException("Archivo vacío");
         try (var input = file.getInputStream()) {
-            var result = importer.receive(file.getOriginalFilename(), input.readAllBytes(), "MANUAL").invoiceIds();
+            var result = importer.receive(file.getOriginalFilename(), input.readAllBytes(), "MANUAL", fechaCorte).invoiceIds();
             if (result.isEmpty()) throw new IllegalArgumentException("El archivo no contiene facturas F1/F20 en un formato compatible");
             return result;
         }
+    }
+
+    @PostMapping(value = "/importar-detallado", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyAuthority('IMPORTS_EXECUTE', 'ROL_SISTEMA', 'ROLE_SISTEMA')")
+    public com.sistemaspalacios.billing.service.OfficialInvoiceImportService.ImportResult importDetailed(
+            @RequestParam("archivo") MultipartFile file,
+            @RequestParam(required = false) java.time.Instant fechaCorte) throws IOException {
+        if (file.isEmpty()) throw new IllegalArgumentException("Archivo vacío");
+        return importer.receive(file.getOriginalFilename(), file.getBytes(), "MANUAL", fechaCorte);
     }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)

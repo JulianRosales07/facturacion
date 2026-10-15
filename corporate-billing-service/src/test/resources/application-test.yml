@@ -1,0 +1,9 @@
+auth:
+  enabled: false
+siigo:
+  sync:
+    cron: "-"
+billing:
+  availability:
+    check:
+      cron: "-"

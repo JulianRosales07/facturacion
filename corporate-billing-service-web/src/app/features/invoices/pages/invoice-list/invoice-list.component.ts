@@ -101,7 +101,7 @@ export class InvoiceListComponent implements OnInit {
       if (!r || !r.items.length) return null;
       const totalFacturado = r.items.reduce((acc, item) => acc + (item.total || 0), 0);
       const totalPagado = r.items.filter(i => i.estado_pago === 'PAGADA').reduce((acc, item) => acc + (item.total || 0), 0);
-      const totalPendiente = r.items.filter(i => i.estado_pago !== 'PAGADA' && i.estado_pago !== 'ANULADA').reduce((acc, item) => acc + (item.total || 0), 0);
+      const totalPendiente = r.items.filter(i => i.estado_pago !== 'PAGADA' && i.estado_pago !== 'ANULADA').reduce((acc, item) => acc + (item.saldo_pendiente ?? item.total ?? 0), 0);
       const pendingPdfs = r.items.filter(i => !i.pdfAvailable).length;
       return {
         totalFacturado,
@@ -374,72 +374,6 @@ export class InvoiceListComponent implements OnInit {
   printConsolidated(): void {
     window.print();
   }
-  getWords(amount: number): string {
-    return this.numberToSpanishWords(Math.round(amount));
-  }
-  getInvoiceGross(amount: number): number {
-    return Math.round((amount / 1.19) * 100) / 100;
-  }
-  getInvoiceIva(amount: number): number {
-    const gross = this.getInvoiceGross(amount);
-    return Math.round((amount - gross) * 100) / 100;
-  }
-  getTotalGross(group: ClientInvoiceGroup): number {
-    return group.facturas.reduce((sum, f) => sum + this.getInvoiceGross(f.valor_servicio), 0);
-  }
-  getTotalIva(group: ClientInvoiceGroup): number {
-    return group.facturas.reduce((sum, f) => sum + this.getInvoiceIva(f.valor_servicio), 0);
-  }
-  getConsolidatedConsecutive(group: ClientInvoiceGroup): string {
-    if (group.facturas.length === 1) {
-      const f = group.facturas[0];
-      return `${f.tipo === 'F20' ? 'FEMG' : 'FESP'} ${f.consecutivo}`;
-    }
-    const f0 = group.facturas[0];
-    return `${f0.tipo === 'F20' ? 'FEMG' : 'FESP'} ${f0.consecutivo} (+${group.facturas.length - 1} DOCS)`;
-  }
-  getConsolidatedIssueDate(group: ClientInvoiceGroup): string {
-    return group.facturas[0]?.fecha_emision || new Date().toISOString().slice(0, 10);
-  }
-  getConsolidatedDueDate(group: ClientInvoiceGroup): string {
-    return group.facturas[0]?.fecha_vencimiento || this.getConsolidatedIssueDate(group);
-  }
-  private numberToSpanishWords(n: number): string {
-    if (isNaN(n) || n === 0) return 'Cero';
-    if (n < 0) return 'Menos ' + this.numberToSpanishWords(Math.abs(n));
-    n = Math.floor(n);
-    const units = ['', 'Un', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve',
-      'Diez', 'Once', 'Doce', 'Trece', 'Catorce', 'Quince', 'Dieciséis', 'Diecisiete', 'Dieciocho', 'Diecinueve', 'Veinte',
-      'Veintiuno', 'Veintidós', 'Veintitrés', 'Veinticuatro', 'Veinticinco', 'Veintiséis', 'Veintisiete', 'Veintiocho', 'Veintinueve'];
-    const tens = ['', '', '', 'Treinta', 'Cuarenta', 'Cincuenta', 'Sesenta', 'Setenta', 'Ochenta', 'Noventa'];
-    const hundreds = ['', 'Ciento', 'Doscientos', 'Trescientos', 'Cuatrocientos', 'Quinientos', 'Seiscientos', 'Setecientos', 'Ochocientos', 'Novecientos'];
-
-    if (n === 100) return 'Cien';
-    if (n < 30) return units[n];
-    if (n < 100) {
-      const t = Math.floor(n / 10);
-      const u = n % 10;
-      return tens[t] + (u > 0 ? ' Y ' + units[u] : '');
-    }
-    if (n < 1000) {
-      const h = Math.floor(n / 100);
-      const rem = n % 100;
-      return hundreds[h] + (rem > 0 ? ' ' + this.numberToSpanishWords(rem) : '');
-    }
-    if (n < 1000000) {
-      const thousands = Math.floor(n / 1000);
-      const rem = n % 1000;
-      const prefix = thousands === 1 ? 'Mil' : this.numberToSpanishWords(thousands) + ' Mil';
-      return prefix + (rem > 0 ? ' ' + this.numberToSpanishWords(rem) : '');
-    }
-    if (n < 1000000000) {
-      const millions = Math.floor(n / 1000000);
-      const rem = n % 1000000;
-      const prefix = millions === 1 ? 'Un Millón' : this.numberToSpanishWords(millions) + ' Millones';
-      return prefix + (rem > 0 ? ' ' + this.numberToSpanishWords(rem) : '');
-    }
-    return String(n);
-  }
   // Generación de la factura consolidada de un cliente para un periodo (POST /facturas/generar)
   readonly showGenerate = signal(false);
   readonly generating = signal(false);
@@ -476,9 +410,19 @@ export class InvoiceListComponent implements OnInit {
     if(file.size>20*1024*1024 || !/\.(xlsx|xls|xlsm|json)$/i.test(file.name)) {
       this.notifications.error('Seleccione Excel o JSON, de hasta 20 MB.'); return;
     }
+    if (/\.(xlsx|xls|xlsm)$/i.test(file.name) && !this.portfolioCutoff) {
+      this.notifications.error('Indique la fecha y hora de generación del corte de cartera.'); return;
+    }
+    // El control expresa hora de Colombia; no depende de la zona del navegador.
+    const cutoff = this.portfolioCutoff ? new Date(`${this.portfolioCutoff}-05:00`) : null;
+    if (cutoff && (!Number.isFinite(cutoff.getTime()) || cutoff.getTime() > Date.now())) {
+      this.notifications.error('La fecha del corte debe ser válida y no futura.'); return;
+    }
     this.importing.set(true);
-    this.importer.importOfficialInvoices(file).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-      next:ids=>{this.importing.set(false);this.notifications.success(`${ids.length} facturas verificadas. Consulte nuevos y repetidos en el historial.`);this.load();},
+    this.importer.importPortfolio(file, cutoff?.toISOString()).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+      next:result=>{this.importing.set(false);this.notifications.success(`${result.created} obligaciones nuevas, ${result.updated} saldos actualizados y ${result.repeated} documentos repetidos. Consulte el historial.`);this.load();},
       error:err=>{this.importing.set(false);this.notifications.error(err?.error?.mensaje||'No se pudo importar el archivo. Revise el historial.');}});
   }
+
+  portfolioCutoff = '';
 }

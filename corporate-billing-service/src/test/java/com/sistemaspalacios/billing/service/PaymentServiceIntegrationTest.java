@@ -358,6 +358,35 @@ class PaymentServiceIntegrationTest {
     }
 
     @Test
+    void partialBalanceCannotUseEstimatedWithholdingBasesForRealCollection() {
+        invoiceAug.applySiigoBalance(Money.of(1_190_000), java.time.Instant.now(), null);
+        repositorioFactura.saveAndFlush(invoiceAug);
+        assertThrows(PaymentConflictException.class, () -> paymentService.simulate(
+                new PaymentService.PaymentSimulationCommand(testClient.getNit(), List.of(invoiceAug.getId()), List.of(at(rfConcept)))));
+    }
+
+    @Test
+    void checkoutApprovalRequiresProviderAmountAndNeverAssumesIt() {
+        var checkout = paymentService.checkout(new PaymentService.CheckoutCommand(testClient.getNit(), List.of(invoiceAug.getId()), List.of()));
+        assertThrows(PaymentConflictException.class, () -> paymentService.confirmPayment(new PaymentService.PaymentConfirmationCommand(
+                testClient.getNit(), "MISSING-AMOUNT", List.of(), List.of(), null, LocalDate.now(), "PSE", "BANCO",
+                null, null, null, null, checkout.paymentId(), "APPROVED")));
+        assertEquals(InvoiceStatus.CONSOLIDATED, invoiceAug.getStatus());
+    }
+
+    @Test
+    void directConfirmationCannotReuseTransactionWithChangedAmount() {
+        String transaction = "DIRECT-" + UUID.randomUUID();
+        var original = new PaymentService.PaymentConfirmationCommand(testClient.getNit(), transaction, null, List.of(invoiceAug.getId()),
+                new BigDecimal("500000"), LocalDate.now(), "PSE", "BANCO", null, null, null, null);
+        var first = paymentService.confirmPayment(original);
+        assertEquals(first.paymentId(), paymentService.confirmPayment(original).paymentId());
+        var changed = new PaymentService.PaymentConfirmationCommand(testClient.getNit(), transaction, null, List.of(invoiceAug.getId()),
+                new BigDecimal("600000"), LocalDate.now(), "PSE", "BANCO", null, null, null, null);
+        assertThrows(PaymentConflictException.class, () -> paymentService.confirmPayment(changed));
+    }
+
+    @Test
     void changedAmountDoesNotSettleInvoice() {
         var cmd = new PaymentService.PaymentRegistrationCommand(testClient.getNit(), List.of(invoiceAug.getId()), List.of(),
                 LocalDate.now(), "TRANSFERENCIA", "11100501", "STALE-" + UUID.randomUUID(), null,

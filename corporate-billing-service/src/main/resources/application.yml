@@ -55,6 +55,7 @@ siigo:
     cron: ${SIIGO_SYNC_CRON:0 0 * * * *}
 
 auth:
+  enabled: ${AUTH_ENABLED:true}
   issuer-uri: ${AUTH_ISSUER_URI:https://qa.sistemaspalacios.com}
   jwk-set-uri: ${AUTH_JWKS_URI:https://qa.sistemaspalacios.com/oauth2/jwks}
   audience: ${AUTH_AUDIENCE:corporate-billing-service}
@@ -80,7 +81,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/V1__esquema_inicial?stringtype=unspecified}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:1193051330 Jr}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -90,7 +91,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
 
@@ -98,7 +99,7 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 1
-    validate-on-migrate: false
+    validate-on-migrate: true
 
 ---
 # Perfil Docker para Contenedores
@@ -110,7 +111,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/facturacion?stringtype=unspecified}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10

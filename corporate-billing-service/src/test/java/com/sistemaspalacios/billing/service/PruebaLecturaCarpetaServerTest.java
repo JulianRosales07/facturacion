@@ -31,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("postgres")
 @Transactional
 public class PruebaLecturaCarpetaServerTest {
+    @org.junit.jupiter.api.io.TempDir Path outputDirectory;
+    @Autowired private OfficialInvoiceDetailService detailService;
 
     @Autowired
     private OfficialInvoiceReader officialReader;
@@ -69,7 +71,7 @@ public class PruebaLecturaCarpetaServerTest {
         // 1. Leer saldos_de_cartera.xlsx
         List<OfficialInvoiceData> records;
         try (FileInputStream fis = new FileInputStream(excelFile)) {
-            records = officialReader.read(excelFile.getName(), fis);
+            records = officialReader.read(excelFile.getName(), fis, java.time.Instant.parse("2026-10-14T15:00:00Z"));
         }
 
         System.out.println(">>> 2. FACTURAS LEÍDAS DE saldos_de_cartera.xlsx: " + records.size());
@@ -110,6 +112,9 @@ public class PruebaLecturaCarpetaServerTest {
         // 4. Importar factura oficial al sistema
         Invoice importedInvoice = importer.importDocument(invoiceData);
         assertNotNull(importedInvoice);
+        assertFalse(importedInvoice.isPayable(), "Un saldo sin detalle todavía no es cobrable");
+        assertEquals(OfficialInvoiceDetailService.Outcome.APLICADO,
+                detailService.applyPdfDetail(importedInvoice, pdfMeta, pdfFile.getName()).outcome());
 
         // 5. Enriquecer la factura con los datos fiscales del PDF
         importedInvoice.setCufe(pdfMeta.cufe());
@@ -146,7 +151,7 @@ public class PruebaLecturaCarpetaServerTest {
         System.out.println("================================================================================");
 
         // 8. Guardar el archivo JSON en Docs/server
-        Path jsonOutputFile = serverDir.resolve("factura_51993_sp_pagos.json");
+        Path jsonOutputFile = outputDirectory.resolve("factura_51993_sp_pagos.json");
         Files.writeString(jsonOutputFile, jsonGenerado);
         System.out.println(">>> Archivo JSON guardado con éxito en: " + jsonOutputFile);
         System.out.println("================================================================================");
@@ -168,12 +173,12 @@ public class PruebaLecturaCarpetaServerTest {
         // 1. Leer todas las facturas del Excel
         List<OfficialInvoiceData> records;
         try (FileInputStream fis = new FileInputStream(excelFile)) {
-            records = officialReader.read(excelFile.getName(), fis);
+            records = officialReader.read(excelFile.getName(), fis, java.time.Instant.parse("2026-10-14T15:00:00Z"));
         }
 
         // 2. Filtrar un NIT diferente al anterior (1088970617)
         List<OfficialInvoiceData> otrosNits = records.stream()
-                .filter(r -> r.nit() != null && !r.nit().equals("1088970617") && r.total().isPositive())
+                .filter(r -> r.nit() != null && !r.nit().equals("1088970617") && r.outstandingBalance().isPositive())
                 .toList();
 
         assertFalse(otrosNits.isEmpty(), "Deben existir otros NITs en el archivo Excel");
@@ -227,14 +232,14 @@ public class PruebaLecturaCarpetaServerTest {
         System.out.println("================================================================================");
 
         // 7. Guardar el archivo JSON en Docs/server
-        Path jsonOutputFile = serverDir.resolve("factura_nit_" + otroRegistro.nit() + "_sp_pagos.json");
+        Path jsonOutputFile = outputDirectory.resolve("factura_nit_" + otroRegistro.nit() + "_sp_pagos.json");
         Files.writeString(jsonOutputFile, jsonGenerado);
         System.out.println(">>> Archivo JSON guardado exitosamente en: " + jsonOutputFile);
         System.out.println("================================================================================");
 
         assertEquals(otroRegistro.invoiceNumber(), spPagosDto.numeroFactura());
         assertEquals(otroRegistro.nit(), spPagosDto.cliente().nit());
-        assertEquals(otroRegistro.total().getAmount(), spPagosDto.importes().saldoPendiente());
-        assertTrue(spPagosDto.pagable());
+        assertEquals(otroRegistro.outstandingBalance().getAmount(), spPagosDto.importes().saldoPendiente());
+        assertFalse(spPagosDto.pagable(), "Sin detalle oficial no se habilita el cobro");
     }
 }

@@ -130,6 +130,10 @@ public class CarteraSyncService {
 
         SiigoCarteraReader.CarteraSnapshotData data = carteraReader.read(file);
 
+        if (data.cutoffDate() == null) {
+            throw new IllegalArgumentException("El Excel no informa la fecha de generación del corte. Impórtelo desde el panel indicando fecha y hora; no se usará la fecha de una factura como corte.");
+        }
+
         // El corte se fecha por su contenido (la fecha de documento más reciente), no por la
         // hora de ingesta: así un archivo viejo copiado hoy no se confunde con uno nuevo.
         LocalDate cutoffDate = data.cutoffDate() != null ? data.cutoffDate() : LocalDate.now();

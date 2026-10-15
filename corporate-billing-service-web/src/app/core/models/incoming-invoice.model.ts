@@ -14,6 +14,9 @@ export interface IncomingInvoice {
   issueDate: string;
   dueDate: string | null;
   total: number;
+  saldo_pendiente?: number;
+  detalle_oficial_confirmado?: boolean;
+  saldo_a_favor?: number;
   pdfAvailable: boolean;
   cufe: string | null;
   qr?: InvoiceQr | null;
@@ -51,6 +54,9 @@ export interface GroupedInvoice {
   consecutivo: string;
   clave_documento: string;
   valor_servicio: number;
+  saldo_pendiente?: number;
+  detalle_oficial_confirmado?: boolean;
+  saldo_a_favor?: number;
   fecha_emision: string;
   fecha_vencimiento: string | null;
   pdf_disponible: boolean;

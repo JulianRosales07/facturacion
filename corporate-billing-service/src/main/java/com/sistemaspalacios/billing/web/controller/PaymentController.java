@@ -104,7 +104,7 @@ public class PaymentController {
      * Es estrictamente idempotente por transactionId.
      */
     @PostMapping("/confirmar")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasAnyAuthority('ROL_PASARELA', 'ROLE_PASARELA', 'ROL_SISTEMA', 'ROLE_SISTEMA')")
     public ResponseEntity<PaymentService.PaymentResult> confirmPayment(
             @RequestBody PaymentService.PaymentConfirmationCommand command
     ) {
@@ -115,7 +115,7 @@ public class PaymentController {
      * Webhook de confirmación de pasarelas de pago externas (PSE, Redeban, etc.).
      */
     @PostMapping("/webhook")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasAnyAuthority('ROL_PASARELA', 'ROLE_PASARELA', 'ROL_SISTEMA', 'ROLE_SISTEMA')")
     public ResponseEntity<PaymentService.PaymentResult> paymentWebhook(
             @RequestBody PaymentService.PaymentConfirmationCommand command
     ) {
@@ -125,7 +125,7 @@ public class PaymentController {
     // Ambos endpoints terminan en el mismo método de servicio que usa el registro manual;
     // los logs permiten ver en orden si la confirmación llegó, qué respondió y por qué falló.
     private ResponseEntity<PaymentService.PaymentResult> confirm(String source, PaymentService.PaymentConfirmationCommand command) {
-        log.info("=== CONFIRMACION DE PAGO RECIBIDA ({}) === payload: {}", source, command);
+        log.info("Confirmación de pago recibida ({})", source);
         try {
             PaymentService.PaymentResult result = paymentService.confirmPayment(command);
             log.info("=== RESPUESTA {} HTTP 200 === paymentId={} transactionId={} facturas={}",

@@ -27,7 +27,6 @@ public class InvoiceItem {
     @Column(name = "factura_id")
     private UUID invoiceId;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "tipo_item", nullable = false)
     private BillableItemType itemType;
 

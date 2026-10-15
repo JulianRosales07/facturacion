@@ -51,8 +51,18 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:4300,http://localhost:3000,http://localhost:5173,https://panel.sistemaspalacios.com,https://pasarela.sistemaspalacios.com}")
     private String allowedOrigins;
 
-    @Value("${auth.enabled:false}")
+    @Value("${auth.enabled:true}")
     private boolean authEnabled;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.core.env.Environment environment;
+
+    @jakarta.annotation.PostConstruct
+    void validateAuthenticationMode() {
+        if (!authEnabled && (!environment.matchesProfiles("local", "test") || environment.matchesProfiles("production", "prod", "docker"))) {
+            throw new IllegalStateException("Deshabilitar autenticación solo está permitido en perfiles local o test, fuera de producción");
+        }
+    }
 
     private final CurrentAccessService currentAccess;
 

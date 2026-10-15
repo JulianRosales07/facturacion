@@ -16,6 +16,14 @@ import {
 import { FacturaSpPagosDto } from '../models/sp-pagos.model';
 import { NotaCreditoResponseDto, EmitirNotaCreditoRequest } from '../models/credit-note.model';
 
+export interface OfficialImportResult {
+  invoiceIds: string[];
+  created: number;
+  updated: number;
+  repeated: number;
+  importedBalance: string | number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -26,6 +34,13 @@ export class InvoiceService {
     const form = new FormData();
     form.append('archivo', file);
     return this.api.post<string[]>('/siigo/facturas/importar', form);
+  }
+
+  importPortfolio(file: File, cutoffAt?: string): Observable<OfficialImportResult> {
+    const form = new FormData();
+    form.append('archivo', file);
+    if (cutoffAt) form.append('fechaCorte', cutoffAt);
+    return this.api.post<OfficialImportResult>('/siigo/facturas/importar-detallado', form);
   }
 
   getInvoices(filters?: InvoiceFilters): Observable<FacturaResumenDto[]> {

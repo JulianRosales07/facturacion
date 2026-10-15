@@ -38,7 +38,6 @@ public class InstallationFee {
     @Column(name = "valor_cuota", nullable = false, precision = 14, scale = 2)
     private Money installmentAmount;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private InstallationFeeStatus status;
 

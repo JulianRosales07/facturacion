@@ -173,7 +173,8 @@ class OfficialInvoiceSyncE2EIntegrationTest {
             // Historial con filas esperadas
             var historyRows = historyRepository.findAll();
             assertTrue(historyRows.stream().anyMatch(h -> h.getFilename().equals("movimiento_test.xlsx") && "IMPORTADO".equals(h.getStatus())));
-            assertTrue(historyRows.stream().anyMatch(h -> h.getFilename().equals("saldos_de_cartera.xlsx") && "OMITIDO".equals(h.getStatus())));
+            assertTrue(historyRows.stream().anyMatch(h -> h.getFilename().equals("saldos_de_cartera.xlsx") && "RECHAZADO".equals(h.getStatus())),
+                    "Un corte sin fecha de generación no se aplica ni se anuncia como verificado");
             assertTrue(historyRows.stream().anyMatch(h -> h.getFilename().equals("notas.txt") && "OMITIDO".equals(h.getStatus())));
 
             long historyCountCiclo1 = historyRows.size();

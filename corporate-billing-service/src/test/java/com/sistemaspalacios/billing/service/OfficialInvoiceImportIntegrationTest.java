@@ -65,7 +65,7 @@ class OfficialInvoiceImportIntegrationTest {
         }
         Path balances = Path.of("Docs/archivosplanos/saldos_de_cartera.xlsx");
         try (var stream = Files.newInputStream(balances)) {
-            var docs = reader.read("saldos_de_cartera.xlsx", stream);
+            var docs = reader.read("saldos_de_cartera.xlsx", stream, java.time.Instant.parse("2026-10-14T15:00:00Z"));
             assertFalse(docs.isEmpty());
             assertTrue(docs.stream().anyMatch(d -> d.invoiceNumber().equals("51993")));
         }

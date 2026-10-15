@@ -104,7 +104,7 @@ class IncomingInvoiceGroupingTest {
     }
 
     @Test
-    void renderGroupHtmlGeneratesFaithfulDocumentMatchingReferencePdf() {
+    void renderGroupHtmlShowsAccountStatementWithoutInventingInvoiceTaxesOrCufe() {
         var g = IncomingInvoiceQueryService.groupByNit(List.of(
                 row("800092198", BillingType.F1, "51993", "2722500"),
                 row("800092198", BillingType.F1, "51994", "907500"),
@@ -114,13 +114,12 @@ class IncomingInvoiceGroupingTest {
         String html = renderer.renderGroupHtml(g);
 
         assertNotNull(html);
-        assertTrue(html.contains("FACTURA ELECTR\u00d3NICA DE VENTA"));
-        assertTrue(html.contains("SP SISTEMAS PALACIOS LTDA"));
+        assertTrue(html.contains("Estado de cuenta"));
         assertTrue(html.contains("800092198"));
-        assertTrue(html.contains("FESP 51993 (+2 Facturas)"));
-        assertTrue(html.contains("Total Items : 3"));
+        assertTrue(html.contains("F1 51993"));
+        assertTrue(html.contains("F20 287"));
         assertTrue(html.contains("4,290,000.00")); // 2722500 + 907500 + 660000
-        assertTrue(html.contains("CUFE:"));
-        assertTrue(html.contains("Software:SIIGO"));
+        assertFalse(html.contains("CUFE:"));
+        assertFalse(html.contains("Software:SIIGO"));
     }
 }

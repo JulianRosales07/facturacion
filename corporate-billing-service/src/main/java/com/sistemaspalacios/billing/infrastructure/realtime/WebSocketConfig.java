@@ -41,7 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, Dispos
 
     public WebSocketConfig(
             @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:4300}") String allowedOrigins,
-            @Value("${auth.enabled:false}") boolean authEnabled,
+            @Value("${auth.enabled:true}") boolean authEnabled,
             ObjectProvider<JwtDecoder> jwtDecoder,
             ObjectProvider<JwtAuthenticationConverter> authenticationConverter,
             ObjectProvider<CurrentAccessService> currentAccess) {

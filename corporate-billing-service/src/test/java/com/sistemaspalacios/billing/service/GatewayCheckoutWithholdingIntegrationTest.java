@@ -229,7 +229,7 @@ class GatewayCheckoutWithholdingIntegrationTest {
     @DisplayName("Caso H / CA-10: cambiar el catálogo después no altera el pago histórico")
     void caseH_historicalSnapshotIsImmutable() {
         var checkout = checkout(List.of(invoiceB), reteFuente);
-        confirm(checkout.paymentId(), "CUS-H", "APROBADA", null);
+        confirm(checkout.paymentId(), "CUS-H", "APROBADA", checkout.netPayable().amount());
 
         reteFuente.closeValidity(LocalDate.now().minusDays(1));
         reteFuente.setName("ReteFuente renombrada");
@@ -255,7 +255,7 @@ class GatewayCheckoutWithholdingIntegrationTest {
         assertEquals(Payment.STATUS_CANCELLED, paymentService.getPaymentDetail(tab1.paymentId()).status());
 
         assertThrows(PaymentConflictException.class, () -> confirm(tab1.paymentId(), "CUS-T1", "APROBADA", null));
-        confirm(tab2.paymentId(), "CUS-T2", "APROBADA", null);
+        confirm(tab2.paymentId(), "CUS-T2", "APROBADA", tab2.netPayable().amount());
         assertEquals(InvoiceStatus.PAID, statusOf(invoiceA));
 
         assertThrows(PaymentConflictException.class, () -> checkout(List.of(invoiceA)), "una factura PAGADA no admite nuevo checkout");
@@ -295,8 +295,16 @@ class GatewayCheckoutWithholdingIntegrationTest {
         assertThrows(IllegalArgumentException.class, () -> paymentService.simulate(new PaymentService.PaymentSimulationCommand(
                 NIT, List.of(invoiceA.getId(), invoiceA.getId(), invoiceB.getId()), List.of())), "no se suma A dos veces");
 
-        Invoice foreign = repositorioFactura.findAll().stream()
-                .filter(i -> !i.getClientId().equals(client.getId())).findFirst().orElseThrow();
+        CorporateClient foreignClient = repositorioCliente.saveAndFlush(new CorporateClient(
+                UUID.randomUUID(), "FOREIGN-" + UUID.randomUUID().toString().substring(0, 8), "Otro cliente de prueba",
+                null, null, null, (short) 1, (short) 1, BillingType.F1, false, null, null));
+        Invoice foreign = new Invoice(UUID.randomUUID(), foreignClient.getId(), invoiceA.getPeriodId(), BillingType.F1,
+                foreignClient, LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 30));
+        foreign.setInvoiceNumber("FOREIGN-1");
+        foreign.addItem(InvoiceItem.fromOfficialAmounts(foreign.getId(), "INTERNET", "Servicio de otro cliente",
+                BigDecimal.ONE, Money.of(100), Money.of(19)));
+        foreign.consolidate();
+        repositorioFactura.saveAndFlush(foreign);
         assertThrows(IllegalArgumentException.class, () -> paymentService.simulate(new PaymentService.PaymentSimulationCommand(
                 NIT, List.of(foreign.getId()), List.of())));
     }

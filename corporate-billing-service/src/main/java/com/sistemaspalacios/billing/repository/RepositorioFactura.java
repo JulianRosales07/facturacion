@@ -84,6 +84,10 @@ public interface RepositorioFactura extends JpaRepository<Invoice, UUID>, org.sp
 
     Optional<Invoice> findByExternalDocumentKey(String key);
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM Invoice f WHERE f.externalDocumentKey = :key")
+    Optional<Invoice> findByExternalDocumentKeyForUpdate(@Param("key") String key);
+
     @Query("SELECT f FROM Invoice f WHERE f.billingType = :billingType AND f.status <> com.sistemaspalacios.billing.domain.model.InvoiceStatus.VOIDED AND f.invoiceNumber LIKE CONCAT('%', :consecutive)")
     List<Invoice> findCandidatesByBillingTypeAndConsecutive(
             @Param("billingType") com.sistemaspalacios.billing.domain.model.BillingType billingType,

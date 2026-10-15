@@ -63,7 +63,6 @@ public class PoiXlsxCarteraReader implements SiigoCarteraReader {
     public CarteraSnapshotData read(File spreadsheet) {
         List<CarteraRow> rows = new ArrayList<>();
         List<CarteraRowError> errors = new ArrayList<>();
-        LocalDate maxDocumentDate = null;
 
         if (spreadsheet == null || !spreadsheet.exists() || !spreadsheet.isFile()) {
             return new CarteraSnapshotData(
@@ -91,10 +90,6 @@ public class PoiXlsxCarteraReader implements SiigoCarteraReader {
                         continue;
                     }
                     rows.add(parsed);
-                    if (parsed.documentDate() != null
-                            && (maxDocumentDate == null || parsed.documentDate().isAfter(maxDocumentDate))) {
-                        maxDocumentDate = parsed.documentDate();
-                    }
                 } catch (RuntimeException ex) {
                     errors.add(new CarteraRowError(rowNumber, truncate(ex.getMessage())));
                 }
@@ -104,10 +99,10 @@ public class PoiXlsxCarteraReader implements SiigoCarteraReader {
             errors.add(new CarteraRowError(0, "Archivo ilegible: " + truncate(ex.getMessage())));
         }
 
-        log.info("Corte de cartera {}: {} filas válidas, {} con error, corte al {}",
-                spreadsheet.getName(), rows.size(), errors.size(), maxDocumentDate);
+        log.info("Cartera {}: {} filas válidas, {} con error; fecha de generación no informada",
+                spreadsheet.getName(), rows.size(), errors.size());
 
-        return new CarteraSnapshotData(spreadsheet.getName(), maxDocumentDate, rows, errors);
+        return new CarteraSnapshotData(spreadsheet.getName(), null, rows, errors);
     }
 
     /**

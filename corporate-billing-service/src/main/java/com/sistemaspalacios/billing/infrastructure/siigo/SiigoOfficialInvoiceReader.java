@@ -21,6 +21,11 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
 
     @Override
     public List<OfficialInvoiceData> read(String filename, InputStream input) {
+        return read(filename, input, null);
+    }
+
+    @Override
+    public List<OfficialInvoiceData> read(String filename, InputStream input, java.time.Instant cutoffAt) {
         try {
             if (filename.toLowerCase(Locale.ROOT).endsWith(".json")) {
                 return mapper.readValue(input, new TypeReference<List<OfficialInvoiceData>>() {});
@@ -50,7 +55,14 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
                     }
                 }
                 if (carteraHeader >= 0) {
-                    return readCarteraSpreadsheet(sheet, carteraHeader);
+                    validatePortfolioHeader(sheet.getRow(carteraHeader));
+                    if (workbook.getNumberOfSheets() != 1) {
+                        throw new IllegalArgumentException("Cartera con varias hojas requiere seleccionar y conciliar su alcance");
+                    }
+                    if (cutoffAt == null || cutoffAt.isAfter(java.time.Instant.now())) {
+                        throw new IllegalArgumentException("Cartera requiere fecha y hora reales del corte, no futuras");
+                    }
+                    return readCarteraSpreadsheet(sheet, carteraHeader, cutoffAt);
                 }
 
                 return List.of();
@@ -58,6 +70,18 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
         } catch (Exception ex) {
             throw new IllegalArgumentException("No se pudo leer facturación oficial: " + ex.getMessage(), ex);
         }
+    }
+
+    private void validatePortfolioHeader(Row header) {
+        Map<Integer, String> expected = Map.of(3, "TIPO DE COMPROBANTE", 4, "CODIGO COMPROBANTE",
+                5, "NUMERO DE DOCUMENTO", 7, "FECHA VENCIMIENTO", 11, "SALDO", 16, "FECHA DOCUMENTO");
+        expected.forEach((column, label) -> {
+            String actual = java.text.Normalizer.normalize(text(header, column), java.text.Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}", "").replaceAll("\\s+", " ").toUpperCase(Locale.ROOT);
+            if (!actual.startsWith(label)) {
+                throw new IllegalArgumentException("Encabezado de cartera inválido en columna " + (column + 1) + ": se requiere " + label);
+            }
+        });
     }
 
     private List<OfficialInvoiceData> readMovementSpreadsheet(Sheet sheet, int header) {
@@ -92,8 +116,9 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
         return docs.values().stream().filter(d -> !d.voided).map(Document::data).toList();
     }
 
-    private List<OfficialInvoiceData> readCarteraSpreadsheet(Sheet sheet, int header) {
+    private List<OfficialInvoiceData> readCarteraSpreadsheet(Sheet sheet, int header, java.time.Instant cutoffAt) {
         Map<String, OfficialInvoiceData> docs = new LinkedHashMap<>();
+        Map<String, String> installments = new HashMap<>();
         for (int i = header + 1; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
@@ -105,32 +130,51 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
             if (!"1".equals(code) && !"20".equals(code)) continue;
 
             String number = text(row, 5).trim().replaceFirst("^0+(?!$)", "");
-            if (nit.isBlank() || number.isBlank()) continue;
+            String currency = text(row, 8).trim();
+            if (!currency.isBlank() && !"0".equals(currency) && !"COP".equalsIgnoreCase(currency)) {
+                throw new IllegalArgumentException("Moneda distinta de COP requiere conciliación en fila " + (i + 1));
+            }
+            if (!nit.matches("[0-9]+") || !number.matches("[0-9]+")) {
+                throw new IllegalArgumentException("NIT o consecutivo inválido en fila " + (i + 1));
+            }
 
+            if (text(row, 11).isBlank()) throw new IllegalArgumentException("Falta saldo en fila " + (i + 1));
             BigDecimal balanceValue = decimal(row, 11);
-            if (balanceValue.signum() <= 0) continue;
-            Money total = Money.of(balanceValue);
+            Money balance = Money.of(balanceValue);
 
             LocalDate docDate = parseCarteraDate(cell(row, 16));
-            if (docDate == null) docDate = LocalDate.now();
+            if (docDate == null) throw new IllegalArgumentException("Fecha de documento inválida en fila " + (i + 1));
+            if (docDate.isAfter(cutoffAt.atZone(java.time.ZoneId.of("America/Bogota")).toLocalDate())) {
+                throw new IllegalArgumentException("Documento posterior al corte en fila " + (i + 1));
+            }
 
             LocalDate dueDate = parseCarteraDate(cell(row, 7));
-            if (dueDate == null) dueDate = docDate.plusDays(15);
+            if (dueDate == null && !text(row, 7).isBlank()) {
+                throw new IllegalArgumentException("Fecha de vencimiento inválida en fila " + (i + 1));
+            }
 
             BillingType billingType = "20".equals(code) ? BillingType.F20 : BillingType.F1;
             String key = billingType.name() + ":" + number;
+            String installment = text(row, 6);
+            String previousInstallment = installments.putIfAbsent(key, installment);
+            if (previousInstallment != null && !previousInstallment.equals(installment)) {
+                throw new IllegalArgumentException("Múltiples cuotas del documento requieren conciliación: " + key);
+            }
 
             var items = List.of(new OfficialInvoiceData.Item(
                     "SERV-CORP",
                     "Facturación de servicios corporativos",
                     BigDecimal.ONE,
-                    total,
+                    Money.ZERO,
                     Money.ZERO
             ));
 
-            docs.putIfAbsent(key, new OfficialInvoiceData(
-                    nit, null, billingType, number, docDate, dueDate, null, total, items
-            ));
+            var data = new OfficialInvoiceData(nit, null, billingType, number, docDate, dueDate,
+                    null, Money.ZERO, items, balance, cutoffAt);
+            var previous = docs.putIfAbsent(key, data);
+            if (previous != null && !previous.equals(data)) {
+                throw new IllegalArgumentException("Filas contradictorias o cuotas sin conciliar para " + key + " en fila " + (i + 1));
+            }
         }
         return new ArrayList<>(docs.values());
     }
@@ -151,7 +195,7 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
         String str = text(cell).replaceAll("[^0-9]", "");
         if (str.length() == 8) {
             try {
-                return LocalDate.parse(str, java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+                return LocalDate.parse(str, java.time.format.DateTimeFormatter.ofPattern("uuuuMMdd").withResolverStyle(java.time.format.ResolverStyle.STRICT));
             } catch (Exception ignored) {}
         }
         return null;
@@ -160,7 +204,7 @@ public class SiigoOfficialInvoiceReader implements OfficialInvoiceReader {
     private LocalDate parseCompactDate(long value) {
         if (value < 19000101 || value > 21001231) return null;
         try {
-            return LocalDate.parse(String.valueOf(value), java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            return LocalDate.parse(String.valueOf(value), java.time.format.DateTimeFormatter.ofPattern("uuuuMMdd").withResolverStyle(java.time.format.ResolverStyle.STRICT));
         } catch (Exception ignored) {
             return null;
         }
