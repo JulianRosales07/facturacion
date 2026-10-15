@@ -1,0 +1,191 @@
+@use '@angular/material' as mat;
+
+// Modern Enterprise Corporate Billing Theme (Material 3)
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+:root {
+  /* Corporate Billing Design Tokens */
+  --cb-primary: #0f4c81;
+  --cb-primary-light: #e8f1f8;
+  --cb-primary-dark: #0a3357;
+  --cb-accent: #0284c7;
+  --cb-accent-hover: #0369a1;
+
+  --cb-bg-app: #f8fafc;
+  --cb-bg-surface: #ffffff;
+  --cb-bg-card: #ffffff;
+  --cb-bg-muted: #f1f5f9;
+
+  --cb-border-subtle: #e2e8f0;
+  --cb-border-strong: #cbd5e1;
+
+  --cb-text-primary: #0f172a;
+  --cb-text-secondary: #475569;
+  --cb-text-muted: #64748b;
+  --cb-text-inverse: #ffffff;
+
+  /* Status Colors */
+  --cb-success: #059669;
+  --cb-success-bg: #ecfdf5;
+  --cb-success-border: #a7f3d0;
+
+  --cb-warning: #d97706;
+  --cb-warning-bg: #fffbeb;
+  --cb-warning-border: #fde68a;
+
+  --cb-danger: #dc2626;
+  --cb-danger-bg: #fef2f2;
+  --cb-danger-border: #fecaca;
+
+  --cb-info: #2563eb;
+  --cb-info-bg: #eff6ff;
+  --cb-info-border: #bfdbfe;
+
+  /* Layout Dimensions */
+  --cb-sidebar-width: 275px;
+  --cb-sidebar-collapsed-width: 72px;
+  --cb-topbar-height: 64px;
+
+  /* Radius & Shadows */
+  --cb-radius-sm: 6px;
+  --cb-radius-md: 10px;
+  --cb-radius-lg: 14px;
+  --cb-radius-pill: 9999px;
+
+  --cb-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --cb-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --cb-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--cb-bg-app);
+  color: var(--cb-text-primary);
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global utility classes */
+.cb-card {
+  background: var(--cb-bg-surface);
+  border-radius: var(--cb-radius-md);
+  border: 1px solid var(--cb-border-subtle);
+  box-shadow: var(--cb-shadow-sm);
+  padding: 1.5rem;
+}
+
+.cb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--cb-radius-pill);
+}
+
+.cb-badge--success {
+  background-color: var(--cb-success-bg);
+  color: var(--cb-success);
+  border: 1px solid var(--cb-success-border);
+}
+
+.cb-badge--warning {
+  background-color: var(--cb-warning-bg);
+  color: var(--cb-warning);
+  border: 1px solid var(--cb-warning-border);
+}
+
+.cb-badge--danger {
+  background-color: var(--cb-danger-bg);
+  color: var(--cb-danger);
+  border: 1px solid var(--cb-danger-border);
+}
+
+.cb-badge--info {
+  background-color: var(--cb-info-bg);
+  color: var(--cb-info);
+  border: 1px solid var(--cb-info-border);
+}
+
+/* Global Button & Pill Utilities */
+.btn {
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.42rem 0.85rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &--outline {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    &:hover { background: #f9fafb; border-color: #9ca3af; color: #111827; }
+  }
+
+  &--primary-red {
+    background: #c41230;
+    border: 1px solid #c41230;
+    color: #ffffff;
+    font-weight: 600;
+    &:hover { background: #b00f2a; border-color: #b00f2a; }
+  }
+
+  &--pill-white {
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #1e293b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.4rem 0.95rem;
+    &:hover { background: #f8fafc; }
+  }
+
+  .btn-icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+  }
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+
+  &--green { background-color: #f0fdf4; border: 1px solid #86efac; color: #16a34a; }
+  &--amber { background-color: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+  &--gray { background-color: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; }
+}
+

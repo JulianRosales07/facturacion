@@ -1,0 +1,105 @@
+<section class="audit">
+  <header class="audit__head">
+    <h4 class="audit__title">Auditoría de Retenciones</h4>
+    <span class="audit__hint">Horas de Colombia (UTC−5) registradas por el servidor. Valores tal como se diligenciaron: no dependen del catálogo actual.</span>
+    @if (audit()?.audit?.length) {
+      <button type="button" class="audit__export" (click)="exportExcel()" [disabled]="exporting()">
+        {{ exporting() ? 'Generando Excel…' : 'Exportar a Excel' }}
+      </button>
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="audit__muted">Cargando auditoría…</p>
+  } @else if (error()) {
+    <p class="audit__error" role="alert">{{ error() }}</p>
+  } @else if (audit(); as a) {
+    <p class="audit__meta">
+      Pago <code>{{ a.paymentId.slice(0, 8) }}</code> · {{ a.status }}
+      @if (a.clientNit) { · NIT {{ a.clientNit }} }
+      @if (a.invoiceNumbers.length) { · Facturas {{ a.invoiceNumbers.join(', ') }} }
+      @if (a.confirmedAt) { · Confirmado {{ a.confirmedAt | date: 'dd/MM/yyyy HH:mm:ss' : offset }} }
+    </p>
+
+    @if (a.audit.length === 0) {
+      <p class="audit__muted">Este pago no tiene retenciones seleccionadas.</p>
+    } @else {
+      <div class="audit__scroll">
+        <table class="audit__table">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th class="num">%</th>
+              <th class="num">Base</th>
+              <th class="num">Valor</th>
+              <th>Seleccionado</th>
+              <th>Aplicado</th>
+              <th>Canal</th>
+              <th>Usuario</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of a.audit; track row.id) {
+              <tr [class.is-selected]="selected()?.id === row.id">
+                <td>
+                  {{ row.conceptName }}
+                  @if (row.invoiceNumbers.length === 1 && row.invoiceId) { <span class="audit__muted"> · {{ row.invoiceNumbers[0] }}</span> }
+                  <span class="badge" [class]="'badge badge--' + row.selectionStatus.toLowerCase()">{{ statusLabels[row.selectionStatus] }}</span>
+                </td>
+                <td class="num">{{ row.appliedPercentage | number: '1.0-4' }}%</td>
+                <td class="num">{{ row.calculationBase | copCurrency }}</td>
+                <td class="num">{{ row.withheldAmount | copCurrency }}</td>
+                <td>{{ row.selectedAt | date: 'dd/MM/yyyy HH:mm' : offset }}</td>
+                <td>{{ row.appliedAt ? (row.appliedAt | date: 'dd/MM/yyyy HH:mm' : offset) : '—' }}</td>
+                <td>{{ channel(row.sourceChannel) }}</td>
+                <td>{{ row.selectedBy.label }}</td>
+                <td><button type="button" class="audit__link" (click)="toggle(row)">{{ selected()?.id === row.id ? 'Ocultar' : 'Ver auditoría' }}</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (selected(); as r) {
+        <dl class="audit__detail">
+          <div><dt>Concepto</dt><dd>{{ r.conceptName }}</dd></div>
+          <div><dt>Tipo</dt><dd>{{ r.conceptCode }}</dd></div>
+          <div><dt>Porcentaje ingresado</dt><dd>{{ r.enteredPercentage | number: '1.0-4' }}%</dd></div>
+          <div><dt>Porcentaje aplicado</dt><dd>{{ r.appliedPercentage | number: '1.0-4' }}%</dd></div>
+          <div><dt>Máximo permitido</dt><dd>{{ r.maxPercentage !== null ? (r.maxPercentage | number: '1.0-4') + '%' : '—' }}</dd></div>
+          <div><dt>Base</dt><dd>{{ r.calculationBase | copCurrency }}</dd></div>
+          <div><dt>Base mínima</dt><dd>{{ r.minimumBase | copCurrency }}</dd></div>
+          <div><dt>Valor retenido</dt><dd>{{ r.withheldAmount | copCurrency }}</dd></div>
+          <div><dt>Versión concepto</dt><dd>{{ r.conceptVersion }}{{ r.validFrom ? ' · vigente desde ' + r.validFrom : '' }}</dd></div>
+          <div><dt>Estado</dt><dd>{{ statusLabels[r.selectionStatus] }}{{ r.nonApplicableReason ? ' · ' + r.nonApplicableReason : '' }}</dd></div>
+          <div><dt>Seleccionado</dt><dd>{{ r.selectedAt | date: 'dd/MM/yyyy HH:mm:ss' : offset }}</dd></div>
+          <div><dt>Aplicado</dt><dd>{{ r.appliedAt ? (r.appliedAt | date: 'dd/MM/yyyy HH:mm:ss' : offset) : '—' }}</dd></div>
+          <div><dt>Canal</dt><dd>{{ channel(r.sourceChannel) }}</dd></div>
+          <div><dt>Actor</dt><dd>{{ r.selectedBy.label }}</dd></div>
+          <div><dt>Sesión</dt><dd><code>{{ r.selectedBy.sessionId || '—' }}</code></dd></div>
+          <div><dt>IP / agente</dt><dd>{{ r.ipAddress || '—' }}{{ r.userAgent ? ' · ' + r.userAgent : '' }}</dd></div>
+        </dl>
+      }
+    }
+
+    <h5 class="audit__subtitle">Historial de selección</h5>
+    @if (a.events.length === 0) {
+      <p class="audit__muted">Sin historial registrado (pagos anteriores a la auditoría solo conservan el snapshot).</p>
+    } @else {
+      <ol class="audit__timeline">
+        @for (e of a.events; track e.id) {
+          <li>
+            <time>{{ e.occurredAt | date: 'dd/MM/yyyy HH:mm:ss' : offset }}</time>
+            <span><strong>{{ eventLabels[e.eventType] }}</strong> {{ e.conceptName || e.conceptCode }}
+              @if (e.eventType === 'UPDATED') { {{ e.oldPercentage | number: '1.0-4' }}% → {{ e.newPercentage | number: '1.0-4' }}% }
+              @else if (e.newPercentage !== null) { {{ e.newPercentage | number: '1.0-4' }}% }
+              @else if (e.oldPercentage !== null) { ({{ e.oldPercentage | number: '1.0-4' }}%) }
+            </span>
+            <span class="audit__muted">{{ channel(e.sourceChannel) }} · {{ e.actor.label }}</span>
+          </li>
+        }
+      </ol>
+    }
+  }
+</section>

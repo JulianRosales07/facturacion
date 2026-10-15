@@ -1,0 +1,92 @@
+<section class="novelties" aria-label="Novedades del periodo">
+  <header class="novelties__head">
+    <div>
+      <h2>Novedades del periodo {{ periodo() }}</h2>
+      <p class="novelties__sub">
+        Cada novedad se cobra en un solo documento. Si la factura del periodo ya estaba emitida o pagada,
+        su impacto pasa como ajuste a la siguiente factura en preparación.
+      </p>
+    </div>
+    <div class="novelties__actions">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="load()" [disabled]="loading()">Actualizar</button>
+      <button type="button" class="btn btn-primary btn-sm" *hasPermission="'SYNC_EXECUTE'"
+              (click)="reprocess()" [disabled]="reprocessing() || loading()">
+        {{ reprocessing() ? 'Reprocesando…' : 'Reprocesar novedades' }}
+      </button>
+    </div>
+  </header>
+
+  @if (inReview() > 0) {
+    <div class="novelties__alert" role="alert">
+      <strong>{{ inReview() }} novedad(es) en revisión.</strong>
+      Su impacto no se pudo calcular (tarifa anterior desconocida o "no cobrar prorrateo") y no se cobrarán solas.
+    </div>
+  }
+  @if (pendingAdjustments() > 0) {
+    <div class="novelties__info" role="status">
+      {{ pendingAdjustments() }} ajuste(s) esperando la siguiente factura en preparación del cliente.
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="novelties__muted">Consultando novedades…</p>
+  } @else if (error()) {
+    <p class="novelties__error" role="alert">{{ error() }}</p>
+  } @else if (!novelties().length) {
+    <p class="novelties__muted">No hay novedades registradas para este cliente en el periodo.</p>
+  } @else {
+    <div class="table-scroll">
+      <table class="novelties__table">
+        <thead>
+          <tr>
+            <th>Sede</th>
+            <th>Novedad</th>
+            <th>Fecha efectiva</th>
+            <th class="number">Valor anterior → nuevo</th>
+            <th class="number">Impacto</th>
+            <th>Estado</th>
+            <th>Factura</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of novelties(); track n.id) {
+            <tr [class.row--review]="n.estado === 'EN_REVISION'">
+              <td>
+                <strong>{{ n.sedeNombre }}</strong>
+                @if (n.codigoOrden) { <small>Orden {{ n.codigoOrden }}</small> }
+              </td>
+              <td>
+                {{ typeLabel(n) }}
+                @if (n.periodoNovedad && n.periodoNovedad !== periodo()) {
+                  <small>Ajuste del periodo {{ n.periodoNovedad }}</small>
+                }
+              </td>
+              <td>{{ n.fechaEfectiva | appDate }} <small>{{ n.diasProrrateo }} días</small></td>
+              <td class="number">
+                {{ n.valorOriginal | copCurrency }} → {{ n.valorNuevo != null ? (n.valorNuevo | copCurrency) : '—' }}
+              </td>
+              <td class="number">
+                @if (signedImpact(n) !== null) {
+                  <span [class.negative]="signedImpact(n)! < 0">{{ signedImpact(n) | copCurrency }}</span>
+                } @else {
+                  <span class="novelties__muted">Por revisar</span>
+                }
+              </td>
+              <td>
+                <span class="status" [ngClass]="statusClass(n)">{{ statusLabel(n) }}</span>
+                @if (n.detalleProcesamiento) { <small>{{ n.detalleProcesamiento }}</small> }
+              </td>
+              <td>
+                @if (n.facturaId && n.numeroFactura) {
+                  <a [routerLink]="['/consultar-facturas', n.facturaId]">{{ n.numeroFactura }}</a>
+                } @else {
+                  <span class="novelties__muted">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,284 @@
+<div class="admin-page">
+  <header class="page-head">
+    <div>
+      <span class="page-head__eyebrow">Administración</span>
+      <h1 class="page-head__title">Usuarios</h1>
+      <p class="page-head__subtitle">
+        Usuarios del panel y sus roles. El inicio de sesión y la contraseña se gestionan en el microservicio de autenticación;
+        aquí el usuario se vincula por su nombre de usuario o correo.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--outline" (click)="load()">Actualizar</button>
+      <button type="button" class="btn btn--primary-red" *hasPermission="'USERS_CREATE'" (click)="openCreate()">Nuevo usuario</button>
+    </div>
+  </header>
+
+  <section class="panel filters" aria-label="Filtros">
+    <label class="field">
+      <span class="field__label">Usuario</span>
+      <input class="field__input" placeholder="Buscar por usuario" (input)="setFilter('username', $any($event.target).value)">
+    </label>
+    <label class="field">
+      <span class="field__label">Nombre</span>
+      <input class="field__input" placeholder="Buscar por nombre" (input)="setFilter('name', $any($event.target).value)">
+    </label>
+    <label class="field">
+      <span class="field__label">Email</span>
+      <input class="field__input" placeholder="Buscar por email" (input)="setFilter('email', $any($event.target).value)">
+    </label>
+    <label class="field">
+      <span class="field__label">Rol</span>
+      <select class="field__input" (change)="setFilter('role', $any($event.target).value)">
+        <option value="">Todos</option>
+        @for (role of roles(); track role.id) {
+          <option [value]="role.name">{{ roleLabel(role.name) }}</option>
+        }
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label">Estado</span>
+      <select class="field__input" (change)="setFilter('active', $any($event.target).value)">
+        <option value="">Todos</option>
+        <option value="true">Activos</option>
+        <option value="false">Inactivos</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Roles y accesos</th>
+            <th>Estado</th>
+            <th>Último acceso</th>
+            <th class="num">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <tr class="skeleton-row">
+                @for (cell of [1, 2, 3, 4, 5, 6, 7]; track cell) { <td><span class="skeleton"></span></td> }
+              </tr>
+            }
+          } @else {
+            @for (user of users(); track user.id) {
+              <tr [class.row-inactive]="!user.active">
+                <td class="strong">{{ user.username }}</td>
+                <td>{{ user.fullName }}</td>
+                <td class="muted">{{ user.email }}</td>
+                <td>
+                  <div class="user-access-summary">
+                    <span class="badge-pill badge-pill--blue">
+                      {{ getUserAccessiblePages(user).length }} / 11 páginas
+                    </span>
+                    <div class="chips">
+                      @for (role of user.roles; track role.id) { <span class="chip">{{ roleLabel(role.name) }}</span> }
+                      @empty { <span class="muted">Sin roles</span> }
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge-pill" [class.badge-pill--green]="user.active" [class.badge-pill--gray]="!user.active">
+                    {{ user.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="muted">{{ user.lastLoginAt ? (user.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}</td>
+                <td>
+                  <div class="actions">
+                    <button type="button" class="link-btn" (click)="openView(user)">Ver</button>
+                    @if (canUpdate()) {
+                      <button type="button" class="link-btn" style="color: var(--tx-2563eb); font-weight: 600;" (click)="openPageAccess(user)">Accesos</button>
+                      <button type="button" class="link-btn" (click)="openEdit(user)">Editar</button>
+                      <button type="button" class="link-btn" [class.link-btn--danger]="user.active" (click)="askStatus(user)">
+                        {{ user.active ? 'Desactivar' : 'Activar' }}
+                      </button>
+                    }
+                    @if (canDelete() && !isSelf(user)) {
+                      <button type="button" class="link-btn link-btn--danger" (click)="askDelete(user)">Eliminar</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty">No hay usuarios con los filtros actuales.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="pagination">
+      <span>{{ totalItems() }} usuario(s) · página {{ totalPages() ? page() + 1 : 0 }} de {{ totalPages() }}</span>
+      <div class="pagination__buttons">
+        <button type="button" class="btn btn--outline" [disabled]="page() === 0" (click)="goTo(page() - 1)">Anterior</button>
+        <button type="button" class="btn btn--outline" [disabled]="page() + 1 >= totalPages()" (click)="goTo(page() + 1)">Siguiente</button>
+      </div>
+    </footer>
+  </section>
+</div>
+
+<!-- Crear / editar -->
+<app-ui-modal [isOpen]="formOpen()" [title]="editing() ? 'Editar usuario' : 'Nuevo usuario'" size="lg" (closed)="formOpen.set(false)">
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (editingSelf()) {
+      <p class="notice notice--warning">
+        Estás editando tu propio usuario. Si quitas los roles que te permiten administrar accesos perderás esa capacidad;
+        el sistema no permitirá que quede sin ningún administrador.
+      </p>
+    }
+    <div class="form-grid">
+      <label class="field">
+        <span class="field__label">Usuario</span>
+        <input class="field__input" formControlName="username" autocomplete="off" [class.field__input--error]="invalid('username')">
+        @if (invalid('username')) { <small class="field__error">Entre 3 y 100 caracteres: letras, números, punto, guion o &#64;.</small> }
+        @if (editing()) { <small class="field__hint">El usuario no se modifica: es el vínculo con el inicio de sesión.</small> }
+      </label>
+      <label class="field">
+        <span class="field__label">Email</span>
+        <input class="field__input" type="email" formControlName="email" [class.field__input--error]="invalid('email')">
+        @if (invalid('email')) { <small class="field__error">Ingresa un correo válido.</small> }
+      </label>
+      <label class="field">
+        <span class="field__label">Nombre</span>
+        <input class="field__input" formControlName="firstName" [class.field__input--error]="invalid('firstName')">
+        @if (invalid('firstName')) { <small class="field__error">El nombre es obligatorio.</small> }
+      </label>
+      <label class="field">
+        <span class="field__label">Apellido</span>
+        <input class="field__input" formControlName="lastName" [class.field__input--error]="invalid('lastName')">
+        @if (invalid('lastName')) { <small class="field__error">El apellido es obligatorio.</small> }
+      </label>
+      <div class="span-2">
+        <p class="section-label">Roles</p>
+        <div class="check-list">
+          @for (role of roles(); track role.id) {
+            <label class="check">
+              <input type="checkbox" [checked]="selectedRoles().has(role.id)" (change)="toggleRole(role.id, $any($event.target).checked)">
+              <span>
+                {{ roleLabel(role.name) }} @if (!role.active) { <em class="field__hint">(inactivo)</em> }
+                <span class="check__hint">{{ role.description || role.permissionCount + ' permisos' }}</span>
+              </span>
+            </label>
+          } @empty {
+            <span class="field__hint">No tienes permiso para consultar roles.</span>
+          }
+        </div>
+      </div>
+      <label class="switch-row span-2">
+        <input type="checkbox" formControlName="active"> Usuario activo
+      </label>
+      @if (!editing()) {
+        <p class="notice span-2">
+          No se define contraseña aquí: la persona inicia sesión con su cuenta del microservicio de autenticación
+          usando este mismo usuario o correo.
+        </p>
+      }
+    </div>
+  </form>
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="formOpen.set(false)" [disabled]="saving()">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Guardando…' : (editing() ? 'Guardar cambios' : 'Crear usuario') }}
+    </button>
+  </div>
+</app-ui-modal>
+
+<!-- Detalle -->
+<app-ui-modal [isOpen]="!!viewing()" title="Detalle del usuario" size="md" (closed)="viewing.set(null)">
+  @if (viewing(); as user) {
+    <dl class="detail-list">
+      <dt>Usuario</dt><dd>{{ user.username }}</dd>
+      <dt>Nombre</dt><dd>{{ user.fullName }}</dd>
+      <dt>Email</dt><dd>{{ user.email }}</dd>
+      <dt>Estado</dt><dd>{{ user.active ? 'Activo' : 'Inactivo' }}</dd>
+      <dt>Último acceso</dt><dd>{{ user.lastLoginAt ? (user.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}</dd>
+      <dt>Creado</dt><dd>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }} {{ user.createdBy ? '· ' + user.createdBy : '' }}</dd>
+      <dt>Roles</dt>
+      <dd><div class="chips">@for (role of user.roles; track role.id) { <span class="chip">{{ roleLabel(role.name) }}</span> } @empty { Sin roles }</div></dd>
+    </dl>
+    <p class="section-label">Permisos efectivos</p>
+    <div class="chips">
+      @for (code of user.permissions ?? []; track code) { <span class="chip">{{ code }}</span> }
+      @empty { <span class="field__hint">{{ user.permissions ? 'Sin permisos' : 'Cargando…' }}</span> }
+    </div>
+  }
+</app-ui-modal>
+
+<!-- Modal de gestión directa de accesos a páginas -->
+<app-ui-modal [isOpen]="pageAccessModalOpen()" [title]="'Accesos a páginas del usuario'" size="lg" (closed)="pageAccessModalOpen.set(false)">
+  @if (selectedUserForAccess(); as user) {
+    <div class="access-modal-content">
+      <div class="access-user-header">
+        <div class="access-user-header__left">
+          <div class="access-user-avatar">
+            {{ user.firstName?.charAt(0) || user.username.charAt(0) | uppercase }}
+          </div>
+          <div class="access-user-meta">
+            <span class="access-user-name">{{ user.fullName }}</span>
+            <span class="access-user-tag">&#64;{{ user.username }} · {{ user.email }}</span>
+          </div>
+        </div>
+        <div class="access-counter-badge">
+          <span class="access-counter-number">{{ selectedUserPageKeys().size }} / 11</span>
+          <span class="access-counter-label">páginas permitidas</span>
+        </div>
+      </div>
+
+      <div class="access-quick-actions">
+        <span class="access-quick-title">Selección rápida:</span>
+        <button type="button" class="btn btn--outline btn--sm" (click)="selectAllPagesForUser()">Todas las páginas</button>
+        <button type="button" class="btn btn--outline btn--sm" (click)="selectOperationsPagesForUser()">Solo operaciones (sin admin)</button>
+        <button type="button" class="btn btn--outline btn--sm" (click)="clearAllPagesForUser()">Desmarcar todas</button>
+      </div>
+
+      <div class="access-modules-grid">
+        @for (module of pageModules; track module) {
+          <div class="access-module-card">
+            <div class="access-module-header">
+              <h4 class="access-module-title">{{ module }}</h4>
+            </div>
+            <div class="access-pages-list">
+              @for (page of getPageItemsForModule(module); track page.key) {
+                <label class="access-page-item" [class.access-page-item--checked]="selectedUserPageKeys().has(page.key)">
+                  <input type="checkbox"
+                         [checked]="selectedUserPageKeys().has(page.key)"
+                         (change)="toggleUserPageKey(page.key, $any($event.target).checked)">
+                  <div class="access-page-info">
+                    <div class="access-page-title-row">
+                      <span class="access-page-name">{{ page.name }}</span>
+                      <span class="access-page-route">{{ page.route }}</span>
+                    </div>
+                    <p class="access-page-desc">{{ page.description }}</p>
+                  </div>
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="pageAccessModalOpen.set(false)" [disabled]="savingAccess()">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="saveUserPageAccess()" [disabled]="savingAccess()">
+      {{ savingAccess() ? 'Guardando accesos…' : 'Guardar accesos del usuario' }}
+    </button>
+  </div>
+</app-ui-modal>
+
+<app-confirm-dialog
+  [open]="!!confirmation()"
+  [title]="confirmation()?.kind === 'delete' ? 'Eliminar usuario' : 'Desactivar usuario'"
+  [message]="confirmationMessage()"
+  [detail]="confirmation() && isSelf(confirmation()!.user) ? 'Es tu propio usuario: perderás el acceso al panel.' : null"
+  [confirmLabel]="confirmation()?.kind === 'delete' ? 'Eliminar' : 'Desactivar'"
+  [busy]="confirming()"
+  (confirmed)="confirm()"
+  (cancelled)="confirmation.set(null)">
+</app-confirm-dialog>

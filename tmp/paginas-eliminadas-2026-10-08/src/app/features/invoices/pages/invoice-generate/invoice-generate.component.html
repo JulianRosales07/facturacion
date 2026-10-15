@@ -1,0 +1,1225 @@
+<div class="generate-page">
+  <!-- ============================================================== -->
+  <!-- VISTA 1: DETALLE COMPLETO DEL CLIENTE CORPORATIVO EN TODA LA PÁGINA -->
+  <!-- ============================================================== -->
+  @if (detailClient()) {
+    <div class="client-fullview-container">
+      <!-- Barra Superior de Navegación y Acciones -->
+      <div class="fullview-topbar">
+        <div class="topbar-left">
+          <button type="button" class="btn btn-outline btn-back" (click)="closeClientDetails()">
+            <mat-icon>arrow_back</mat-icon> Volver al Listado de Clientes
+          </button>
+          <div class="fullview-breadcrumbs">
+            <span class="crumb-root">Generar Facturación</span>
+            <mat-icon class="crumb-sep">chevron_right</mat-icon>
+            <span class="crumb-current">Detalle y Novedades del Corporativo</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <button type="button" class="btn btn-primary" (click)="selectFromDetails()">
+            <mat-icon>bolt</mat-icon> Seleccionar para Facturar
+          </button>
+        </div>
+      </div>
+
+      <!-- Cabecera Principal del Corporativo -->
+      <app-ui-card [elevated]="true" class="fullview-header-card">
+        <div class="header-content">
+          <div class="company-badge-icon">
+            <mat-icon>business</mat-icon>
+          </div>
+          <div class="company-info-block">
+            <div class="title-status-row">
+              <h1 class="company-title">{{ detailClient()?.razonSocial }}</h1>
+              <span class="badge-type font-mono">Tipo {{ detailClient()?.tipoFacturacion || 'F1' }}</span>
+              @if (selectedClient()?.nit === detailClient()?.nit) {
+                <span class="badge-selected">
+                  <mat-icon>check_circle</mat-icon> Seleccionado para Emisión
+                </span>
+              }
+            </div>
+            <div class="meta-pills-row">
+              <span class="meta-pill font-mono">NIT: {{ detailClient()?.nit }}</span>
+              <span class="meta-pill"><mat-icon>location_on</mat-icon> {{ detailClient()?.municipio }}</span>
+              <span class="meta-pill"><mat-icon>email</mat-icon> {{ detailClient()?.emailFacturacion }}</span>
+              <span class="meta-pill"><mat-icon>phone</mat-icon> {{ detailClient()?.telefono }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicadores Clave / KPIs en Toda la Página -->
+        <div class="kpis-grid mt-4">
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--blue">
+              <mat-icon>hub</mat-icon>
+            </div>
+            <div class="kpi-text">
+              <span class="kpi-label">Sedes Conectadas</span>
+              <span class="kpi-value font-mono">{{ detailClient()?.branchesCount || 1 }}</span>
+              <span class="kpi-sub">Sedes activas registradas</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--green">
+              <mat-icon>payments</mat-icon>
+            </div>
+            <div class="kpi-text">
+              <span class="kpi-label">Canon Mensual Base</span>
+              <span class="kpi-value font-mono font-bold text-accent">
+                {{ (detailClient()?.totalMonthlyValue || 0) | copCurrency }}
+              </span>
+              <span class="kpi-sub">Subtotal antes de novedades</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon kpi-icon--amber">
+              <mat-icon>sync_alt</mat-icon>
+            </div>
+            <div class="kpi-text">
+              <span class="kpi-label">Novedades en Ciclo</span>
+              <span class="kpi-value font-mono">
+                {{ noveltiesSummary()?.totalNovedades || 0 }} registradas
+              </span>
+              <span class="kpi-sub">Periodo {{ periodCode }}</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-card--highlight">
+            <div class="kpi-icon kpi-icon--purple">
+              <mat-icon>receipt_long</mat-icon>
+            </div>
+            <div class="kpi-text">
+              <span class="kpi-label">Total Estimado a Facturar</span>
+              <span class="kpi-value font-mono font-bold text-success">
+                {{ (noveltiesSummary()?.totalEstimadoFactura || detailClient()?.totalMonthlyValue || 0) | copCurrency }}
+              </span>
+              <span class="kpi-sub">Base + Prorrateos + Cuotas</span>
+            </div>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- ============================================================== -->
+      <!-- SECCIÓN CRÍTICA: CONSUMO Y VISUALIZACIÓN DE NOVEDADES DEL CLIENTE -->
+      <!-- ============================================================== -->
+      <app-ui-card title="Novedades y Cambios del Periodo (Consumo de Órdenes)" [elevated]="true" class="fullview-section-card novelties-card">
+        <div class="novelties-header-row">
+          <div class="novelties-intro">
+            <p class="section-subtitle">
+              Cambios contractuales sincronizados para el periodo contable <strong>{{ periodCode }}</strong>.
+              Permite validar altas, bajas, traslados, ajustes de plan, prorrateos por días y cuotas de instalación antes de facturar.
+            </p>
+          </div>
+          <div class="novelties-actions">
+            <button
+              type="button"
+              class="btn btn-outline btn-sync-novelties"
+              (click)="consumeNovelties()"
+              [disabled]="isConsumingNovelties() || isLoadingNovelties()"
+              title="Consumir y recalcular las novedades de órdenes de este cliente"
+            >
+              <mat-icon [class.spin-icon]="isConsumingNovelties() || isLoadingNovelties()">sync</mat-icon>
+              @if (isConsumingNovelties()) {
+                Consumiendo Novedades...
+              } @else {
+                Consumir Novedades de Órdenes
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de Impacto Financiero en la Factura -->
+        @if (noveltiesSummary()) {
+          <div class="novelty-financial-breakdown mt-3">
+            <div class="breakdown-item">
+              <span class="breakdown-label">Canon Base (Sedes):</span>
+              <span class="breakdown-val font-mono">{{ noveltiesSummary()?.baseMensual | copCurrency }}</span>
+            </div>
+            <span class="breakdown-operator">+</span>
+            <div class="breakdown-item">
+              <span class="breakdown-label">Ajuste por Novedades / Prorrateos:</span>
+              <span class="breakdown-val font-mono text-accent">+ {{ noveltiesSummary()?.ajusteNovedades | copCurrency }}</span>
+            </div>
+            @if (noveltiesSummary()?.cuotasInstalacion) {
+              <span class="breakdown-operator">+</span>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Cuotas de Instalación:</span>
+                <span class="breakdown-val font-mono text-purple">+ {{ noveltiesSummary()?.cuotasInstalacion | copCurrency }}</span>
+              </div>
+            }
+            <span class="breakdown-operator">=</span>
+            <div class="breakdown-item breakdown-item--total">
+              <span class="breakdown-label">Total a Facturar Estimado:</span>
+              <span class="breakdown-val font-mono font-bold">{{ noveltiesSummary()?.totalEstimadoFactura | copCurrency }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Tabla Detallada de Novedades del Cliente -->
+        @if (isLoadingNovelties()) {
+          <div class="py-4 text-center">
+            <app-ui-spinner message="Cargando novedades del periodo..."></app-ui-spinner>
+          </div>
+        } @else if (noveltiesSummary()?.novedades && noveltiesSummary()!.novedades!.length > 0) {
+          <div class="table-responsive mt-3">
+            <table class="data-table novelties-table">
+              <thead>
+                <tr>
+                  <th>Tipo de Novedad</th>
+                  <th>Sede Afectada</th>
+                  <th>Fecha Efectiva</th>
+                  <th>Prorrateo / Detalle Comercial</th>
+                  <th class="text-right">Ajuste a Facturar</th>
+                  <th class="text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (nov of noveltiesSummary()?.novedades; track nov.id) {
+                  <tr>
+                    <td>
+                      <span class="badge-novelty" [attr.data-type]="nov.tipoNovedad">
+                        @switch (nov.tipoNovedad) {
+                          @case ('ALTA') { <mat-icon>add_circle</mat-icon> Alta de Sede }
+                          @case ('BAJA') { <mat-icon>remove_circle</mat-icon> Baja / Retiro }
+                          @case ('CAMBIO_PLAN') { <mat-icon>upgrade</mat-icon> Cambio de Plan }
+                          @case ('CAMBIO_SERVICIO') { <mat-icon>tune</mat-icon> Cambio de Servicio }
+                          @case ('CUOTA_INSTALACION') { <mat-icon>build</mat-icon> Cuota Instalación }
+                          @case ('SUSPENSION') { <mat-icon>pause_circle</mat-icon> Suspensión }
+                          @case ('REACTIVACION') { <mat-icon>play_circle</mat-icon> Reactivación }
+                          @case ('TRASLADO_DIRECCION') { <mat-icon>near_me</mat-icon> Traslado }
+                          @default { <mat-icon>info</mat-icon> {{ nov.tipoNovedad }} }
+                        }
+                      </span>
+                    </td>
+                    <td>
+                      <div class="nov-site-cell">
+                        <span class="site-order font-mono font-bold">{{ nov.codigoOrden }}</span>
+                        <span class="site-name">{{ nov.sedeNombre }}</span>
+                      </div>
+                    </td>
+                    <td class="font-mono text-xs">{{ nov.fechaEfectiva }}</td>
+                    <td>
+                      <div class="nov-obs-cell">
+                        <span class="nov-obs-text">{{ nov.observacion }}</span>
+                        @if (nov.diasProrrateo) {
+                          <span class="proration-pill">
+                            <mat-icon>schedule</mat-icon> {{ nov.diasProrrateo }} días prorrateados
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td class="text-right font-mono font-bold" [class.text-accent]="nov.tipoImpacto !== 'RESTA'" [class.text-danger]="nov.tipoImpacto === 'RESTA'">
+                      @if (nov.tipoImpacto === 'RESTA') {
+                        - {{ nov.valorAjuste | copCurrency }}
+                      } @else {
+                        + {{ nov.valorAjuste | copCurrency }}
+                      }
+                    </td>
+                    <td class="text-center">
+                      @if (nov.estado === 'CONSUMIDA') {
+                        <span class="badge-pill badge-pill--green">
+                          <mat-icon class="icon-xs">check_circle</mat-icon> Consumida
+                        </span>
+                      } @else {
+                        <span class="badge-pill badge-pill--amber">
+                          <mat-icon class="icon-xs">schedule</mat-icon> Por Facturar
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty-novelties-box mt-3">
+            <mat-icon>task_alt</mat-icon>
+            <div class="empty-text">
+              <strong>No se registran novedades pendientes en el periodo {{ periodCode }}</strong>
+              <p>El cliente se facturará con el canon regular de sus sedes activas.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" (click)="consumeNovelties()">
+              <mat-icon>sync</mat-icon> Forzar Consulta de Novedades
+            </button>
+          </div>
+        }
+      </app-ui-card>
+
+      <!-- Tabla Completa de Sedes Activas y Canones Mensuales -->
+      <app-ui-card title="Sedes Activas y Servicios Suscritos" [elevated]="true" class="fullview-section-card">
+        @if (detailClient()?.sedes && detailClient()!.sedes!.length > 0) {
+          <div class="table-responsive">
+            <table class="data-table fullview-sedes-table">
+              <thead>
+                <tr>
+                  <th>Código de Orden</th>
+                  <th>Nombre de Sede</th>
+                  <th>Dirección Física</th>
+                  <th>Velocidad / Enlace</th>
+                  <th>Novedades en Ciclo</th>
+                  <th class="text-right">Canon Mensual</th>
+                  <th class="text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of detailClient()?.sedes; track s.codigoOrden) {
+                  <tr>
+                    <td class="font-mono font-bold text-accent">{{ s.codigoOrden }}</td>
+                    <td class="font-semibold">{{ s.nombreSede }}</td>
+                    <td class="text-muted text-sm">{{ s.direccion }}</td>
+                    <td class="font-mono text-xs">{{ s.anchoBanda }}</td>
+                    <td class="site-novelties-cell">
+                      @if (getSiteNovelties(s.codigoOrden).length > 0) {
+                        <div class="site-novelties-stack">
+                          @for (nov of getSiteNovelties(s.codigoOrden); track nov.id) {
+                            <div class="site-novelty-item" [attr.data-type]="nov.tipoNovedad" [title]="nov.observacion">
+                              <span class="site-nov-tag">
+                                @switch (nov.tipoNovedad) {
+                                  @case ('ALTA') { <mat-icon>add_circle</mat-icon> Alta }
+                                  @case ('BAJA') { <mat-icon>remove_circle</mat-icon> Baja }
+                                  @case ('CAMBIO_PLAN') { <mat-icon>upgrade</mat-icon> Cambio Plan }
+                                  @case ('CAMBIO_SERVICIO') { <mat-icon>tune</mat-icon> Cambio Serv. }
+                                  @case ('CUOTA_INSTALACION') { <mat-icon>build</mat-icon> Cuota Inst. }
+                                  @case ('SUSPENSION') { <mat-icon>pause_circle</mat-icon> Suspensión }
+                                  @case ('REACTIVACION') { <mat-icon>play_circle</mat-icon> Reactivación }
+                                  @case ('TRASLADO_DIRECCION') { <mat-icon>near_me</mat-icon> Traslado }
+                                  @default { <mat-icon>info</mat-icon> {{ nov.tipoNovedad }} }
+                                }
+                              </span>
+                              <div class="site-nov-impact font-mono">
+                                <span class="nov-val">
+                                  {{ (nov.tipoImpacto === 'RESTA' ? '- ' : '+ ') + (nov.valorAjuste | copCurrency) }}
+                                </span>
+                                @if (nov.diasProrrateo) {
+                                  <span class="nov-proration">{{ nov.diasProrrateo }}d prorrateo</span>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <span class="site-nov-none">
+                          <mat-icon>check_circle</mat-icon> Sin novedades
+                        </span>
+                      }
+                    </td>
+                    <td class="text-right font-mono font-bold">{{ s.valorMensual | copCurrency }}</td>
+                    <td class="text-center">
+                      <span class="badge-pill badge-pill--green">{{ s.estado }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr class="table-total-row">
+                  <td colspan="4" class="text-right font-bold">Total Mensual Canones Sedes:</td>
+                  <td class="text-center">
+                    @if (((noveltiesSummary()?.ajusteNovedades || 0) + (noveltiesSummary()?.cuotasInstalacion || 0)) > 0) {
+                      <span class="badge-pill badge-pill--amber text-xs font-mono font-semibold" title="Total Ajustes por Novedades del Ciclo">
+                        Ajustes: +{{ ((noveltiesSummary()?.ajusteNovedades || 0) + (noveltiesSummary()?.cuotasInstalacion || 0)) | copCurrency }}
+                      </span>
+                    }
+                  </td>
+                  <td class="text-right font-mono font-bold text-accent text-base">
+                    {{ (detailClient()?.totalMonthlyValue || 0) | copCurrency }}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        } @else {
+          <p class="text-muted text-sm">No hay sedes asociadas registradas para este corporativo.</p>
+        }
+      </app-ui-card>
+
+      <!-- Historial de Facturas Emitidas con Filtros de Mes / Periodo y Fechas -->
+      <app-ui-card title="Historial de Facturas Emitidas" [elevated]="true" class="fullview-section-card">
+        <div class="history-header-bar">
+          <div class="history-intro">
+            <span class="section-subtitle">
+              Registro histórico y auditoría de facturas consolidadas generadas para {{ detailClient()?.razonSocial }}. Cada emisión realizada se almacena automáticamente.
+            </span>
+          </div>
+          <div class="history-counter-pill">
+            <mat-icon>receipt_long</mat-icon>
+            <span>Mostrando <strong>{{ filteredHistoryInvoices().length }}</strong> de <strong>{{ clientInvoices().length }}</strong> facturas</span>
+          </div>
+        </div>
+
+        <!-- Filtros de Fecha y Mes -->
+        <div class="history-filters-grid">
+          <div class="form-group">
+            <label class="form-label text-xs">
+              <mat-icon class="icon-inline">calendar_month</mat-icon> Filtrar por Mes / Periodo
+            </label>
+            <select class="form-control form-control-sm" [(ngModel)]="historyMonthFilter" name="historyMonthFilter">
+              <option value="">Todos los Meses Registrados</option>
+              @for (m of availableHistoryMonths(); track m) {
+                <option [value]="m">{{ m }} (Periodo)</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label text-xs">
+              <mat-icon class="icon-inline">date_range</mat-icon> Fecha Desde
+            </label>
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              [(ngModel)]="historyStartDateFilter"
+              name="historyStartDateFilter"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label text-xs">
+              <mat-icon class="icon-inline">event</mat-icon> Fecha Hasta
+            </label>
+            <input
+              type="date"
+              class="form-control form-control-sm"
+              [(ngModel)]="historyEndDateFilter"
+              name="historyEndDateFilter"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label text-xs">
+              <mat-icon class="icon-inline">filter_alt</mat-icon> Estado
+            </label>
+            <select class="form-control form-control-sm" [(ngModel)]="historyStatusFilter" name="historyStatusFilter">
+              <option value="">Todos los Estados</option>
+              <option value="CONSOLIDADA">Consolidada / Emitida</option>
+              <option value="PAGADA">Pagada</option>
+              <option value="ANULADA">Anulada</option>
+            </select>
+          </div>
+
+          <div class="form-group filter-actions-group">
+            <label class="form-label text-xs">&nbsp;</label>
+            <button
+              type="button"
+              class="btn btn-outline btn-sm btn-clear-filters"
+              (click)="resetHistoryFilters()"
+              [disabled]="!historyMonthFilter && !historyStartDateFilter && !historyEndDateFilter && !historyStatusFilter"
+              title="Restablecer todos los filtros"
+            >
+              <mat-icon>filter_alt_off</mat-icon> Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla del Historial de Facturas -->
+        @if (isLoadingHistory()) {
+          <div class="py-4 text-center">
+            <app-ui-spinner message="Cargando historial de facturas emitidas..."></app-ui-spinner>
+          </div>
+        } @else if (filteredHistoryInvoices().length > 0) {
+          <div class="table-responsive mt-3">
+            <table class="data-table history-invoices-table">
+              <thead>
+                <tr>
+                  <th>Nº Factura</th>
+                  <th>Periodo</th>
+                  <th>Fecha Emisión</th>
+                  <th>Fecha Vencimiento</th>
+                  <th class="text-center">Sedes</th>
+                  <th class="text-right">Total Factura</th>
+                  <th class="text-center">Estado</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inv of filteredHistoryInvoices(); track inv.id) {
+                  <tr [class.row-highlight-new]="inv.periodoCodigo === periodCode">
+                    <td>
+                      <div class="inv-num-cell">
+                        <span class="font-mono font-bold text-accent">{{ inv.numeroFactura }}</span>
+                        <div class="inv-badges-sub">
+                          <span class="badge-type font-mono">{{ inv.tipoFacturacion }}</span>
+                          @if (inv.periodoCodigo === periodCode) {
+                            <span class="badge-new-pill">Ciclo Actual</span>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge-period font-mono">{{ inv.periodoCodigo }}</span>
+                    </td>
+                    <td class="font-mono text-xs">{{ inv.fechaEmision }}</td>
+                    <td class="font-mono text-xs">{{ inv.fechaVencimiento }}</td>
+                    <td class="text-center">
+                      <span class="site-count-badge font-mono">{{ inv.sedesCount }} sedes</span>
+                    </td>
+                    <td class="text-right font-mono font-bold text-base">
+                      {{ inv.valorTotal | copCurrency }}
+                    </td>
+                    <td class="text-center">
+                      <span class="badge-pill" [ngClass]="{
+                        'badge-pill--green': inv.estado === 'CONSOLIDADA',
+                        'badge-pill--blue': inv.estado === 'PAGADA',
+                        'badge-pill--red': inv.estado === 'ANULADA',
+                        'badge-pill--amber': inv.estado === 'BORRADOR'
+                      }">
+                        {{ inv.estado }}
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <div class="history-actions-row">
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-sm action-btn"
+                          (click)="onViewInvoice(inv.id)"
+                          title="Ver detalle completo de factura"
+                        >
+                          <mat-icon>visibility</mat-icon> Ver
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-sm action-btn"
+                          (click)="onDownloadInvoicePdf(inv)"
+                          title="Ver representación gráfica / PDF"
+                        >
+                          <mat-icon>picture_as_pdf</mat-icon> PDF
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty-history-box mt-3">
+            <mat-icon>search_off</mat-icon>
+            <div class="empty-text">
+              <strong>No se encontraron facturas con los filtros seleccionados</strong>
+              <p>Prueba cambiando el mes seleccionado o borrando los filtros de fecha para ver todas las facturas registradas.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" (click)="resetHistoryFilters()">
+              <mat-icon>refresh</mat-icon> Mostrar Todas las Facturas
+            </button>
+          </div>
+        }
+      </app-ui-card>
+
+      <!-- Ficha de Datos Fiscales y de Contacto -->
+      <app-ui-card title="Datos Fiscales y Domicilio de Facturación" [elevated]="true" class="fullview-section-card">
+        <div class="fiscal-grid">
+          <div class="fiscal-item">
+            <span class="fiscal-label">Razón Social Registrada</span>
+            <span class="fiscal-value font-semibold">{{ detailClient()?.razonSocial }}</span>
+          </div>
+          <div class="fiscal-item">
+            <span class="fiscal-label">Número de Identificación Tributaria (NIT)</span>
+            <span class="fiscal-value font-mono font-bold">{{ detailClient()?.nit }}</span>
+          </div>
+          <div class="fiscal-item">
+            <span class="fiscal-label">Dirección Fiscal Principal</span>
+            <span class="fiscal-value">{{ detailClient()?.direccionFiscal || 'No registrada' }}</span>
+          </div>
+          <div class="fiscal-item">
+            <span class="fiscal-label">Municipio / Departamento</span>
+            <span class="fiscal-value">{{ detailClient()?.municipio || 'No registrado' }}</span>
+          </div>
+          <div class="fiscal-item">
+            <span class="fiscal-label">Correo Electrónico de Facturación</span>
+            <span class="fiscal-value font-mono">{{ detailClient()?.emailFacturacion || 'No registrado' }}</span>
+          </div>
+          <div class="fiscal-item">
+            <span class="fiscal-label">Teléfono de Contacto</span>
+            <span class="fiscal-value font-mono">{{ detailClient()?.telefono || 'No registrado' }}</span>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Panel de Emisión Directa para este Corporativo con Novedades -->
+      <app-ui-card title="Emitir Factura para este Corporativo" [elevated]="true" class="fullview-section-card">
+        <form (ngSubmit)="openInvoicePreview()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">Periodo Contable</label>
+              <input
+                type="month"
+                class="form-control"
+                [(ngModel)]="periodCode"
+                name="periodCode"
+                (change)="onPeriodChangeInDetail()"
+                required
+              />
+              <span class="form-hint">Al cambiar el periodo se recargan sus novedades.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Tipo de Facturación</label>
+              <select class="form-control" [(ngModel)]="billingType" name="billingType">
+                <option value="F1">F1 · Sistemas Palacios (Prefijo FESP)</option>
+                <option value="F20">F20 · Meganet (Prefijo FEMG)</option>
+              </select>
+              <span class="form-hint">Resolución contable aplicable.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Tipo de Corte</label>
+              <select class="form-control" [(ngModel)]="cutType" name="cutType">
+                <option value="ADVANCE">Mes Adelantado (Normal)</option>
+                <option value="ARREARS">Mes Vencido</option>
+              </select>
+              <span class="form-hint">Modalidad de cobro del ciclo.</span>
+            </div>
+          </div>
+
+          <div class="fullview-actions-bar mt-3">
+            <button type="button" class="btn btn-outline" (click)="closeClientDetails()">
+              <mat-icon>arrow_back</mat-icon> Regresar al Listado General
+            </button>
+            <button type="submit" class="btn btn-primary btn-preview-submit" [disabled]="!periodCode">
+              <mat-icon>visibility</mat-icon> Previsualizar Factura Consolidada ({{ (noveltiesSummary()?.totalEstimadoFactura || detailClient()?.totalMonthlyValue || 0) | copCurrency }})
+            </button>
+          </div>
+        </form>
+      </app-ui-card>
+
+      <!-- Documento de Previsualización de Factura (Borrador antes de Emitir) -->
+      @if (isPreviewOpen()) {
+        <app-ui-card [elevated]="true" class="fullview-section-card invoice-preview-document-card" id="invoicePreviewSection">
+          <!-- Banner Superior de Advertencia de Borrador -->
+          <div class="preview-draft-banner">
+            <div class="draft-badge-col">
+              <span class="draft-watermark-pill">
+                <mat-icon>visibility</mat-icon> PREVISUALIZACIÓN DE FACTURA ELECTRÓNICA
+              </span>
+              <span class="draft-status-pill">BORRADOR PREVIO · SIN TRANSMITIR A LA DIAN</span>
+            </div>
+            <div class="draft-actions-top">
+              <button type="button" class="btn btn-outline btn-sm" (click)="closeInvoicePreview()">
+                <mat-icon>close</mat-icon> Cerrar Previsualización
+              </button>
+              <button
+                type="button"
+                class="btn btn-success btn-sm btn-confirm-emit"
+                (click)="confirmAndEmitInvoice()"
+                [disabled]="isProcessing()"
+              >
+                @if (isProcessing()) {
+                  <mat-icon class="spin-icon">autorenew</mat-icon> Generando Factura...
+                } @else {
+                  <mat-icon>verified</mat-icon> Confirmar y Generar Factura
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Cabecera Fiscal y Comercial del Documento -->
+          <div class="preview-doc-body">
+            <div class="doc-header-grid">
+              <!-- Datos del Emisor -->
+              <div class="doc-issuer-box">
+                <span class="doc-corp-title font-bold">
+                  {{ billingType === 'F20' ? 'MEGANET COMUNICACIONES S.A.S.' : 'SISTEMAS PALACIOS Y REDES S.A.S.' }}
+                </span>
+                <span class="doc-issuer-meta">
+                  NIT: <strong>{{ billingType === 'F20' ? '901.442.120-4' : '800.200.300-1' }}</strong> · Régimen Común / Responsable de IVA
+                </span>
+                <span class="doc-issuer-meta">
+                  Autorización de Numeración DIAN No. 187640001923 habilitada para Prefijo <strong>{{ previewPrefix() }}</strong>
+                </span>
+                <span class="doc-issuer-meta">
+                  Rango Autorizado: {{ previewPrefix() }}-0001 a {{ previewPrefix() }}-9999 · Vigencia: 24 Meses
+                </span>
+              </div>
+
+              <!-- Ficha de la Factura Borrador -->
+              <div class="doc-invoice-meta-box">
+                <div class="meta-box-header">
+                  <span class="doc-type-label">FACTURA ELECTRÓNICA DE VENTA</span>
+                  <span class="doc-number-preview font-mono font-bold">{{ previewInvoiceNumber() }}</span>
+                </div>
+                <div class="meta-box-grid">
+                  <div class="meta-row">
+                    <span class="meta-lbl">Periodo Contable:</span>
+                    <span class="meta-val font-mono font-bold">{{ periodCode }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-lbl">Fecha Emisión:</span>
+                    <span class="meta-val font-mono">{{ previewIssueDate() }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-lbl">Fecha Vencimiento:</span>
+                    <span class="meta-val font-mono">{{ previewDueDate() }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-lbl">Modalidad:</span>
+                    <span class="meta-val">{{ cutType === 'ADVANCE' ? 'Mes Adelantado (Normal)' : 'Mes Vencido' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Datos del Cliente / Adquirente -->
+            <div class="doc-client-card mt-3">
+              <div class="client-card-title">
+                <mat-icon>business</mat-icon> DATOS DEL CLIENTE ADQUIRENTE
+              </div>
+              <div class="client-fields-grid">
+                <div>
+                  <span class="c-lbl">Razón Social:</span>
+                  <strong class="c-val">{{ detailClient()?.razonSocial }}</strong>
+                </div>
+                <div>
+                  <span class="c-lbl">NIT / Identificación:</span>
+                  <strong class="c-val font-mono">{{ detailClient()?.nit }}</strong>
+                </div>
+                <div>
+                  <span class="c-lbl">Dirección Fiscal:</span>
+                  <span class="c-val">{{ detailClient()?.direccionFiscal || 'No registrada' }}</span>
+                </div>
+                <div>
+                  <span class="c-lbl">Ciudad / Depto:</span>
+                  <span class="c-val">{{ detailClient()?.municipio || 'Bogotá D.C.' }}</span>
+                </div>
+                <div>
+                  <span class="c-lbl">Email Facturación:</span>
+                  <span class="c-val font-mono">{{ detailClient()?.emailFacturacion || 'facturacion@cliente.com' }}</span>
+                </div>
+                <div>
+                  <span class="c-lbl">Forma de Pago:</span>
+                  <span class="c-val font-semibold">Crédito Corporativo 30 días</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Ítems a Facturar (Cánones por Sede + Novedades del Ciclo) -->
+            <div class="table-responsive mt-3">
+              <table class="data-table preview-items-table">
+                <thead>
+                  <tr>
+                    <th class="text-center">#</th>
+                    <th>Código / Orden</th>
+                    <th>Concepto Comercial / Descripción Detallada</th>
+                    <th class="text-center">Cant.</th>
+                    <th class="text-center">Und.</th>
+                    <th class="text-right">Valor Unitario</th>
+                    <th class="text-right">Total Ítem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (it of previewItems(); track it.item) {
+                    <tr [class.row-novelty-item]="it.tipo === 'NOVEDAD'">
+                      <td class="text-center font-mono text-muted text-xs">{{ it.item }}</td>
+                      <td class="font-mono font-bold" [class.text-accent]="it.tipo === 'CANON_SEDE'">
+                        {{ it.codigo }}
+                      </td>
+                      <td>
+                        <div class="item-desc-cell">
+                          <span class="item-title">{{ it.descripcion }}</span>
+                          @if (it.diasProrrateo) {
+                            <span class="item-proration-pill">
+                              <mat-icon>schedule</mat-icon> {{ it.diasProrrateo }} días prorrateados en ciclo
+                            </span>
+                          }
+                        </div>
+                      </td>
+                      <td class="text-center font-mono">{{ it.cant }}</td>
+                      <td class="text-center font-mono text-xs">{{ it.und }}</td>
+                      <td class="text-right font-mono">{{ it.valorUnitario | copCurrency }}</td>
+                      <td class="text-right font-mono font-bold" [class.text-accent]="it.tipo === 'CANON_SEDE'">
+                        {{ it.valorTotal | copCurrency }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Resumen de Liquidación y Totales Contables -->
+            <div class="doc-totals-layout mt-3">
+              <div class="doc-notes-col">
+                <div class="legal-box">
+                  <strong>Notas Contables y Tributarias:</strong>
+                  <p>
+                    Esta factura consolidada comprende la totalidad de enlaces de sedes operativas activas y los ajustes comerciales por novedades contractuales (altas, upgrades de ancho de banda y cuotas de instalación pactadas) sincronizadas en el periodo contable {{ periodCode }}.
+                  </p>
+                  <p class="text-xs text-muted mb-0">
+                    Documento sujeto a generación de CUFE y firma digital tras confirmación de emisión.
+                  </p>
+                </div>
+              </div>
+
+              <div class="doc-totals-col">
+                <div class="totals-table-box">
+                  <div class="total-row">
+                    <span class="t-lbl">Subtotal Base Cánones Sedes:</span>
+                    <span class="t-val font-mono">{{ previewSubtotalBase() | copCurrency }}</span>
+                  </div>
+                  @if (previewAjustesNovedades() > 0) {
+                    <div class="total-row total-row--adjustment">
+                      <span class="t-lbl">Ajustes Novedades / Prorrateos:</span>
+                      <span class="t-val font-mono text-accent">+ {{ previewAjustesNovedades() | copCurrency }}</span>
+                    </div>
+                  }
+                  @if (previewCuotasInstalacion() > 0) {
+                    <div class="total-row total-row--adjustment">
+                      <span class="t-lbl">Cuotas de Instalación:</span>
+                      <span class="t-val font-mono text-purple">+ {{ previewCuotasInstalacion() | copCurrency }}</span>
+                    </div>
+                  }
+                  <div class="total-row total-row--subtotal">
+                    <span class="t-lbl font-semibold">Base Gravable Total:</span>
+                    <span class="t-val font-mono font-semibold">{{ previewTotal() | copCurrency }}</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="t-lbl">IVA Aplicable (19% Discriminado):</span>
+                    <span class="t-val font-mono">{{ previewIva() | copCurrency }}</span>
+                  </div>
+                  <div class="total-row total-row--grand-total">
+                    <span class="t-lbl">TOTAL A FACTURAR:</span>
+                    <span class="t-val font-mono font-bold">{{ previewTotal() | copCurrency }}</span>
+                  </div>
+
+                  <!-- Retenciones Sugeridas Informativas -->
+                  <div class="withholdings-subbox mt-2">
+                    <div class="wh-row">
+                      <span>ReteFuente Estimada (4%):</span>
+                      <span class="font-mono">- {{ previewReteFuente() | copCurrency }}</span>
+                    </div>
+                    <div class="wh-row">
+                      <span>ReteICA Estimada (0.966%):</span>
+                      <span class="font-mono">- {{ previewReteIca() | copCurrency }}</span>
+                    </div>
+                    <div class="wh-row wh-net-row font-semibold">
+                      <span>Neto Estimado a Pagar:</span>
+                      <span class="font-mono text-accent">{{ (previewTotal() - previewReteFuente() - previewReteIca()) | copCurrency }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Barra de Confirmación y Emisión al pie del borrador -->
+            <div class="preview-bottom-actions mt-4">
+              <button type="button" class="btn btn-outline" (click)="closeInvoicePreview()">
+                <mat-icon>arrow_back</mat-icon> Modificar Parámetros / Volver
+              </button>
+              <button
+                type="button"
+                class="btn btn-success btn-lg btn-confirm-emit-large"
+                (click)="confirmAndEmitInvoice()"
+                [disabled]="isProcessing()"
+              >
+                @if (isProcessing()) {
+                  <mat-icon class="spin-icon">autorenew</mat-icon> Procesando y Transmitiendo Factura...
+                } @else {
+                  <mat-icon>verified</mat-icon> Confirmar y Generar Factura Definitiva ({{ previewTotal() | copCurrency }})
+                }
+              </button>
+            </div>
+          </div>
+        </app-ui-card>
+      }
+
+      <!-- Resultados si se generó factura -->
+      @if (isProcessing()) {
+        <app-ui-card [elevated]="true" class="result-card" id="resultsSection">
+          <div class="processing-state">
+            <app-ui-spinner message="Consolidando sedes y novedades... Generando comprobante fiscal..."></app-ui-spinner>
+          </div>
+        </app-ui-card>
+      } @else if (processCompleted()) {
+        <app-ui-card title="Resultado de la Emisión" [elevated]="true" class="result-card" id="resultsSection">
+          <div class="result-summary">
+            <div class="stat-badge">
+              <span class="stat-number">{{ generatedInvoices().length }}</span>
+              <span class="stat-label">Facturas Emitidas</span>
+            </div>
+          </div>
+
+          @if (generatedInvoices().length > 0) {
+            <div class="table-responsive mt-3">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Factura</th>
+                    <th>Cliente</th>
+                    <th>NIT</th>
+                    <th class="text-center">Sedes</th>
+                    <th class="text-right">Valor Total</th>
+                    <th class="text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (inv of generatedInvoices(); track inv.id) {
+                    <tr>
+                      <td class="font-mono font-bold">{{ inv.numeroFactura }}</td>
+                      <td>{{ inv.razonSocial }}</td>
+                      <td class="font-mono text-xs">{{ inv.nit }}</td>
+                      <td class="text-center font-mono">{{ inv.sedesCount }}</td>
+                      <td class="text-right font-mono font-semibold">{{ inv.valorTotal | copCurrency }}</td>
+                      <td class="text-center">
+                        <button class="btn btn-outline btn-sm" (click)="onViewInvoice(inv.id)">
+                          Ver Factura
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </app-ui-card>
+      }
+    </div>
+  } @else {
+    <!-- ============================================================== -->
+    <!-- VISTA 2: LISTADO GENERAL Y PARÁMETROS DE EMISIÓN MASIVA        -->
+    <!-- ============================================================== -->
+    <div class="page-header">
+      <div class="page-header__info">
+        <h1 class="page-title">Generar Facturación Consolidada</h1>
+        <p class="page-subtitle">Procesamiento de novedades, consolidación por sedes y emisión de facturas (Sprint 4, Sprint 8).</p>
+      </div>
+    </div>
+
+    <div class="content-layout">
+      <!-- Formulario de Parámetros de Emisión -->
+      <app-ui-card title="Parámetros de Emisión" [elevated]="true" class="form-card">
+        <form (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            <!-- Periodo Contable -->
+            <div class="form-group">
+              <label class="form-label required">Periodo Contable</label>
+              <input
+                type="month"
+                class="form-control"
+                [(ngModel)]="periodCode"
+                name="periodCode"
+                required
+              />
+              <span class="form-hint">Mes y año a consolidar.</span>
+            </div>
+
+            <!-- Tipo de Facturación -->
+            <div class="form-group">
+              <label class="form-label required">Tipo de Facturación</label>
+              <select class="form-control" [(ngModel)]="billingType" name="billingType">
+                <option value="F1">F1 · Sistemas Palacios (Prefijo FESP)</option>
+                <option value="F20">F20 · Meganet (Prefijo FEMG)</option>
+              </select>
+              <span class="form-hint">Resolución DIAN y prefijo contable.</span>
+            </div>
+
+            <!-- Tipo de Corte -->
+            <div class="form-group">
+              <label class="form-label required">Tipo de Corte</label>
+              <select class="form-control" [(ngModel)]="cutType" name="cutType">
+                <option value="ADVANCE">Mes Adelantado (Normal)</option>
+                <option value="ARREARS">Mes Vencido</option>
+              </select>
+              <span class="form-hint">Modalidad de cobro del canon mensual.</span>
+            </div>
+
+            <!-- Corporativo Objetivo de Emisión -->
+            <div class="form-group target-client-group">
+              <label class="form-label">Destino de la Emisión</label>
+              @if (selectedClient()) {
+                <div class="selected-target-box">
+                  <div class="target-icon">
+                    <mat-icon>business</mat-icon>
+                  </div>
+                  <div class="target-info">
+                    <div class="target-name" [title]="selectedClient()?.razonSocial">{{ selectedClient()?.razonSocial }}</div>
+                    <div class="target-meta">
+                      <span class="font-mono">NIT: {{ selectedClient()?.nit }}</span>
+                      <span class="target-badge">{{ selectedClient()?.branchesCount }} sedes</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-clear-target"
+                    (click)="clearBillingSelection()"
+                    title="Quitar corporativo y procesar todos (modo masivo)"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+                <span class="form-hint hint-individual">
+                  <mat-icon>check_circle</mat-icon> Generando factura solo para este cliente.
+                </span>
+              } @else {
+                <div class="all-clients-box">
+                  <mat-icon class="all-icon">groups</mat-icon>
+                  <div class="all-info">
+                    <strong>Todos los Clientes Activos</strong>
+                    <span>Consolidación masiva general</span>
+                  </div>
+                </div>
+                <span class="form-hint">
+                  Seleccione un cliente en la tabla de abajo si desea procesar solo uno.
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="rules-card">
+            <div class="rules-title">
+              <mat-icon>info</mat-icon>
+              <span>Reglas de consolidación aplicadas:</span>
+            </div>
+            <ul class="rules-list">
+              <li>Garantiza 1 sola factura activa por cliente y periodo contable.</li>
+              <li>Agrupa todas las sedes activas con código de orden y velocidad.</li>
+              <li>Aplica prorrateo automático en días para novedades ingresadas durante el ciclo.</li>
+            </ul>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" (click)="onReset()" [disabled]="isProcessing()">
+              Limpiar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="isProcessing() || !periodCode">
+              @if (isProcessing()) {
+                <mat-icon class="spin-icon">autorenew</mat-icon> Procesando Facturación...
+              } @else if (selectedClient()) {
+                <mat-icon>bolt</mat-icon> Facturar a {{ selectedClient()?.razonSocial }}
+              } @else {
+                <mat-icon>bolt</mat-icon> Iniciar Proceso de Generación Masiva
+              }
+            </button>
+          </div>
+        </form>
+      </app-ui-card>
+
+      <!-- Tabla de Clientes Corporativos con Búsqueda -->
+      <app-ui-card title="Clientes Corporativos Disponibles" [elevated]="true" class="clients-card">
+        <div class="clients-header-bar">
+          <div class="search-input-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input
+              type="text"
+              class="form-control table-search-control"
+              placeholder="Buscar por NIT o Nombre del corporativo..."
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onSearchChange()"
+            />
+            @if (searchQuery) {
+              <button type="button" class="btn-clear-search" (click)="searchQuery = ''; onSearchChange()">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </div>
+
+          <div class="clients-stats-info">
+            @if (selectedClient()) {
+              <span class="selected-pill">
+                <mat-icon>radio_button_checked</mat-icon>
+                1 corporativo seleccionado para facturación
+              </span>
+            }
+            <span class="count-pill">
+              {{ filteredClients().length }} de {{ clients().length }} corporativos
+            </span>
+          </div>
+        </div>
+
+        <!-- Tabla de Clientes -->
+        <div class="table-responsive mt-3">
+          <table class="data-table clients-table">
+            <thead>
+              <tr>
+                <th class="text-center w-12">Emisión</th>
+                <th>Cliente / Razón Social</th>
+                <th>NIT</th>
+                <th>Tipo</th>
+                <th class="text-center">Sedes</th>
+                <th class="text-right">Canon Estimado</th>
+                <th>Municipio</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of paginatedClients(); track (c.id || c.nit)) {
+                <tr [class.row-selected]="selectedClient()?.nit === c.nit">
+                  <td class="text-center">
+                    <input
+                      type="radio"
+                      name="clientSelect"
+                      [checked]="selectedClient()?.nit === c.nit"
+                      (change)="selectClientForBilling(c)"
+                      class="radio-custom"
+                      title="Seleccionar para facturar"
+                    />
+                  </td>
+                  <td>
+                    <div class="client-cell">
+                      <mat-icon class="cell-avatar">business</mat-icon>
+                      <div>
+                        <div class="cell-name font-bold">{{ c.razonSocial }}</div>
+                        <div class="cell-sub">{{ c.emailFacturacion }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="font-mono text-xs font-semibold">{{ c.nit }}</td>
+                  <td>
+                    <span class="badge-type font-mono" [class.badge-type--f20]="c.tipoFacturacion === 'F20'">
+                      {{ c.tipoFacturacion || 'F1' }}
+                    </span>
+                  </td>
+                  <td class="text-center font-mono">
+                    <span class="badge-branches">{{ c.branchesCount || 1 }} sedes</span>
+                  </td>
+                  <td class="text-right font-mono font-semibold">
+                    {{ (c.totalMonthlyValue || 0) | copCurrency }}
+                  </td>
+                  <td class="text-muted text-xs">{{ c.municipio }}</td>
+                  <td class="text-center">
+                    <div class="actions-cell">
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-xs"
+                        (click)="openClientDetails(c)"
+                        title="Abrir detalles y novedades de este cliente en toda la página"
+                      >
+                        <mat-icon>open_in_new</mat-icon> Ver Detalles
+                      </button>
+                      @if (selectedClient()?.nit === c.nit) {
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-xs btn-selected"
+                          (click)="clearBillingSelection()"
+                          title="Quitar selección individual"
+                        >
+                          <mat-icon>check</mat-icon> Seleccionado
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-xs"
+                          (click)="selectClientForBilling(c)"
+                          title="Fijar este cliente para generar factura"
+                        >
+                          <mat-icon>radio_button_unchecked</mat-icon> Facturar
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+
+              @if (filteredClients().length === 0) {
+                <tr>
+                  <td colspan="8" class="empty-table-cell">
+                    <div class="empty-state-box">
+                      <mat-icon>search_off</mat-icon>
+                      <p>No se encontraron clientes corporativos que coincidan con <strong>"{{ searchQuery }}"</strong></p>
+                      @if (searchQuery.trim()) {
+                        <button
+                          type="button"
+                          class="btn btn-outline btn-sm mt-2"
+                          (click)="selectManualNit(searchQuery)"
+                        >
+                          <mat-icon>add_link</mat-icon> Facturar con NIT manual: "{{ searchQuery.trim() }}"
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Barra de Paginación -->
+        @if (filteredClients().length > pageSize()) {
+          <div class="clients-pagination-bar mt-3">
+            <span class="pagination-info font-mono text-xs text-muted">
+              Mostrando {{ startDisplay() }} - {{ minDisplay() }} de {{ filteredClients().length }} corporativos
+            </span>
+            <div class="pagination-controls">
+              <button
+                type="button"
+                class="btn btn-outline btn-xs"
+                (click)="prevPage()"
+                [disabled]="currentPage() === 1"
+              >
+                <mat-icon>chevron_left</mat-icon> Anterior
+              </button>
+              <span class="page-indicator font-mono text-xs font-semibold">
+                Pág. {{ currentPage() }} de {{ totalPages() }}
+              </span>
+              <button
+                type="button"
+                class="btn btn-outline btn-xs"
+                (click)="nextPage()"
+                [disabled]="currentPage() >= totalPages()"
+              >
+                Siguiente <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </app-ui-card>
+
+      <!-- Resultados de la Generación -->
+      @if (isProcessing()) {
+        <app-ui-card [elevated]="true" class="result-card" id="resultsSection">
+          <div class="processing-state">
+            <app-ui-spinner message="Consolidando sedes y generando comprobantes fiscales..."></app-ui-spinner>
+          </div>
+        </app-ui-card>
+      } @else if (processCompleted()) {
+        <app-ui-card title="Resultado de la Consolidación" [elevated]="true" class="result-card" id="resultsSection">
+          <div class="result-summary">
+            <div class="stat-badge">
+              <span class="stat-number">{{ generatedInvoices().length }}</span>
+              <span class="stat-label">Facturas Generadas</span>
+            </div>
+            @if (selectedClient()) {
+              <div class="filter-indicator">
+                <mat-icon>filter_alt</mat-icon> Emisión individual: <strong>{{ selectedClient()?.razonSocial }} (NIT: {{ selectedClient()?.nit }})</strong>
+              </div>
+            }
+          </div>
+
+          @if (generatedInvoices().length > 0) {
+            <div class="table-responsive mt-3">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Factura</th>
+                    <th>Cliente</th>
+                    <th>NIT</th>
+                    <th class="text-center">Sedes</th>
+                    <th class="text-right">Valor Total</th>
+                    <th class="text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (inv of generatedInvoices(); track inv.id) {
+                    <tr>
+                      <td class="font-mono font-bold">{{ inv.numeroFactura }}</td>
+                      <td>{{ inv.razonSocial }}</td>
+                      <td class="font-mono text-xs">{{ inv.nit }}</td>
+                      <td class="text-center font-mono">{{ inv.sedesCount }}</td>
+                      <td class="text-right font-mono font-semibold">{{ inv.valorTotal | copCurrency }}</td>
+                      <td class="text-center">
+                        <button class="btn btn-outline btn-sm" (click)="onViewInvoice(inv.id)">
+                          Ver Factura
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </app-ui-card>
+      }
+    </div>
+  }
+</div>

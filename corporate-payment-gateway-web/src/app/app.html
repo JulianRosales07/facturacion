@@ -1,0 +1,1153 @@
+<header class="gateway-header">
+  <div class="header-container">
+    <div class="brand">
+      <img src="assets/images/Sp.png" alt="Sistemas Palacios" class="brand-logo" onerror="this.style.display='none'" />
+      <div class="brand-text">
+        <span class="brand-name">SP PAGOS</span>
+        <span class="brand-sub">Pasarela Corporativa de Recaudos</span>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <div class="badge-ssl">
+        <svg class="icon-lock" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+        </svg>
+        <span>Transacción Segura SSL 256-Bit</span>
+      </div>
+      <div class="badge-dian">
+        <span>✓ Facturación Electrónica DIAN</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Barra de Pasos / Stepper -->
+<nav class="stepper-nav no-print">
+  <div class="stepper-container">
+    <div class="step-item" [class.active]="currentStep() === 'SEARCH'" [class.done]="currentStep() !== 'SEARCH'">
+      <div class="step-num">1</div>
+      <div class="step-label">Consulta por NIT</div>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step-item" [class.active]="currentStep() === 'INVOICES'" [class.done]="currentStep() === 'PAYMENT_METHOD' || currentStep() === 'PROCESSING' || currentStep() === 'RECEIPT'">
+      <div class="step-num">2</div>
+      <div class="step-label">Facturas & QR</div>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step-item" [class.active]="currentStep() === 'PAYMENT_METHOD'" [class.done]="currentStep() === 'PROCESSING' || currentStep() === 'RECEIPT'">
+      <div class="step-num">3</div>
+      <div class="step-label">Medio de Pago</div>
+    </div>
+    <div class="step-sep"></div>
+    <div class="step-item" [class.active]="currentStep() === 'RECEIPT'" [class.done]="currentStep() === 'RECEIPT'">
+      <div class="step-num">4</div>
+      <div class="step-label">Comprobante</div>
+    </div>
+  </div>
+</nav>
+
+<main class="gateway-main">
+
+  <!-- ============================================================= -->
+  <!-- PASO 1: BÚSQUEDA POR NIT -->
+  <!-- ============================================================= -->
+  @if (currentStep() === 'SEARCH') {
+    <section class="card hero-search-card">
+      <div class="search-header">
+        <div class="search-icon-wrap">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h1>Paga tus Facturas Corporativas en Línea</h1>
+        <p>Ingresa el NIT o documento de tu empresa para consultar automáticamente el consolidado de facturas electrónicas y sus códigos QR oficiales.</p>
+      </div>
+
+      <div class="search-box">
+        <label for="nitInput" class="input-label">NIT o Documento de Identidad de la Empresa</label>
+        <div class="input-group">
+          <input
+            id="nitInput"
+            type="text"
+            class="form-control-lg mono"
+            placeholder="Ejemplo: 900163149 o 900123456"
+            [ngModel]="nitInput()"
+            (ngModelChange)="nitInput.set($event)"
+            (keyup.enter)="searchInvoices()"
+          />
+          <button class="btn btn-primary btn-lg" (click)="searchInvoices()" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <span class="spinner-sm"></span> Consultando...
+            } @else {
+              <span>Consultar Facturas →</span>
+            }
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert-error">
+            <span>⚠️ {{ errorMessage() }}</span>
+          </div>
+        }
+
+        <!-- Accesos rápidos para pruebas rápidas de demostración -->
+        <!-- Accesos rápidos para pruebas con datos reales de la BD -->
+        <div class="quick-chips">
+          <span class="chips-title">Pruebas rápidas con datos reales de la BD:</span>
+          <button type="button" class="chip" (click)="selectQuickNit('800092198')">
+            <span class="chip-badge">6 FACTURAS</span>
+            <strong>800092198</strong> (Empresa con múltiples facturas para prueba de pago individual)
+          </button>
+          <button type="button" class="chip" (click)="selectQuickNit('1088970617')">
+            <span class="chip-badge">QR DIAN REAL</span>
+            <strong>1088970617</strong> (Factura F1 51993 con QR Oficial extraído del PDF)
+          </button>
+          <button type="button" class="chip" (click)="resetPaidInvoicesSimulation()" title="Restablecer pruebas de pago">
+            <span class="chip-badge">RESET</span>
+            <span>🔄 Restablecer estado</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="security-footer">
+        <div class="sec-item">
+          <span class="sec-icon">🔒</span>
+          <div>
+            <strong>Canal Bancario Cifrado</strong>
+            <p>Conexión directa sin intermediarios no certificados</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <span class="sec-icon">🧾</span>
+          <div>
+            <strong>QR & CUFE Verificables</strong>
+            <p>Cada factura conserva su código QR original impreso por Siigo</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <span class="sec-icon">⚡</span>
+          <div>
+            <strong>Conciliación Automática</strong>
+            <p>Aplicación de recaudo en tiempo real a la cartera de la empresa</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ============================================================= -->
+  <!-- PASO 2: VISUALIZACIÓN DE FACTURAS Y QR -->
+  <!-- ============================================================= -->
+  @if (currentStep() === 'INVOICES' && clientGroup()) {
+    @if (realtimeNotice()) {
+      <div class="realtime-notice" role="status" aria-live="polite">
+        <span>🔔 {{ realtimeNotice() }}</span>
+        <button type="button" class="btn-close" (click)="dismissRealtimeNotice()" aria-label="Cerrar aviso">✕</button>
+      </div>
+    }
+    <div class="layout-invoices">
+      
+      <!-- Columna Principal: Detalle de Facturas -->
+      <section class="invoices-main">
+        
+        <!-- Tarjeta de Identificación del Cliente -->
+        <div class="card client-card">
+          <div class="client-info">
+            <div class="client-avatar">🏢</div>
+            <div>
+              <span class="client-badge">CLIENTE CORPORATIVO</span>
+              <h2 class="client-name">{{ clientGroup()!.razon_social || ('EMPRESA NIT ' + clientGroup()!.nit) }}</h2>
+              <div class="client-meta">
+                <span>NIT: <strong class="mono">{{ clientGroup()!.nit }}</strong></span>
+                <span>•</span>
+                <span>Facturas Pendientes: <strong>{{ clientGroup()!.cantidad_facturas }}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="client-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="toggleJsonViewer()">
+              ⚡ Ver JSON de Facturación
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="resetFlow()">
+              Buscar otro NIT
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner Explicativo de la Regla del QR -->
+        <div class="alert-info">
+          <div class="alert-icon">ℹ️</div>
+          <div>
+            <strong>QR Oficial por Factura:</strong>
+            El código QR pertenece a cada documento individual y contiene la URL real del catálogo de la DIAN. Si el NIT tiene varias facturas, cada una conserva su propio QR sin mezclarse.
+          </div>
+        </div>
+
+        <!-- Lista de Facturas del Consolidado -->
+        <div class="card invoices-card">
+          <div class="invoices-card-header">
+            <div>
+              <h3>Facturas Asignadas al NIT</h3>
+              <p>Selecciona las facturas que deseas pagar en esta transacción:</p>
+            </div>
+            <div class="select-all-wrap">
+              <label class="custom-checkbox">
+                <input type="checkbox" [checked]="allSelected()" (change)="toggleSelectAll()" />
+                <span class="checkmark"></span>
+                <span>Seleccionar todas ({{ clientGroup()!.cantidad_facturas }})</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="invoice-items-list">
+            @for (inv of clientGroup()!.facturas; track inv.clave_documento) {
+              <div class="invoice-row" [class.selected]="inv.seleccionada">
+                
+                <!-- Selector Checkbox -->
+                <div class="inv-col-select">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" [checked]="inv.seleccionada" (change)="toggleInvoiceSelection(inv)" />
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+
+                <!-- Info Factura -->
+                <div class="inv-col-info">
+                  <div class="inv-badge-row">
+                    <span class="inv-type-badge">{{ inv.tipo }}</span>
+                    <span class="inv-consecutive mono">Factura #{{ inv.consecutivo }}</span>
+                    <span class="inv-key mono">({{ inv.clave_documento }})</span>
+                  </div>
+                  <div class="inv-dates">
+                    <span>Emisión: <strong>{{ inv.fecha_emision }}</strong></span>
+                    <span>•</span>
+                    <span>Vence: <strong [class.text-danger]="true">{{ inv.fecha_vencimiento || 'Inmediato' }}</strong></span>
+                  </div>
+                  @if (inv.cufe) {
+                    <div class="inv-cufe mono" [title]="inv.cufe">
+                      CUFE: {{ inv.cufe.slice(0, 32) }}...
+                    </div>
+                  }
+                  <!-- PDF oficial de esta factura (su propio servicio); acciones independientes de la selección -->
+                  <div class="inv-pdf">
+                    <span class="pdf-status" [class.available]="inv.pdf_disponible">
+                      PDF: {{ inv.pdf_disponible ? '✅ Disponible' : '⏳ Pendiente de recibir' }}
+                    </span>
+                    <div class="inv-pdf-actions">
+                      <button type="button" class="btn btn-outline btn-sm" [disabled]="!inv.pdf_disponible"
+                              (click)="openPdfViewer(inv)" [attr.aria-label]="'Ver factura ' + inv.tipo + '-' + inv.consecutivo">
+                        👁 Ver factura
+                      </button>
+                      <button type="button" class="btn btn-outline btn-sm" [disabled]="!inv.pdf_disponible || pdfDownloading() === inv.id"
+                              (click)="downloadInvoicePdf(inv)" [attr.aria-label]="'Descargar PDF de la factura ' + inv.tipo + '-' + inv.consecutivo">
+                        {{ pdfDownloading() === inv.id ? 'Descargando…' : '⬇ Descargar PDF' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- QR Oficial de la Factura -->
+                <div class="inv-col-qr">
+                  @if (inv.qr?.contenido) {
+                    <div class="qr-thumbnail-box" (click)="openQrModal(inv)" title="Clic para inspeccionar el QR Oficial">
+                      <div class="qr-tag">QR DIAN</div>
+                      <div class="qr-preview">
+                        <!-- Miniatura del QR -->
+                        <svg width="34" height="34" viewBox="0 0 33 33" fill="#000" class="qr-svg-preview">
+                          <rect width="33" height="33" fill="#fff"/>
+                          <rect x="2" y="2" width="7" height="7"/><rect x="3" y="3" width="5" height="5" fill="#fff"/><rect x="4" y="4" width="3" height="3"/>
+                          <rect x="24" y="2" width="7" height="7"/><rect x="25" y="3" width="5" height="5" fill="#fff"/><rect x="26" y="4" width="3" height="3"/>
+                          <rect x="2" y="24" width="7" height="7"/><rect x="3" y="25" width="5" height="5" fill="#fff"/><rect x="4" y="26" width="3" height="3"/>
+                          <rect x="10" y="4" width="2" height="1"/><rect x="14" y="4" width="3" height="1"/><rect x="19" y="4" width="2" height="1"/>
+                          <rect x="11" y="6" width="1" height="2"/><rect x="15" y="6" width="2" height="1"/><rect x="18" y="7" width="2" height="1"/>
+                          <rect x="10" y="14" width="3" height="1"/><rect x="15" y="13" width="2" height="2"/><rect x="20" y="14" width="3" height="2"/>
+                        </svg>
+                      </div>
+                      <span class="qr-inspect-btn">Ver QR</span>
+                    </div>
+                  } @else {
+                    <div class="qr-missing-box">
+                      <span>Sin QR</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Monto a pagar -->
+                <div class="inv-col-amount">
+                  <span class="amount-label">Valor Servicio:</span>
+                  <span class="amount-val mono">${{ (inv.valor_servicio || 0) | number:'1.2-2' }} COP</span>
+                </div>
+
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Retenciones y Deducibles Fiscales (HU-51): el cliente elige el modo, marca los conceptos y escribe el % -->
+        <div class="card withholdings-card">
+          <div class="invoices-card-header">
+            <div>
+              <h3>Retenciones y Deducibles Fiscales</h3>
+              <p>Marca las retenciones que tu entidad practica sobre este pago y escribe el porcentaje de cada una. Son opcionales; el sistema valida si cada una aplica.</p>
+              <p class="audit-note">La selección de retenciones y porcentajes quedará registrada para fines de trazabilidad y auditoría.</p>
+            </div>
+          </div>
+
+          @if (savedConfigNotice()) {
+            <div class="saved-config-notice" role="status">
+              <span>{{ savedConfigNotice() }}</span>
+              @if (savedConfig()) {
+                <button type="button" class="link-btn" (click)="forgetSavedConfig()">No volver a usar esta configuración</button>
+              }
+            </div>
+          }
+
+          <fieldset class="mode-selector">
+            <legend>¿Cómo deseas aplicar las retenciones?</legend>
+            <label class="mode-option" [class.selected]="applicationMode() === 'CONSOLIDATED'">
+              <input type="radio" name="applicationMode" [checked]="applicationMode() === 'CONSOLIDATED'"
+                     (change)="setApplicationMode('CONSOLIDATED')" />
+              <span>
+                <strong>Sobre el total de las facturas seleccionadas</strong>
+                <small>Un solo conjunto de retenciones; las bases mínimas se evalúan con la suma de las facturas.</small>
+              </span>
+            </label>
+            <label class="mode-option" [class.selected]="applicationMode() === 'PER_INVOICE'">
+              <input type="radio" name="applicationMode" [checked]="applicationMode() === 'PER_INVOICE'"
+                     (change)="setApplicationMode('PER_INVOICE')" />
+              <span>
+                <strong>Configurarlas individualmente por factura</strong>
+                <small>Cada factura lleva sus propias retenciones y se evalúa por separado con sus bases mínimas.</small>
+              </span>
+            </label>
+          </fieldset>
+
+          @if (modeNotice()) {
+            <div class="mode-notice" role="status">{{ modeNotice() }}</div>
+          }
+
+          @if (!applicationMode()) {
+            <p class="withholding-empty">Elige una opción para configurar las retenciones y calcular el neto a pagar.</p>
+          } @else if (taxCatalogError()) {
+            <div class="withholding-error">{{ taxCatalogError() }}</div>
+          } @else if (taxCatalog().length === 0) {
+            <p class="withholding-empty">No hay retenciones vigentes en el catálogo.</p>
+          } @else if (applicationMode() === 'CONSOLIDATED') {
+            <div class="concept-list">
+              @for (concept of taxCatalog(); track concept.id) {
+                <div class="concept-row" [class.selected]="isConceptSelected(concept.id)"
+                     [class.not-applicable]="isConceptSelected(concept.id) && evaluationFor(concept.id)?.aplica === false">
+                  <label class="concept-check">
+                    <span class="custom-checkbox">
+                      <input type="checkbox" [checked]="isConceptSelected(concept.id)" (change)="toggleConcept(concept.id)" />
+                      <span class="checkmark"></span>
+                    </span>
+                    <span class="concept-info">
+                      <span class="concept-name">{{ concept.nombre }}</span>
+                      <span class="concept-meta">
+                        Sobre {{ concept.tipo === 'RETEIVA' ? 'el IVA' : 'la base gravable' }} · Máximo {{ concept.porcentajeMaximo | number:'1.0-4' }}%
+                        @if (concept.baseMinima > 0) { · Base mínima ${{ concept.baseMinima | number:'1.0-0' }} }
+                      </span>
+                      @if (isConceptSelected(concept.id) && evaluationFor(concept.id); as ev) {
+                        @if (!ev.aplica) {
+                          <span class="na-badge">NO APLICA</span>
+                          <span class="concept-reason">{{ ev.motivo }}</span>
+                        }
+                      }
+                    </span>
+                  </label>
+                  @if (isConceptSelected(concept.id)) {
+                    <div class="concept-percent">
+                      <div class="percent-input">
+                        <input type="number" inputmode="decimal" step="0.01" min="0" [max]="concept.porcentajeMaximo"
+                               placeholder="0,00" [attr.aria-label]="'Porcentaje de ' + concept.nombre"
+                               [ngModel]="consolidatedPercentage(concept.id)" (ngModelChange)="setConsolidatedPercentage(concept.id, $event)" />
+                        <span>%</span>
+                      </div>
+                      @if (percentageError(concept.id, consolidatedPercentage(concept.id)); as error) {
+                        <small class="percent-error">{{ error }}</small>
+                      } @else if (evaluationFor(concept.id); as ev) {
+                        <span class="concept-amount mono" [class.text-danger]="ev.aplica">
+                          {{ ev.aplica ? '-' : '' }}${{ ev.valorRetenido | number:'1.2-2' }}
+                        </span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="invoice-retention-list">
+              @for (inv of selectedInvoices(); track inv.id) {
+                <div class="invoice-retention-panel">
+                  <button type="button" class="invoice-retention-header" (click)="toggleInvoiceExpanded(inv.id)"
+                          [attr.aria-expanded]="isInvoiceExpanded(inv.id)">
+                    <span class="invoice-retention-title">
+                      <strong>Factura {{ inv.tipo }}-{{ inv.consecutivo }}</strong>
+                      <small class="mono">Valor: ${{ inv.valor_servicio | number:'1.2-2' }}</small>
+                    </span>
+                    <span class="panel-toggle">
+                      {{ isInvoiceExpanded(inv.id) ? '▲' : '▼' }} Configurar deducibles
+                      @if (selectedConceptCount(inv.id) > 0) { ({{ selectedConceptCount(inv.id) }}) }
+                    </span>
+                  </button>
+                  @if (isInvoiceExpanded(inv.id)) {
+                    <div class="concept-list nested">
+                      @for (concept of taxCatalog(); track concept.id) {
+                        <div class="concept-row" [class.selected]="isInvoiceConceptSelected(inv.id, concept.id)"
+                             [class.not-applicable]="isInvoiceConceptSelected(inv.id, concept.id) && invoiceEvaluationFor(inv.id, concept.id)?.aplica === false">
+                          <label class="concept-check">
+                            <span class="custom-checkbox">
+                              <input type="checkbox" [checked]="isInvoiceConceptSelected(inv.id, concept.id)"
+                                     (change)="toggleInvoiceConcept(inv.id, concept.id)" />
+                              <span class="checkmark"></span>
+                            </span>
+                            <span class="concept-info">
+                              <span class="concept-name">{{ concept.nombre }}</span>
+                              <span class="concept-meta">
+                                Sobre {{ concept.tipo === 'RETEIVA' ? 'el IVA de esta factura' : 'la base de esta factura' }} · Máximo {{ concept.porcentajeMaximo | number:'1.0-4' }}%
+                                @if (concept.baseMinima > 0) { · Base mínima ${{ concept.baseMinima | number:'1.0-0' }} }
+                              </span>
+                              @if (isInvoiceConceptSelected(inv.id, concept.id) && invoiceEvaluationFor(inv.id, concept.id); as ev) {
+                                @if (!ev.aplica) {
+                                  <span class="na-badge">NO APLICA</span>
+                                  <span class="concept-reason">{{ ev.motivo }}</span>
+                                }
+                              }
+                            </span>
+                          </label>
+                          @if (isInvoiceConceptSelected(inv.id, concept.id)) {
+                            <div class="concept-percent">
+                              <div class="percent-input">
+                                <input type="number" inputmode="decimal" step="0.01" min="0" [max]="concept.porcentajeMaximo"
+                                       placeholder="0,00" [attr.aria-label]="'Porcentaje de ' + concept.nombre + ' para la factura ' + inv.consecutivo"
+                                       [ngModel]="invoicePercentage(inv.id, concept.id)"
+                                       (ngModelChange)="setInvoicePercentage(inv.id, concept.id, $event)" />
+                                <span>%</span>
+                              </div>
+                              @if (percentageError(concept.id, invoicePercentage(inv.id, concept.id)); as error) {
+                                <small class="percent-error">{{ error }}</small>
+                              } @else if (invoiceEvaluationFor(inv.id, concept.id); as ev) {
+                                <span class="concept-amount mono" [class.text-danger]="ev.aplica">
+                                  {{ ev.aplica ? '-' : '' }}${{ ev.valorRetenido | number:'1.2-2' }}
+                                </span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @empty {
+                <p class="withholding-empty">Selecciona al menos una factura.</p>
+              }
+            </div>
+          }
+        </div>
+
+      </section>
+
+      <!-- Columna Lateral: Resumen de Liquidación y Botón de Pago -->
+      <aside class="invoices-sidebar">
+        <div class="card summary-card">
+          <h3>Resumen de Pago</h3>
+          <p class="summary-subtitle">Liquidación de las facturas seleccionadas</p>
+
+          <div class="summary-breakdown">
+            <div class="breakdown-row">
+              <span>Facturas seleccionadas</span>
+              <strong class="mono">{{ selectedInvoices().length }} de {{ clientGroup()!.cantidad_facturas }}</strong>
+            </div>
+
+            <div class="breakdown-divider"></div>
+
+            @for (sel of selectedInvoices(); track sel.clave_documento) {
+              <div class="breakdown-subrow mono">
+                <span>{{ sel.tipo }}-{{ sel.consecutivo }}</span>
+                <span>${{ sel.valor_servicio | number:'1.2-2' }}</span>
+              </div>
+            }
+
+            <div class="breakdown-divider"></div>
+
+            @if (simulationError()) {
+              <div class="withholding-error">{{ simulationError() }}</div>
+            } @else if (!applicationMode()) {
+              <p class="summary-calculating">Elige cómo aplicar las retenciones para calcular el neto a pagar.</p>
+            } @else if (simulating() || !settlement()) {
+              <p class="summary-calculating">{{ selectedInvoices().length ? 'Calculando liquidación…' : 'Selecciona al menos una factura.' }}</p>
+            } @else if (settlement(); as s) {
+              <!-- Valor oficial de las facturas: nunca cambia por las retenciones -->
+              <div class="breakdown-row">
+                <span>Total facturado</span>
+                <strong class="mono">${{ s.totalFacturas | number:'1.2-2' }}</strong>
+              </div>
+              <div class="breakdown-subrow mono">
+                <span>Base gravable</span><span>${{ s.baseGravable | number:'1.2-2' }}</span>
+              </div>
+              <div class="breakdown-subrow mono">
+                <span>IVA</span><span>${{ s.totalIva | number:'1.2-2' }}</span>
+              </div>
+
+              @if (s.applicationMode === 'PER_INVOICE') {
+                <div class="breakdown-divider"></div>
+                <div class="breakdown-caption">Detalle por factura</div>
+                @for (f of s.facturas; track f.id) {
+                  <div class="invoice-settlement">
+                    <div class="breakdown-row">
+                      <span>{{ f.tipo }}-{{ f.numero }}</span>
+                      <strong class="mono">${{ f.valorLiquidado | number:'1.2-2' }}</strong>
+                    </div>
+                    @for (r of f.retenciones; track r.conceptoId) {
+                      <div class="breakdown-subrow mono" [class.muted]="!r.aplica">
+                        <span>{{ r.nombre }} · {{ r.porcentaje | number:'1.0-4' }}%</span>
+                        <span [class.text-danger]="r.aplica">{{ r.aplica ? '-' : '' }}${{ r.valorRetenido | number:'1.2-2' }}</span>
+                      </div>
+                      @if (!r.aplica) {
+                        <div class="breakdown-note">No aplica: {{ r.motivo }}</div>
+                      }
+                    }
+                    <div class="breakdown-subrow mono">
+                      <span>Retenciones</span>
+                      <span class="text-danger">-${{ (f.totalRetenciones ?? 0) | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="breakdown-subrow mono invoice-net">
+                      <span>Neto de esta factura</span>
+                      <span>${{ (f.netoFactura ?? 0) | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                }
+                <div class="breakdown-row">
+                  <span>Total retenciones</span>
+                  <strong class="mono text-danger">-${{ s.totalRetenciones | number:'1.2-2' }}</strong>
+                </div>
+              } @else if (s.retenciones.length) {
+                <div class="breakdown-divider"></div>
+                <div class="breakdown-caption">Retenciones consolidadas</div>
+                @for (r of s.retenciones; track r.conceptoId) {
+                  <div class="breakdown-subrow mono" [class.muted]="!r.aplica">
+                    <span>{{ r.nombre }} · {{ r.porcentaje | number:'1.0-4' }}%</span>
+                    <span [class.text-danger]="r.aplica">{{ r.aplica ? '-' : '' }}${{ r.valorRetenido | number:'1.2-2' }}</span>
+                  </div>
+                  @if (!r.aplica) {
+                    <div class="breakdown-note">No aplica: {{ r.motivo }}</div>
+                  }
+                }
+                <div class="breakdown-row">
+                  <span>Total retenciones</span>
+                  <strong class="mono text-danger">-${{ s.totalRetenciones | number:'1.2-2' }}</strong>
+                </div>
+              }
+
+              <div class="breakdown-row">
+                <span>Ajuste por redondeo</span>
+                <strong class="mono">{{ s.ajusteRedondeo > 0 ? '+' : '' }}${{ s.ajusteRedondeo | number:'1.2-2' }}</strong>
+              </div>
+
+              <div class="breakdown-divider"></div>
+
+              <div class="breakdown-total">
+                <span class="total-label">Neto a pagar</span>
+                <span class="total-val mono">${{ s.netoAPagar | number:'1.2-2' }} <small>COP</small></span>
+              </div>
+              @if (s.totalRetenciones > 0) {
+                <p class="breakdown-note">El valor oficial de tus facturas sigue siendo ${{ s.totalFacturas | number:'1.2-2' }}; las retenciones solo reducen el valor a transferir.</p>
+              }
+            }
+          </div>
+
+          <button
+            class="btn btn-primary btn-block btn-lg"
+            (click)="proceedToPayment()"
+            [disabled]="!canProceed()"
+          >
+            <span>Continuar al Pago{{ netPayable() !== null ? ' ($' + (netPayable() | number:'1.2-2') + ')' : '' }} →</span>
+          </button>
+
+          <div class="summary-guarantees">
+            <div>🛡️ Certificado por Redeban & PSE</div>
+            <div>⚡ Aplicación inmediata del saldo</div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  }
+
+  <!-- ============================================================= -->
+  <!-- PASO 3: SELECCIÓN Y FORMULARIO DE MEDIO DE PAGO -->
+  <!-- ============================================================= -->
+  @if (currentStep() === 'PAYMENT_METHOD' && clientGroup()) {
+    @if (realtimeNotice()) {
+      <div class="realtime-notice" role="status" aria-live="polite">
+        <span>🔔 {{ realtimeNotice() }}</span>
+        <button type="button" class="btn-close" (click)="dismissRealtimeNotice()" aria-label="Cerrar aviso">✕</button>
+      </div>
+    }
+    <div class="layout-payment-method">
+      
+      <section class="payment-main card">
+        <div class="payment-header">
+          <button class="btn-back" (click)="currentStep.set('INVOICES')">← Volver a facturas</button>
+          <h2>Selecciona tu Medio de Pago</h2>
+          <p>Transacción segura procesada para <strong>{{ clientGroup()!.razon_social }}</strong></p>
+        </div>
+
+        <!-- Selector de Métodos de Pago en Pestañas -->
+        <div class="payment-tabs">
+          <button
+            type="button"
+            class="payment-tab"
+            [class.active]="selectedMethod() === 'PSE'"
+            (click)="setPaymentMethod('PSE')"
+          >
+            <div class="tab-icon">🏦</div>
+            <div class="tab-info">
+              <strong>PSE</strong>
+              <span>Débito desde tu cuenta de ahorros o corriente</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="payment-tab"
+            [class.active]="selectedMethod() === 'CARD'"
+            (click)="setPaymentMethod('CARD')"
+          >
+            <div class="tab-icon">💳</div>
+            <div class="tab-info">
+              <strong>Tarjeta de Crédito / Débito</strong>
+              <span>Visa, Mastercard, American Express</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="payment-tab"
+            [class.active]="selectedMethod() === 'BANCOLOMBIA_QR'"
+            (click)="setPaymentMethod('BANCOLOMBIA_QR')"
+          >
+            <div class="tab-icon">📱</div>
+            <div class="tab-info">
+              <strong>Bancolombia QR</strong>
+              <span>Paga desde la App Bancolombia</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- FORMULARIO: PSE -->
+        @if (selectedMethod() === 'PSE') {
+          <div class="payment-form-section">
+            <h4 class="section-title">Datos para Pago por PSE</h4>
+            
+            <div class="form-grid">
+              <div class="form-group col-12">
+                <label>Selecciona tu Banco o Entidad Financiera</label>
+                <select class="form-control" [(ngModel)]="paymentForm.bankCode">
+                  @for (bank of banks; track bank.code) {
+                    <option [value]="bank.code">
+                      {{ bank.name }} {{ bank.popular ? '★ (Frecuente)' : '' }}
+                    </option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group col-6">
+                <label>Tipo de Cliente</label>
+                <select class="form-control" [(ngModel)]="paymentForm.userType">
+                  <option value="JURIDICA">Persona Jurídica (Empresa)</option>
+                  <option value="NATURAL">Persona Natural</option>
+                </select>
+              </div>
+
+              <div class="form-group col-6">
+                <label>Correo Electrónico registrado en PSE</label>
+                <input type="email" class="form-control" [(ngModel)]="paymentForm.payerEmail" placeholder="pagos@empresa.com" />
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- FORMULARIO: TARJETA DE CRÉDITO / DÉBITO -->
+        @if (selectedMethod() === 'CARD') {
+          <div class="payment-form-section">
+            <h4 class="section-title">Datos de la Tarjeta</h4>
+
+            <!-- Mock Gráfico Interactivo de Tarjeta -->
+            <div class="credit-card-preview">
+              <div class="card-chip"></div>
+              <div class="card-brand-logo">VISA / MC</div>
+              <div class="card-number-display mono">{{ paymentForm.cardNumber || '•••• •••• •••• ••••' }}</div>
+              <div class="card-footer-display">
+                <div>
+                  <div class="card-label">TITULAR</div>
+                  <div class="card-holder-name">{{ paymentForm.cardHolder || 'NOMBRE DEL TITULAR' }}</div>
+                </div>
+                <div>
+                  <div class="card-label">VENCE</div>
+                  <div class="card-expiry-val mono">{{ paymentForm.cardExpiry || 'MM/AA' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group col-12">
+                <label>Número de Tarjeta</label>
+                <input type="text" class="form-control mono" [(ngModel)]="paymentForm.cardNumber" placeholder="4532 0000 0000 0000" maxlength="19" />
+              </div>
+
+              <div class="form-group col-6">
+                <label>Nombre del Titular</label>
+                <input type="text" class="form-control" [(ngModel)]="paymentForm.cardHolder" placeholder="Como figura en el plástico" />
+              </div>
+
+              <div class="form-group col-3">
+                <label>Vencimiento</label>
+                <input type="text" class="form-control mono" [(ngModel)]="paymentForm.cardExpiry" placeholder="MM/AA" maxlength="5" />
+              </div>
+
+              <div class="form-group col-3">
+                <label>CVV</label>
+                <input type="password" class="form-control mono" [(ngModel)]="paymentForm.cardCvv" placeholder="123" maxlength="4" />
+              </div>
+
+              <div class="form-group col-6">
+                <label>Número de Cuotas</label>
+                <select class="form-control" [(ngModel)]="paymentForm.installments">
+                  <option [value]="1">1 Cuota (Sin intereses)</option>
+                  <option [value]="2">2 Cuotas</option>
+                  <option [value]="3">3 Cuotas</option>
+                  <option [value]="6">6 Cuotas</option>
+                  <option [value]="12">12 Cuotas</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- FORMULARIO: BANCOLOMBIA QR -->
+        @if (selectedMethod() === 'BANCOLOMBIA_QR') {
+          <div class="payment-form-section bancolombia-section">
+            <h4 class="section-title">Código QR Bancolombia</h4>
+            <div class="bancolombia-qr-box">
+              <!-- QR Oficial Generado para Bancolombia -->
+              <div class="bancolombia-qr-image">
+                <svg width="150" height="150" viewBox="0 0 33 33" fill="#000" class="qr-svg-large">
+                  <rect width="33" height="33" fill="#fff"/>
+                  <rect x="2" y="2" width="7" height="7"/><rect x="3" y="3" width="5" height="5" fill="#fff"/><rect x="4" y="4" width="3" height="3"/>
+                  <rect x="24" y="2" width="7" height="7"/><rect x="25" y="3" width="5" height="5" fill="#fff"/><rect x="26" y="4" width="3" height="3"/>
+                  <rect x="2" y="24" width="7" height="7"/><rect x="3" y="25" width="5" height="5" fill="#fff"/><rect x="4" y="26" width="3" height="3"/>
+                  <rect x="10" y="4" width="3" height="2"/><rect x="15" y="4" width="4" height="2"/>
+                  <rect x="10" y="8" width="4" height="2"/><rect x="16" y="7" width="2" height="3"/>
+                  <rect x="11" y="14" width="4" height="2"/><rect x="18" y="14" width="3" height="2"/>
+                  <rect x="11" y="24" width="4" height="2"/><rect x="18" y="24" width="3" height="3"/>
+                </svg>
+              </div>
+              <div class="bancolombia-instructions">
+                <h5>Instrucciones de Pago:</h5>
+                <ol>
+                  <li>Abre la aplicación <strong>Bancolombia</strong> en tu celular.</li>
+                  <li>Selecciona la opción <strong>Escanear Código QR</strong>.</li>
+                  <li>Apunta tu cámara a este código QR o usa el convenio:</li>
+                </ol>
+                <div class="convenio-box">
+                  <div>Convenio Bancolombia: <strong>#31689</strong></div>
+                  <div>Cuenta de Ahorros: <strong class="mono">997-848832-28</strong></div>
+                  <div>Titular: <strong>SP SISTEMAS PALACIOS LTDA</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- DATOS DEL PAGADOR -->
+        <div class="payer-section">
+          <h4 class="section-title">Datos de Contacto del Pagador</h4>
+          <div class="form-grid">
+            <div class="form-group col-6">
+              <label>Nombre Completo o Razón Social</label>
+              <input type="text" class="form-control" [(ngModel)]="paymentForm.payerName" />
+            </div>
+
+            <div class="form-group col-6">
+              <label>Teléfono Celular</label>
+              <input type="text" class="form-control" [(ngModel)]="paymentForm.payerPhone" />
+            </div>
+
+            <div class="form-group col-3">
+              <label>Tipo Documento</label>
+              <select class="form-control" [(ngModel)]="paymentForm.payerDocType">
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="NIT">NIT</option>
+                <option value="CE">Cédula Extranjería</option>
+              </select>
+            </div>
+
+            <div class="form-group col-9">
+              <label>Número de Documento</label>
+              <input type="text" class="form-control mono" [(ngModel)]="paymentForm.payerDocNumber" />
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-actions">
+          <button class="btn btn-primary btn-lg btn-block" (click)="submitPayment()">
+            🔒 Pagar ${{ netPayable() | number:'1.2-2' }} COP Ahora
+          </button>
+        </div>
+      </section>
+
+      <!-- Sidebar Resumen -->
+      <aside class="payment-sidebar card">
+        <h3>Facturas a Pagar</h3>
+        <div class="sidebar-inv-list">
+          @for (inv of selectedInvoices(); track inv.clave_documento) {
+            <div class="sidebar-inv-item">
+              <div>
+                <strong>Factura {{ inv.tipo }}-{{ inv.consecutivo }}</strong>
+                <div class="mono" style="font-size:11px; color:#64748b;">{{ inv.clave_documento }}</div>
+              </div>
+              <strong class="mono">${{ inv.valor_servicio | number:'1.2-2' }}</strong>
+            </div>
+          }
+        </div>
+        <div class="breakdown-divider"></div>
+        @if (settlement(); as s) {
+          <div class="breakdown-subrow mono">
+            <span>Total facturado</span><span>${{ s.totalFacturas | number:'1.2-2' }}</span>
+          </div>
+          @if (s.totalRetenciones > 0) {
+            <div class="breakdown-subrow mono">
+              <span>Retenciones</span><span class="text-danger">-${{ s.totalRetenciones | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (s.ajusteRedondeo !== 0) {
+            <div class="breakdown-subrow mono">
+              <span>Ajuste redondeo</span><span>${{ s.ajusteRedondeo | number:'1.2-2' }}</span>
+            </div>
+          }
+        }
+        <div class="breakdown-total">
+          <span>Neto a debitar:</span>
+          <strong class="mono" style="color:var(--primary); font-size:18px;">${{ netPayable() | number:'1.2-2' }} COP</strong>
+        </div>
+      </aside>
+
+    </div>
+  }
+
+  <!-- ============================================================= -->
+  <!-- PASO 4: PROCESAMIENTO / ANIMACIÓN BANCARIA -->
+  <!-- ============================================================= -->
+  @if (currentStep() === 'PROCESSING') {
+    @if (realtimeNotice()) {
+      <div class="realtime-notice" role="status" aria-live="polite">
+        <span>🔔 {{ realtimeNotice() }}</span>
+        <button type="button" class="btn-close" (click)="dismissRealtimeNotice()" aria-label="Cerrar aviso">✕</button>
+      </div>
+    }
+    <section class="card processing-card">
+      <div class="spinner-bank"></div>
+      <h2>Conectando con la Entidad Financiera...</h2>
+      <p>Estamos procesando tu pago de forma segura a través de los canales certificados de recaudo.</p>
+      
+      <div class="processing-steps">
+        <div class="proc-step active">✓ Verificando autenticidad de facturas electrónicas y CUFE</div>
+        <div class="proc-step active">✓ Estableciendo canal seguro con la pasarela bancaria</div>
+        <div class="proc-step pending">⏳ Confirmando liquidación de fondos...</div>
+      </div>
+    </section>
+  }
+
+  <!-- ============================================================= -->
+  <!-- PASO 5: COMPROBANTE DE PAGO APROBADO -->
+  <!-- ============================================================= -->
+  @if (currentStep() === 'RECEIPT' && receipt()) {
+    <section class="receipt-container">
+      
+      <div class="card receipt-card" id="printable-receipt">
+        
+        <!-- Header del Comprobante -->
+        <div class="receipt-header">
+          <div class="receipt-status-icon">✓</div>
+          <span class="status-pill status-approved">TRANSACCIÓN APROBADA</span>
+          <h2 class="receipt-title">Comprobante de Pago Electrónico</h2>
+          <p class="receipt-subtitle">SP SISTEMAS PALACIOS LTDA - NIT: 900.163.149-2</p>
+        </div>
+
+        <!-- Bloque de Monto Destacado -->
+        <div class="receipt-amount-block">
+          <div class="amount-title">NETO PAGADO</div>
+          <div class="amount-number mono">${{ receipt()!.totalAmount | number:'1.2-2' }} <small>COP</small></div>
+        </div>
+
+        <!-- Liquidación: total oficial facturado, retenciones practicadas y ajuste -->
+        <div class="receipt-grid">
+          <div class="meta-row">
+            <span class="meta-label">Total facturado (valor oficial):</span>
+            <strong class="meta-val mono">${{ receipt()!.settlement.totalFacturas | number:'1.2-2' }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Retenciones aplicadas:</span>
+            <strong class="meta-val">{{ receipt()!.settlement.applicationMode === 'PER_INVOICE' ? 'Por factura' : 'Sobre el total seleccionado' }}</strong>
+          </div>
+          @for (r of receipt()!.settlement.retenciones; track $index) {
+            <div class="meta-row">
+              <span class="meta-label">{{ r.nombre }} ({{ r.porcentaje | number:'1.0-4' }}%){{ r.facturaId ? ' · ' + invoiceLabel(receipt()!.settlement, r.facturaId) : '' }}{{ r.aplica ? '' : ' (no aplica)' }}:</span>
+              <strong class="meta-val mono">{{ r.aplica ? '-' : '' }}${{ r.valorRetenido | number:'1.2-2' }}</strong>
+            </div>
+          }
+          <div class="meta-row">
+            <span class="meta-label">Total retenciones:</span>
+            <strong class="meta-val mono">-${{ receipt()!.settlement.totalRetenciones | number:'1.2-2' }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Ajuste por redondeo:</span>
+            <strong class="meta-val mono">${{ receipt()!.settlement.ajusteRedondeo | number:'1.2-2' }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">ID de pago:</span>
+            <strong class="meta-val mono">{{ receipt()!.pagoId }}</strong>
+          </div>
+        </div>
+
+        <!-- Metadatos de la Transacción -->
+        <div class="receipt-grid">
+          <div class="meta-row">
+            <span class="meta-label">Código Único de Seguimiento (CUS):</span>
+            <strong class="meta-val mono">{{ receipt()!.cus }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Número de Autorización:</span>
+            <strong class="meta-val mono">{{ receipt()!.authorizationCode }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Referencia / ID Transacción:</span>
+            <strong class="meta-val mono">{{ receipt()!.transactionId }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Fecha y Hora:</span>
+            <strong class="meta-val">{{ receipt()!.paymentDate | date:'yyyy-MM-dd HH:mm:ss' }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Medio de Pago:</span>
+            <strong class="meta-val">{{ receipt()!.bankOrCardName }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Empresa / Cliente:</span>
+            <strong class="meta-val">{{ receipt()!.clientBusinessName }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">NIT Cliente:</span>
+            <strong class="meta-val mono">{{ receipt()!.clientNit }}</strong>
+          </div>
+        </div>
+
+        <!-- Desglose de Facturas Pagadas con sus QRs -->
+        <div class="receipt-invoices-section">
+          <h4>Facturas Canceladas en este Pago</h4>
+          <table class="receipt-table">
+            <thead>
+              <tr>
+                <th>Documento</th>
+                <th>Consecutivo</th>
+                <th>CUFE Identificador</th>
+                <th style="text-align:right;">Valor Oficial</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (inv of receipt()!.invoicesPaid; track inv.claveDocumento) {
+                <tr>
+                  <td><strong>Factura {{ inv.tipo }}</strong></td>
+                  <td class="mono">{{ inv.consecutivo }}</td>
+                  <td class="mono" style="font-size:10px;">{{ inv.cufe ? (inv.cufe.slice(0, 24) + '...') : 'Oficial Siigo' }}</td>
+                  <td style="text-align:right;" class="mono bold">${{ inv.valor | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="receipt-footer-note">
+          Este recibo es soporte válido del pago efectuado a SP SISTEMAS PALACIOS LTDA. Los saldos han sido actualizados en el sistema contable y la DIAN.
+        </div>
+
+      </div>
+
+      <!-- Acciones de Comprobante -->
+      <div class="receipt-actions no-print">
+        <button class="btn btn-primary btn-lg" (click)="printReceipt()">
+          🖨️ Imprimir / Guardar en PDF
+        </button>
+        <button class="btn btn-outline btn-lg" (click)="resetFlow()">
+          🔄 Realizar otro Pago
+        </button>
+      </div>
+
+    </section>
+  }
+
+</main>
+
+<!-- ============================================================= -->
+<!-- MODAL DE INSPECCIÓN DEL QR REAL OFICIAL -->
+<!-- ============================================================= -->
+@if (showQrModal() && selectedQrInvoice()) {
+  <div class="modal-backdrop" (click)="closeQrModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>Código QR Oficial DIAN</h3>
+          <span class="mono" style="font-size:12px; color:#64748b;">
+            Factura {{ selectedQrInvoice()!.tipo }} #{{ selectedQrInvoice()!.consecutivo }} ({{ selectedQrInvoice()!.clave_documento }})
+          </span>
+        </div>
+        <button class="btn-close" (click)="closeQrModal()">✕</button>
+      </div>
+
+      <div class="modal-body qr-modal-body">
+        
+        <!-- Renderizado del QR -->
+        <div class="qr-big-container">
+          @if (selectedQrInvoice()!.qr?.imagen) {
+            <img [src]="selectedQrInvoice()!.qr!.imagen" alt="Código QR Factura" class="qr-big-img" onerror="this.style.display='none'; document.getElementById('fallback-qr-big').style.display='block';" />
+          }
+          <div id="fallback-qr-big" style="display:none;">
+            <!-- SVG de alta resolución como respaldo si la imagen directa no carga -->
+            <svg width="180" height="180" viewBox="0 0 33 33" fill="#000" class="qr-svg-big">
+              <rect width="33" height="33" fill="#fff"/>
+              <rect x="2" y="2" width="7" height="7"/><rect x="3" y="3" width="5" height="5" fill="#fff"/><rect x="4" y="4" width="3" height="3"/>
+              <rect x="24" y="2" width="7" height="7"/><rect x="25" y="3" width="5" height="5" fill="#fff"/><rect x="26" y="4" width="3" height="3"/>
+              <rect x="2" y="24" width="7" height="7"/><rect x="3" y="25" width="5" height="5" fill="#fff"/><rect x="4" y="26" width="3" height="3"/>
+              <rect x="10" y="4" width="2" height="1"/><rect x="14" y="4" width="3" height="1"/><rect x="19" y="4" width="2" height="1"/>
+              <rect x="11" y="6" width="1" height="2"/><rect x="15" y="6" width="2" height="1"/><rect x="18" y="7" width="2" height="1"/>
+              <rect x="10" y="14" width="3" height="1"/><rect x="15" y="13" width="2" height="2"/><rect x="20" y="14" width="3" height="2"/>
+            </svg>
+          </div>
+          <span class="qr-scan-hint">📲 Puedes escanear este código con la cámara de tu celular</span>
+        </div>
+
+        <!-- Payload Real Extraído -->
+        <div class="qr-payload-card">
+          <div class="payload-title">Contenido Original Extraído del PDF (DIAN):</div>
+          <pre class="payload-content mono">{{ selectedQrInvoice()!.qr?.contenido || 'Sin payload' }}</pre>
+        </div>
+
+        @if (selectedQrInvoice()!.cufe) {
+          <div class="qr-cufe-block">
+            <strong>CUFE Oficial:</strong>
+            <div class="mono" style="word-break:break-all; font-size:11px;">{{ selectedQrInvoice()!.cufe }}</div>
+          </div>
+        }
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeQrModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================= -->
+<!-- DRAWER / MODAL DEL JSON OFICIAL DE LA FACTURA -->
+<!-- ============================================================= -->
+@if (showJsonViewer() && clientGroup()) {
+  <div class="modal-backdrop" (click)="toggleJsonViewer()">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>JSON Consolidado de la Factura (Consumido por la Pasarela)</h3>
+          <span class="mono" style="font-size:12px; color:#64748b;">
+            GET /api/v1/facturas/recibidas/por-nit/{{ clientGroup()!.nit }}
+          </span>
+        </div>
+        <button class="btn-close" (click)="toggleJsonViewer()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+          Este es el objeto JSON exacto recibido por la pasarela de pagos, donde cada factura dentro de <code>facturas[]</code> incluye su objeto <code>qr</code> auténtico:
+        </p>
+        <pre class="json-viewer mono">{{ getJsonString() }}</pre>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="toggleJsonViewer()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================= -->
+<!-- MODAL DE AUTORIZACIÓN: GUARDAR CONFIGURACIÓN DE RETENCIONES -->
+<!-- ============================================================= -->
+@if (showConsentModal()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+    <div class="modal-dialog consent-modal">
+      <h3 id="consent-title">¿Usar esta configuración en tus próximas facturas?</h3>
+      <p>
+        ¿Autorizas que guardemos las retenciones y porcentajes que acabas de ingresar para usarlos
+        automáticamente en tus futuras facturas? Siempre podrás revisarlos y modificarlos antes de pagar.
+      </p>
+      @if (settlement(); as s) {
+        <ul class="consent-summary">
+          <li>Forma de aplicación: <strong>{{ s.applicationMode === 'PER_INVOICE' ? 'Por factura' : 'Sobre el total de las facturas' }}</strong></li>
+          @for (r of (s.applicationMode === 'PER_INVOICE' ? (s.facturas[0]?.retenciones ?? []) : s.retenciones); track r.conceptoId) {
+            <li>{{ r.nombre }}: <strong>{{ r.porcentaje | number:'1.0-4' }}%</strong></li>
+          }
+        </ul>
+      }
+      <p class="consent-note">Si no autorizas, no se guardará nada y en tus próximos pagos deberás ingresar los porcentajes de nuevo.</p>
+      <div class="consent-actions">
+        <button type="button" class="btn btn-outline" (click)="declineConsent()" [disabled]="savingConsent()">
+          No, solo para este pago
+        </button>
+        <button type="button" class="btn btn-primary" (click)="acceptConsent()" [disabled]="savingConsent()">
+          {{ savingConsent() ? 'Guardando…' : 'Sí, autorizo guardarla' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================= -->
+<!-- VISOR DEL PDF OFICIAL DE UNA FACTURA (no abandona el paso de pago) -->
+<!-- ============================================================= -->
+@if (pdfInvoice(); as inv) {
+  <div class="modal-backdrop" (click)="closePdfViewer()">
+    <div class="modal-dialog pdf-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="pdf-viewer-title"
+         (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 id="pdf-viewer-title">Factura {{ inv.tipo }}-{{ inv.consecutivo }}</h3>
+          <p class="pdf-viewer-meta">
+            NIT: <strong>{{ clientGroup()?.nit }}</strong> ·
+            Valor: <strong>${{ inv.valor_servicio | number:'1.2-2' }}</strong> ·
+            Estado: <strong>{{ inv.estado_pago || 'PENDIENTE' }}</strong>
+          </p>
+        </div>
+        <button type="button" class="btn-close" (click)="closePdfViewer()" aria-label="Cerrar visor">✕</button>
+      </div>
+      <div class="pdf-viewer-body">
+        @if (pdfLoading()) {
+          <p class="pdf-viewer-state">Abriendo el PDF de la factura…</p>
+        } @else if (pdfError()) {
+          <p class="pdf-viewer-state error">{{ pdfError() }}</p>
+        } @else if (pdfViewerUrl(); as url) {
+          <iframe class="pdf-frame" [src]="url" [title]="'PDF de la factura ' + inv.tipo + '-' + inv.consecutivo"></iframe>
+        }
+      </div>
+      <div class="modal-footer">
+        <span class="pdf-viewer-hint">Si tu navegador no muestra el documento, descárgalo.</span>
+        <button type="button" class="btn btn-primary" (click)="downloadInvoicePdf(inv)" [disabled]="pdfDownloading() === inv.id">
+          {{ pdfDownloading() === inv.id ? 'Descargando…' : '⬇ Descargar PDF' }}
+        </button>
+        <button type="button" class="btn btn-outline" (click)="closePdfViewer()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

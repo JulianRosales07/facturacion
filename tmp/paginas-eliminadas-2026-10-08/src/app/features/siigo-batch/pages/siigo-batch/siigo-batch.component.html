@@ -1,0 +1,120 @@
+<div class="batch-page">
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-title">Lote Siigo (Archivo Plano)</h1>
+      <p class="page-subtitle">Generación de archivos planos de interfaz contable, validación de cuadre débitos vs créditos y confirmación (Sprint 6, HU-49).</p>
+    </div>
+    <div class="page-header__actions">
+      <button class="btn btn-outline" (click)="processSharedFolder()" [disabled]="isProcessingFolder()">
+        <mat-icon [class.spin-icon]="isProcessingFolder()">folder</mat-icon> Procesar Carpeta Compartida
+      </button>
+      <button class="btn btn-outline" (click)="loadBatches()">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <app-error-banner [message]="errorMessage()!" (retry)="loadBatches()"></app-error-banner>
+  }
+
+  <!-- Generador de Lote -->
+  <app-ui-card title="Generar Nuevo Lote Contable" [elevated]="true" class="generator-card">
+    <div class="generator-grid">
+      <div class="form-group">
+        <label class="form-label required">Periodo</label>
+        <input type="month" class="form-control" [(ngModel)]="periodCode" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">Tipo de Facturación</label>
+        <select class="form-control" [(ngModel)]="billingType">
+          <option value="F1">F1 · Sistemas Palacios</option>
+          <option value="F20">F20 · Meganet</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">Corte</label>
+        <select class="form-control" [(ngModel)]="cutType">
+          <option value="ADVANCE">Adelantado</option>
+          <option value="ARREARS">Vencido</option>
+        </select>
+      </div>
+
+      <div class="generator-action">
+        <button class="btn btn-primary" (click)="generateBatch()" [disabled]="isGenerating() || !periodCode">
+          @if (isGenerating()) {
+            <mat-icon class="spin-icon">autorenew</mat-icon> Generando Plano...
+          } @else {
+            <mat-icon>post_add</mat-icon> Generar Lote Siigo
+          }
+        </button>
+      </div>
+    </div>
+  </app-ui-card>
+
+  <!-- Listado de Lotes -->
+  <app-ui-card title="Lotes Generados" [elevated]="true">
+    @if (loading()) {
+      <div class="loading-state">
+        <app-ui-spinner message="Cargando historial de lotes Siigo..."></app-ui-spinner>
+      </div>
+    } @else if (batches().length === 0) {
+      <div class="empty-state">
+        <mat-icon>receipt</mat-icon>
+        <p>No se registran lotes contables generados en el sistema.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Archivo Plano</th>
+              <th>Tipo</th>
+              <th>Corte</th>
+              <th class="text-center">Facturas</th>
+              <th>Generado</th>
+              <th>Confirmado</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (batch of batches(); track batch.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ batch.nombreArchivo }}</td>
+                <td>
+                  <span class="type-pill" [class.type-f1]="batch.tipoFacturacion === 'F1'" [class.type-f20]="batch.tipoFacturacion === 'F20'">
+                    {{ batch.tipoFacturacion }}
+                  </span>
+                </td>
+                <td>{{ batch.tipoCorte }}</td>
+                <td class="text-center font-mono font-bold">{{ batch.totalFacturas }}</td>
+                <td class="text-xs text-muted">{{ batch.generadoEn | appDate }}</td>
+                <td class="text-xs text-muted">{{ batch.confirmadoEn ? (batch.confirmadoEn | appDate) : '-' }}</td>
+                <td>
+                  <app-ui-badge [variant]="batch.estado === 'CONFIRMADO' ? 'success' : 'info'">
+                    {{ batch.estado }}
+                  </app-ui-badge>
+                </td>
+                <td class="text-center">
+                  <div class="action-buttons">
+                    <button class="btn btn-outline btn-sm" (click)="downloadBatchFile(batch.id)" title="Descargar archivo plano Siigo (.txt)">
+                      <mat-icon>download</mat-icon> Descargar .TXT
+                    </button>
+                    @if (batch.estado !== 'CONFIRMADO') {
+                      <button class="btn btn-outline btn-sm" (click)="confirmBatch(batch.id)" title="Confirmar lote importado">
+                        <mat-icon>check</mat-icon> Confirmar
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-ui-card>
+</div>

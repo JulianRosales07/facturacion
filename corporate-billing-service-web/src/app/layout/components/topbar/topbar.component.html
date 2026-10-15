@@ -1,0 +1,71 @@
+<header class="topbar">
+  <!-- Izquierda: marca y nombre del espacio de trabajo -->
+  <a class="topbar__brand" routerLink="/dashboard" aria-label="Ir al resumen de recepción">
+    <img src="assets/layout/images/corporativo.png" alt="SP Corporativo" class="topbar__logo" width="58" height="40" />
+    <span class="topbar__workspace">Facturación corporativa</span>
+  </a>
+
+  <!-- Derecha: idioma y usuario -->
+  <div class="topbar__right">
+    <button type="button" class="topbar__pill" [matMenuTriggerFor]="languageMenu" aria-label="Idioma de la interfaz">
+      <mat-icon class="topbar__pill-icon">language</mat-icon>
+      <mat-icon class="topbar__pill-chevron">expand_more</mat-icon>
+    </button>
+
+    <mat-menu #languageMenu="matMenu" xPosition="before">
+      <button mat-menu-item disabled class="topbar__lang-option">
+        <mat-icon>check</mat-icon>
+        <span>Español</span>
+      </button>
+    </mat-menu>
+
+    <button type="button" class="topbar__avatar-btn" [matMenuTriggerFor]="userMenu" aria-label="Opciones de usuario">
+      @if (avatarUrl && !avatarFailed()) {
+        <img class="topbar__avatar-img" [src]="avatarUrl" [alt]="localPreview ? 'Foto de perfil de ejemplo' : 'Foto de perfil'" (error)="avatarFailed.set(true)" />
+      } @else {
+        <mat-icon class="topbar__avatar-placeholder">account_circle</mat-icon>
+      }
+      <span class="topbar__avatar-status" aria-hidden="true">
+        <mat-icon>check</mat-icon>
+      </span>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before" class="cb-user-menu">
+      <div class="user-menu__header">
+        <div class="user-menu__avatar">
+          @if (avatarUrl && !avatarFailed()) {
+            <img [src]="avatarUrl" alt="" />
+          } @else {
+            <span>{{ initials() }}</span>
+          }
+        </div>
+        <div class="user-menu__identity">
+          <span class="user-menu__name">{{ currentUser()?.fullName || 'Julián Palacios' }}</span>
+          @if (currentUser()?.email) {
+            <span class="user-menu__email" [title]="currentUser()!.email">{{ currentUser()!.email }}</span>
+          }
+          <span class="user-menu__role">{{ currentUser()?.role?.name || 'Administrador' }}</span>
+        </div>
+      </div>
+
+      <div class="user-menu__section">
+        <button mat-menu-item class="user-menu__item" routerLink="/perfil">
+          <span class="user-menu__item-icon"><mat-icon>person_outline</mat-icon></span>
+          <span class="user-menu__item-text">
+            <span class="user-menu__item-label">Mi perfil</span>
+            <span class="user-menu__item-hint">Datos personales y seguridad</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="user-menu__section user-menu__section--footer">
+        <button mat-menu-item class="user-menu__item user-menu__item--danger" (click)="logout()">
+          <span class="user-menu__item-icon"><mat-icon>logout</mat-icon></span>
+          <span class="user-menu__item-text">
+            <span class="user-menu__item-label">Cerrar sesión</span>
+          </span>
+        </button>
+      </div>
+    </mat-menu>
+  </div>
+</header>

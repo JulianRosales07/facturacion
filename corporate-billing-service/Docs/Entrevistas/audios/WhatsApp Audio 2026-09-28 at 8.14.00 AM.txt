@@ -1,0 +1,87 @@
+Transcripción de la reunión / audio WhatsApp (28/09/2026 8:14 AM)
+Participantes identificados:
+- Hablante 1 (Líder técnico / Arquitectura)
+- Julián (Desarrollador / Frontend)
+- Angela (Contabilidad / Finanzas)
+
+--------------------------------------------------------------------------------
+
+[00:00] Claro.
+[00:05] el resultado.
+[00:06] Claro, porque este es el resultado.
+[00:09] Porque al final del día ese es el archivo que necesitamos, ese Excel.
+[00:14] Ajá.
+[00:15] Y de ahí que vaya y lo lee y saque las facturas para cada...
+[00:19] Ajá.
+[00:20] Eso, y de ahí para atrás el enfoque dicen como las novedades.
+[00:23] Porque las novedades son todas las modificaciones que vos vas a tener.
+[00:28] Y esto de... esto de que por ejemplo ya cuando pagan, ¿qué?
+[00:34] Ese es otro camino, ¿no?
+[00:37] Porque cuando pagan nosotros... mejor dicho, ahí sí ya nos toca sentarnos con los... con los contables. Porque prácticamente la interfaz que... o ¡ah, miento! Lo que pasa es que sí nos va a tocar generar un perfil por cada...
+[00:56] Por cada cliente.
+[00:57] Por cada cliente para modificarle lo... o agregarle...
+[01:00] Claro, porque este... las retenciones.
+[01:02] Ajá, eso. Entonces, por ejemplo, llega el corporativo, ingresa su NIT y le decimos: "Bueno, tiene tal factura".
+[01:10] Eso: "Tiene tal factura, listo". La selecciona, podría ser: "Listo, no hay lío". Pero entonces aquí ya diría: "Para tu pago aplica estampillas, aplica esto, aplica esto".
+[01:21] Bueno, eso se lo puede poner los... así como... y pues yo lo que tenía antes era que mostraba pues toda la información y los datos de esto de... de retención, cuánto le descuentan de la factura o cuánto tiene que aumentar.
+[01:46] Pero ¿y eso tiene que permitir hacer eso el microservicio?
+[01:50] ¡Claro! Claro, porque tendrías que... o sea, como te digo, o sea: ¿vos? Sí. Porque incluso no nos sirve ni siquiera lo que está en el SP porque prácticamente desde acá... desde acá se tiene que hacer la configuración del perfil del corporativo para decir: "Para este corporativo..." Ah, miento, son como configuraciones: "Bueno, aplica retención, aplica IVA y demás". Y luego esas asociarlas a cada uno, o sea tendríamos que abrirles un panel.
+[02:22] ¡Hola, Angelita! Sigue, toma asiento.
+[02:27] Y él tiene... pues sí claro, tiene toda la razón. ¿Cómo es que se llama?
+[02:40] Felipe.
+[02:41] Eso, tiene que... Listo, verás. Entonces, como lo que nos estaban diciendo: listo, prácticamente aquí estaría la base de datos que es lo que nosotros vamos a... a recibir.
+[02:55] Sí.
+[02:55] ¿Sí o no? Y eso va a estar por tarea programada, bueno de archivo a archivo y eso es lo que va a hacer Julián, va a hacer la... el consumo de esto y mostrarlo... No mostrarla, sino que la descarguen, porque yo no sé pues si exista ahí un lío en mostrar la factura de... de X proveedor, así como nosotros ocultamos la información de nuestros usuarios, ahí si tocaría revisar ese tema.
+[03:18] Pero o sea, ¿no mostrarla? O sea, ¿no mostrarla en el panel, sino que ya cuando lo pague ya él se pueda descargar el PDF? Pues eso es lo que hacen la mayoría de... de entidades o empresas, ¿no?
+[03:34] Mhm, mhm. Es que acá la factura prácticamente estaría lista, ¿sí o no? Y es que hay algunos que la necesitan... la factura ya hecha, el PDF que nos dan...
+[03:43] Antes de pagarla.
+[03:45] Antes de pagarla, ajá.
+[03:46] Bueno, eso sí.
+[03:47] Entonces date cuenta, por eso es que te digo: o sea, si el corporativo la necesita antes, él digita su... su NIT y le dice "Tu factura está lista", y mostramos solamente lo que tiene que pagar. Y si necesita la factura, consumimos el PDF y que la descargue. No la mostramos, sino que la descargue.
+[04:06] Ah bueno, muestra una cierta parte y...
+[04:07] Eso, ajá, para que mire y bueno. Si ya, por ejemplo, decide pagar, ya ahí lo que decías tú: lo de ReteICA, estampillas y demás. Entonces ahorita estaba pensando, y claro, obviamente, vamos a tener que configurar esos parámetros: a quién aplica estampillas, ReteICA y demás. Entonces nosotros prácticamente vamos a tener toda la base de datos de los corporativos y a esos sí nos tendrían que ayudar ustedes, porque nosotros creamos las variables. Porque entonces, por ejemplo, yo soy Emssanar: a mí me aplicas a todos los pagos ReteICA, a todos los pagos esto, a todos los pagos esto. Entonces, cuando él ya vaya a hacer el pago, automáticamente ya le dice lo que le vamos a aplicar.
+[04:56] ¿Es que sabes cuál es el problema? O bueno... bueno, no, no, mentira. Porque, por ejemplo, las bases de la DIAN están constantemente cambiando. Por ejemplo, este año cambiaron las bases de retenciones: estaban en 210 y pasaron a 105, creo. Eso depende del gobierno, cómo mire.
+[05:15] O sea que tendríamos que tener en cuenta esa variable también para poder aplicar esas...
+[05:19] Sí. Sí, sí, sí. Y digamos, por ejemplo, también el ReteICA: por ejemplo, se aplica... aunque el ReteICA sí con servicios de internet sí aplica, no importa dónde sea, pero hay empresas o hay contadores que no lo toman así. Lo que pasa es que el ReteICA es territorial. El ReteICA si yo hago una compra a otra empresa de aquí de Pasto, aplica. Eso lo toman algunas empresas o toman ese concepto. Aunque el internet, el internet tiene que aplicarse sea donde sea. Pero entonces algunas empresas sí lo aplican o no lo aplican; el ReteICA también tiene bases. Creo que está en cuatrocientos... miento, está en doscientos y algo la base de servicios.
+[06:08] O sea que sí tenemos que... No, o sea sí hay que hacer esa configuración como tal y que ustedes le asignen la configuración al corporativo.
+[06:17] Mhm.
+[06:18] ¿Cuántos corporativos tenemos? Pero bueno, ahí se puede tomar es decir, por ejemplo, no sé, yo lo veo como empresa 1, 2, 3, 4 y le asigno estas variables para su efectivo pago.
+[06:31] Mhm.
+[06:36] Uy, está largo eso.
+[06:38] Sí.
+[06:40] ¿Cada cuánto cambia lo de los ReteICA y retenciones?
+[06:44] Bueno, es que eso está con UVTs. O sea, las UVTs es como el valor que nosotros nos guiamos para no decir: "Bueno, el próximo año va a estar en ciento tanto", no. Entonces el gobierno dice: se va a aumentar, la UVT aumenta a tanto valor, y la base de retenciones son 5 UVTs, por ejemplo. Entonces ya, ahí se configura. Pero ¿qué pasa? Que cuando, por ejemplo, lo que pasó este año: que el gobierno decía "tenemos que recaudar", ¿qué hicieron? Bajaron las bases. Entonces dijeron: ya no son por ejemplo 10 UVTs, sino que bajan a 5. Entonces ahí sí depende, porque en el inicio de año iniciamos con una base, nos la cambiaron, colocamos esa base y luego nos la volvieron a cambiar. Entonces nos tocó tomar tres bases distintas este año.
+[07:39] ¡Ah, puchas!
+[07:44] Pero la base es para todos los corporativos, ¿no?
+[07:47] Sí, sí, sí, sí. Solo que sí es... digamos, por ejemplo, algunos... algunos, por ejemplo, no toman el servicio de internet como un servicio sino como el uso de software, y eso tiene distintas retenciones también.
+[08:08] ¿De internet es como el 4%, no?
+[08:11] Sí, 4%.
+[08:12] Verás, Julián, entonces hagamos algo: es que sí nos toca reunirnos con ellos para definir esto bien porque si no, pues después... O sea, el microservicio de la factura no hay lío porque ya tenemos la base de datos y todo, y ese ya lo puedes empezar a construir como para que suba. Pero sí voy a necesitar los mockups, ese que tenías en HTML con Cloud, para mostrarles a ellos cómo sería el ejercicio del pago y lo que nosotros vamos a guardar, y las configuraciones. Sí nos toca un HTML bien jalado para mirar a ver cómo vamos a configurar, cómo se asigna esa configuración a una empresa, cómo visualizaría el pago, cómo retornaría la información, para que ellos nos digan "Esto sí va así, esto no va así".
+[08:55] Listo.
+[08:57] Porque si no, después vamos a tener líos. Entonces primero arranquemos con eso, yo creo que... ¿hoy a qué estamos?
+[09:07] 10.
+[09:09] 10. Hoy es jueves, ¿no? Para reunirnos el miércoles para que tengas hoy, mañana, el lunes y martes, y nos reunimos con ellos. Ahí sí ya nos tocaría contigo, ¿cuándo llega Andrés?
+[09:21] El lunes.
+[09:23] Eso, ya nos tocaría contigo, con Andrés, yo creo que tendría que estar la gerente también, en este caso Oleíto, para que revisen y con lo que ustedes nos digan, con eso nos vamos. Porque es que el consumir y mostrar no hay lío, de ahí hacia atrás es como... O sea, el último paso que sería el pago, ese es el que más tiene que generar alivio.
+[09:46] El consumir y mostrar tenía que... también depende de eso. Porque ¿qué le vas a mostrar a la factura? ¿Un valor y luego... y luego cambie?
+[09:56] Sí.
+[09:59] No, no, no, el valor nunca cambia. O sea, la factura, si uno le muestra la factura al cliente tiene que mostrarle este. Y la factura va a ir... el valor de pago...
+[10:11] ¿Y con la retención y eso no afecta ahí?
+[10:14] O sea, afecta en el pago, pero la factura no. Lo que pasa es que en la factura no se colocan las retenciones. Digamos, por ejemplo, esta factura de 59.500 esa no tendría retenciones. Pero en la factura, si ustedes... es que no tengo aquí una para mostrarles...
+[10:30] Pero por ejemplo en esta factura, yo como empresa veo este: 430.000...
+[10:36] 880.
+[10:37] Y ahí en el momento de hacer la...
+[10:39] Porque esto es el valor del servicio. Esto es el valor del servicio, entonces esto es lo que yo necesito hasta para calcular...
+[10:50] ¿Se murió?
+[10:52] ¿Se murió, ve?
+[10:56] No, Angelita, ¿se murió?
+[10:57] Ya, ya, ya.
+[11:00] Esto es lo que se necesita, o sea este valor, para calcular. Pero o sea en la factura...
+[11:08] Claro, o sea es que ellos terminan pagando otro valor.
+[11:11] Sí, pero o sea la factura lo que yo necesito ver es este valor.
+[11:16] La factura sí o sí tiene que mostrar ese valor, el saldo.
+[11:19] Y sobre ese es el que se hace el descuento.
+[11:24] Que es lo que dice ella.
+[11:26] Ah bueno, entonces sí sería después de ese otro paso.
+[11:34] Listo, dale Juli. Entonces con eso arrancamos. Igual yo ya sé que me libero de lo del SP empresarial, ya me falta poquito. Ya me meto de lleno... hijo de p... me toca también con lo del Darién porque en Darién también van buenas.
+[11:48] Listo Angelita, entonces el miércoles...

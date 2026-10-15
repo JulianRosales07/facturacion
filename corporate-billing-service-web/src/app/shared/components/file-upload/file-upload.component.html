@@ -1,0 +1,131 @@
+<div class="file-upload-root">
+  <!-- Dropzone with Border Beam Container -->
+  <div
+    class="dropzone-outer"
+    [class.dropzone-outer--active]="isDragging()"
+    [class.dropzone-outer--beam]="showBorderBeam"
+  >
+    <div
+      role="button"
+      tabindex="0"
+      class="dropzone"
+      [class.dropzone--dragging]="isDragging()"
+      (click)="openFileDialog()"
+      (keydown.enter)="openFileDialog()"
+      (keydown.space)="openFileDialog()"
+      (dragenter)="onDragEnter($event)"
+      (dragleave)="onDragLeave($event)"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event)"
+    >
+      <!-- Floating Icon Cluster -->
+      <div class="icon-cluster" aria-hidden="true">
+        <!-- Card 1 (Left - Sheet) -->
+        <div class="cluster-card cluster-card--left" [class.cluster-card--active]="isDragging()">
+          <svg class="cluster-svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="8" y1="13" x2="16" y2="13"></line>
+            <line x1="8" y1="17" x2="16" y2="17"></line>
+            <line x1="10" y1="9" x2="8" y2="9"></line>
+          </svg>
+        </div>
+
+        <!-- Card 2 (Center - Upload / PDF) -->
+        <div class="cluster-card cluster-card--center" [class.cluster-card--active]="isDragging()">
+          <svg class="cluster-svg" viewBox="0 0 24 24" fill="none" stroke="#c41230" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+
+        <!-- Card 3 (Right - Image / Data) -->
+        <div class="cluster-card cluster-card--right" [class.cluster-card--active]="isDragging()">
+          <svg class="cluster-svg" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Text Instructions -->
+      <div class="dropzone-text-group">
+        <div class="dropzone-title">{{ title }}</div>
+        <div class="dropzone-desc">{{ description }}</div>
+
+        @if (rejectionMessage()) {
+          <div class="dropzone-error" role="alert">
+            {{ rejectionMessage() }}
+          </div>
+        }
+      </div>
+
+      <!-- Action Pill Button -->
+      <div class="action-pill">
+        <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>{{ isDragging() ? draggingLabel : browseLabel }}</span>
+      </div>
+
+      <!-- Hidden Input -->
+      <input
+        #fileInput
+        type="file"
+        [accept]="accept"
+        [multiple]="multiple"
+        class="sr-hidden-input"
+        (change)="onFileInputChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Selected Files List -->
+  @if (showFileList && files().length > 0) {
+    <div class="file-list">
+      @for (file of files(); track file.id) {
+        <div class="file-item">
+          <!-- Thumbnail -->
+          <div
+            class="file-thumb"
+            [class.file-thumb--excel]="file.extension === 'XLSX' || file.extension === 'XLS' || file.extension === 'CSV'"
+            [class.file-thumb--pdf]="file.extension === 'PDF'"
+            [class.file-thumb--image]="file.type.startsWith('image/')"
+          >
+            @if (file.type.startsWith('image/')) {
+              <img [src]="file.url" [alt]="file.name" class="file-thumb-img" />
+            } @else {
+              <span class="file-thumb-ext">{{ file.extension }}</span>
+            }
+          </div>
+
+          <!-- Metadata -->
+          <div class="file-info">
+            <div class="file-name" [title]="file.name">{{ file.name }}</div>
+            <div class="file-size">{{ formatSize(file.size) }} &bull; {{ file.extension }}</div>
+          </div>
+
+          <!-- Status Badge -->
+          <span class="file-badge">Listo</span>
+
+          <!-- Delete Action -->
+          <button
+            type="button"
+            class="file-remove-btn"
+            (click)="removeFile(file, $event)"
+            title="Quitar archivo"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

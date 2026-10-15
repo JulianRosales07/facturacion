@@ -1,0 +1,217 @@
+<div
+  class="calendar-root"
+  [ngClass]="className"
+  data-slot="calendar"
+  [attr.data-mode]="mode"
+>
+  <!-- Screen-reader announcement -->
+  <div class="sr-only" aria-live="polite" aria-atomic="true">
+    {{ monthLabel() }}
+  </div>
+
+  <!-- Header Controls -->
+  <div class="calendar-header">
+    <button
+      type="button"
+      aria-label="Mes anterior"
+      (click)="goToMonth(-1)"
+      class="nav-btn"
+    >
+      <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <div class="header-jump-group">
+      <!-- Month QuickNav -->
+      <span class="tip-wrapper">
+        <button
+          type="button"
+          [disabled]="!quickNav"
+          aria-label="Seleccionar mes"
+          (click)="setNavView('months')"
+          class="jump-btn"
+          [class.jump-btn--active]="navViewSignal() === 'months'"
+        >
+          {{ monthNames[displayedMonthSignal().getMonth()] }}
+        </button>
+        @if (quickNav) {
+          <span class="tooltip">Ir al mes</span>
+        }
+      </span>
+
+      <!-- Divider / Toggle -->
+      <span class="tip-wrapper">
+        <button
+          type="button"
+          [disabled]="!quickNav"
+          aria-label="Alternar mes o año"
+          (click)="navViewSignal() === 'months' ? openYearsView() : setNavView('months')"
+          class="divider-btn"
+        >
+          |
+        </button>
+        @if (quickNav) {
+          <span class="tooltip">{{ navViewSignal() === 'months' ? 'Ir al año' : 'Navegación rápida' }}</span>
+        }
+      </span>
+
+      <!-- Year QuickNav -->
+      <span class="tip-wrapper">
+        <button
+          type="button"
+          [disabled]="!quickNav"
+          aria-label="Seleccionar año"
+          (click)="openYearsView()"
+          class="jump-btn"
+          [class.jump-btn--active]="navViewSignal() === 'years'"
+        >
+          {{ displayedMonthSignal().getFullYear() }}
+        </button>
+        @if (quickNav) {
+          <span class="tooltip">Ir al año</span>
+        }
+      </span>
+    </div>
+
+    <button
+      type="button"
+      aria-label="Siguiente mes"
+      (click)="goToMonth(1)"
+      class="nav-btn"
+    >
+      <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <div class="calendar-content">
+    <!-- VIEW 1: DAYS GRID -->
+    @if (navViewSignal() === 'days') {
+      <div class="days-view">
+        <!-- Weekday Labels -->
+        <div class="weekday-row">
+          @for (label of weekdayLabels(); track $index) {
+            <div class="weekday-cell">{{ label }}</div>
+          }
+        </div>
+
+        <!-- Days Grid -->
+        <div
+          #dayGrid
+          role="grid"
+          [attr.aria-label]="monthLabel()"
+          class="days-grid"
+          (keydown)="onKeyDown($event)"
+        >
+          @for (week of weeks(); track $index) {
+            <div role="row" class="week-row">
+              @for (date of week; track date.toISOString()) {
+                @let state = cellState(date);
+                <div
+                  role="gridcell"
+                  [attr.aria-selected]="state.isSelected || undefined"
+                  class="cell-wrapper"
+                >
+                  <!-- Range background band -->
+                  @if (mode === 'range' && (state.isInRange || state.isRangeStart || state.isRangeEnd)) {
+                    <div
+                      class="range-band"
+                      [class.range-band--start]="state.isRangeStart"
+                      [class.range-band--end]="state.isRangeEnd"
+                    ></div>
+                  }
+
+                  <!-- Day button -->
+                  <button
+                    type="button"
+                    [disabled]="state.isDisabled"
+                    [attr.aria-label]="date.toLocaleDateString()"
+                    [attr.data-date]="date.toISOString()"
+                    [attr.data-date-key]="state.dateKey"
+                    (click)="handleSelectDay(date)"
+                    class="day-btn"
+                    [class.day-btn--outside]="state.outsideMonth"
+                    [class.day-btn--selected]="state.isSelected"
+                    [class.day-btn--today]="state.isToday && !state.isSelected"
+                    [class.day-btn--disabled]="state.isDisabled && !state.isBooked"
+                    [class.day-btn--booked]="state.isBooked"
+                  >
+                    {{ date.getDate() }}
+
+                    @if (state.event && !state.isSelected) {
+                      <span class="event-dot" [title]="state.event.label || 'Evento'"></span>
+                    }
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- VIEW 2: MONTHS PICKER -->
+    @if (navViewSignal() === 'months') {
+      <div class="months-view">
+        @for (m of monthNames; track $index) {
+          <button
+            type="button"
+            (click)="selectMonth($index)"
+            class="month-btn"
+            [class.month-btn--active]="$index === displayedMonthSignal().getMonth()"
+          >
+            {{ m.slice(0, 3) }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- VIEW 3: YEARS PICKER (DECADE) -->
+    @if (navViewSignal() === 'years') {
+      <div class="years-view">
+        <div class="decade-header">
+          <button
+            type="button"
+            aria-label="Años anteriores"
+            (click)="changeYearAnchor(-12)"
+            class="nav-btn nav-btn--sm"
+          >
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+
+          <span class="decade-label">
+            {{ yearAnchorSignal() - 5 }} – {{ yearAnchorSignal() + 6 }}
+          </span>
+
+          <button
+            type="button"
+            aria-label="Siguientes años"
+            (click)="changeYearAnchor(12)"
+            class="nav-btn nav-btn--sm"
+          >
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="years-grid">
+          @for (y of yearsList(); track y) {
+            <button
+              type="button"
+              (click)="selectYear(y)"
+              class="year-btn"
+              [class.year-btn--active]="y === displayedMonthSignal().getFullYear()"
+            >
+              {{ y }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

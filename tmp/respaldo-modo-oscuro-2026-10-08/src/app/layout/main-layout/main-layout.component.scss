@@ -1,0 +1,74 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--cb-bg-app, #f8fafc);
+
+  &__body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__sidebar-desktop {
+    display: none;
+    height: 100%;
+    flex-shrink: 0;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.75rem 0 0.75rem 0.75rem;
+    box-sizing: border-box;
+
+    @media (min-width: 1024px) {
+      display: block;
+    }
+  }
+
+  &__drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 998;
+    backdrop-filter: blur(2px);
+  }
+
+  &__drawer {
+    position: fixed;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    width: var(--cb-sidebar-width, 260px);
+    z-index: 999;
+    box-shadow: var(--cb-shadow-lg);
+    background: #ffffff;
+    animation: slideIn 0.2s ease-out;
+  }
+
+  &__main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+    box-sizing: border-box;
+
+    @media (min-width: 1200px) {
+      padding: 1.25rem 2rem;
+    }
+  }
+
+  &__container {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

@@ -1,0 +1,202 @@
+<aside class="sidebar" [class.sidebar--collapsed]="collapsed">
+
+
+  <!-- Header: Hamburger & Corporate Billing Brand -->
+  <div class="sidebar__header">
+    <button type="button" class="sidebar__hamburger" (click)="onToggle()" aria-label="Alternar menú lateral">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    @if (!collapsed) {
+    <div class="sidebar__brand">
+      <img src="assets/layout/images/sistemaspalacios.png" alt="Sistemas Palacios" class="sidebar__brand-logo" />
+    </div>
+    }
+  </div>
+
+  <!-- Scrollable Nav Section -->
+  <nav class="sidebar__nav">
+    @for (section of navSections(); track section.title) {
+      @if (section.title && !collapsed) {
+        <div class="sidebar__section-title">{{ section.title }}</div>
+      }
+      <ul class="sidebar__group">
+        @for (item of section.items; track item.path) {
+          <li class="sidebar__item">
+            @if (item.disabled) {
+              <div class="sidebar__link sidebar__link--disabled" [title]="item.label">
+                <ng-container *ngTemplateOutlet="renderIcon; context: { $implicit: item.icon }"></ng-container>
+                @if (!collapsed) {
+                  <span class="sidebar__label">{{ item.label }}</span>
+                  @if (item.badge) {
+                    <span class="sidebar__badge sidebar__badge--{{ item.badgeType || 'default' }}">{{ item.badge }}</span>
+                  }
+                }
+              </div>
+            } @else {
+              <a [routerLink]="item.path" routerLinkActive="sidebar__link--active" (click)="onNavClick()"
+                class="sidebar__link" [title]="item.label">
+                <ng-container *ngTemplateOutlet="renderIcon; context: { $implicit: item.icon }"></ng-container>
+                @if (!collapsed) {
+                  <span class="sidebar__label">{{ item.label }}</span>
+                  @if (item.badge) {
+                    <span class="sidebar__badge sidebar__badge--{{ item.badgeType || 'default' }}">{{ item.badge }}</span>
+                  }
+                }
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </nav>
+
+  <!-- SVG Icon Definitions -->
+  <ng-template #renderIcon let-name>
+    @switch (name) {
+      @case ('grid') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+        </svg>
+      }
+      @case ('upload') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      }
+      @case ('dollar') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="2" x2="12" y2="22"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      }
+      @case ('file-text') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      }
+      @case ('activity') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+      }
+      @case ('users') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      }
+      @case ('file-minus') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="9" y1="15" x2="15" y2="15"></line>
+        </svg>
+      }
+      @case ('wallet') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path>
+          <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
+        </svg>
+      }
+      @case ('code') {
+        <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+      }
+      @default {
+        <mat-icon class="sidebar__icon">{{ name }}</mat-icon>
+      }
+    }
+  </ng-template>
+
+  <!-- Bottom Container: Theme Switcher & User Profile -->
+  <div class="sidebar__bottom">
+    @if (!collapsed) {
+    <!-- Theme Switcher Pill -->
+    <div class="sidebar__theme-toggle">
+      <button type="button" class="theme-btn" [class.theme-btn--active]="!isDarkMode()" (click)="toggleTheme(false)"
+        aria-label="Modo Claro">
+        <mat-icon>wb_sunny</mat-icon>
+      </button>
+      <button type="button" class="theme-btn" [class.theme-btn--active]="isDarkMode()" (click)="toggleTheme(true)"
+        aria-label="Modo Oscuro">
+        <mat-icon>nightlight_round</mat-icon>
+      </button>
+    </div>
+    } @else {
+    <button type="button" class="theme-btn theme-btn--compact" (click)="toggleTheme(!isDarkMode())"
+      [attr.aria-label]="isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+      [title]="isDarkMode() ? 'Modo claro' : 'Modo oscuro'">
+      <mat-icon>{{ isDarkMode() ? 'wb_sunny' : 'nightlight_round' }}</mat-icon>
+    </button>
+    }
+
+    <hr class="sidebar__divider sidebar__divider--bottom" />
+
+    <!-- User Profile Card -->
+    <div class="sidebar__profile">
+      <a routerLink="/perfil" (click)="onNavClick()" class="sidebar__profile-left" title="Ver mi perfil">
+        <div class="sidebar__avatar">
+          @if (avatarUrl && !avatarFailed()) {
+            <img class="sidebar__avatar-img" [src]="avatarUrl" [alt]="currentUser()?.fullName || 'Perfil'" (error)="avatarFailed.set(true)" />
+          } @else {
+            {{ currentUser()?.fullName ? currentUser()!.fullName.charAt(0).toUpperCase() : 'U' }}
+          }
+        </div>
+        @if (!collapsed) {
+        <div class="sidebar__user-details">
+          <span class="sidebar__user-name">{{ currentUser()?.fullName || 'Julián Palacios' }}</span>
+          <span class="sidebar__user-role">{{ currentUser()?.role?.name || 'Administrador' }}</span>
+        </div>
+        }
+      </a>
+
+      @if (!collapsed) {
+      <button type="button" class="sidebar__more-btn" [matMenuTriggerFor]="sidebarUserMenu"
+        aria-label="Opciones de perfil">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+
+      <mat-menu #sidebarUserMenu="matMenu" yPosition="above" xPosition="after" class="cb-user-menu cb-user-menu--sidebar">
+        @if (currentUser()?.email) {
+          <div class="user-menu__account">
+            <span class="user-menu__account-label">Sesión iniciada como</span>
+            <span class="user-menu__email" [title]="currentUser()!.email">{{ currentUser()!.email }}</span>
+          </div>
+        }
+
+        <div class="user-menu__section">
+          <button mat-menu-item class="user-menu__item" routerLink="/perfil" (click)="onNavClick()">
+            <span class="user-menu__item-icon"><mat-icon>person_outline</mat-icon></span>
+            <span class="user-menu__item-text">
+              <span class="user-menu__item-label">Mi perfil</span>
+              <span class="user-menu__item-hint">Datos personales y seguridad</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="user-menu__section user-menu__section--footer">
+          <button mat-menu-item class="user-menu__item user-menu__item--danger" (click)="logout()">
+            <span class="user-menu__item-icon"><mat-icon>logout</mat-icon></span>
+            <span class="user-menu__item-text">
+              <span class="user-menu__item-label">Cerrar sesión</span>
+            </span>
+          </button>
+        </div>
+      </mat-menu>
+      }
+    </div>
+  </div>
+</aside>

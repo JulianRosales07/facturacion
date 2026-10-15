@@ -1,0 +1,274 @@
+<header class="page-head">
+  <div class="head-title">
+    <a routerLink="/consultar-facturas" queryParamsHandling="preserve" class="back-link">← Volver a facturas recibidas</a>
+    <h1>Detalle de factura</h1>
+    <p>Información recibida de Siigo. Las modificaciones se gestionan en el sistema emisor.</p>
+  </div>
+</header>
+
+@if(loading()){
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando factura…</p>
+  </div>
+} @else if(error()){
+  <div class="empty-state" role="alert">
+    <h2>Error al cargar</h2>
+    <p>{{ error() }}</p>
+    <a class="btn btn-secondary btn-sm" routerLink="/consultar-facturas">Volver al listado</a>
+  </div>
+} @else if(invoice(); as inv){
+  <section class="panel">
+    <header class="page-head">
+      <h2>{{ inv.tipoFacturacion }} · {{ inv.numeroFactura }}</h2>
+      <div class="head-actions">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="openSpPagosJson()">⚡ Ver JSON SP Pagos</button>
+        <button type="button" class="btn btn-secondary btn-sm" *hasPermission="'INVOICES_UPDATE'" (click)="toggleRegenerate()" [attr.aria-expanded]="showRegenerate()">Regenerar</button>
+        @if(inv.rutaPdf){
+          <a class="btn btn-secondary btn-sm" [routerLink]="['/consultar-facturas', inv.id, 'pdf']" queryParamsHandling="preserve">Ver PDF oficial</a>
+          <button type="button" class="btn btn-primary btn-sm" (click)="download()">Descargar PDF</button>
+        } @else {
+          <span class="status-pill status-pill--pending"><span class="dot"></span>PDF pendiente de recibir</span>
+          <a class="btn btn-secondary btn-sm" routerLink="/sincronizacion">Consultar sincronización</a>
+        }
+      </div>
+    </header>
+    @if(showRegenerate()){
+      <form class="filters-panel" (ngSubmit)="regenerate()" aria-label="Regenerar factura">
+        <p>Recalcula la factura con las sedes y novedades actuales del periodo {{ inv.periodoCodigo }} y crea una nueva versión. La versión actual queda reemplazada.</p>
+        <div class="filters">
+          <label>
+            <span>Motivo</span>
+            <input name="regenReason" [(ngModel)]="regenerateReason" placeholder="Ej.: cambio de plan el 16" required />
+          </label>
+          @if(needsCufeConfirmation()){
+            <label>
+              <span>Factura ya transmitida a la DIAN</span>
+              <span><input name="regenCufe" type="checkbox" [(ngModel)]="confirmTransmittedCufe" /> Confirmo que la corrección está autorizada</span>
+            </label>
+          }
+        </div>
+        <div class="filters-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleRegenerate()">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="regenerating()">{{ regenerating() ? 'Regenerando…' : 'Regenerar factura' }}</button>
+        </div>
+      </form>
+    }
+    <dl class="details">
+      <div><dt>Cliente</dt><dd>{{ inv.cliente.razonSocial }}</dd></div>
+      <div><dt>NIT</dt><dd>{{ inv.cliente.nit }}</dd></div>
+      <div><dt>Fecha de emisión</dt><dd>{{ inv.fechaEmision | appDate }}</dd></div>
+      <div><dt>Vencimiento</dt><dd>{{ inv.fechaVencimiento ? (inv.fechaVencimiento | appDate) : 'No informado' }}</dd></div>
+      <div><dt>Dirección</dt><dd>{{ inv.cliente.direccionFiscal || 'No informada' }}</dd></div>
+      <div><dt>Correo de facturación</dt><dd>{{ inv.cliente.emailFacturacion || 'No informado' }}</dd></div>
+    </dl>
+    <p class="subtle long-text" style="margin-top: 12px;"><strong>CUFE:</strong> {{ inv.cufe || 'No informado en el archivo de datos' }}</p>
+  </section>
+
+  <section class="panel">
+    <h2>Control y trazabilidad del pago</h2>
+    <dl class="details">
+      <div>
+        <dt>Estado de pago</dt>
+        <dd>
+          @if(inv.estado_pago === 'PAGADA' || inv.estado === 'PAGADA'){
+            <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
+          } @else if(inv.estado_pago === 'ANULADA' || inv.estado === 'ANULADA'){
+            <span class="status-pill status-pill--voided"><span class="dot"></span>Anulada</span>
+          } @else if(inv.estado_pago === 'EN_PROCESO'){
+            <span class="status-pill status-pill--processing"><span class="dot"></span>En proceso</span>
+          } @else {
+            <span class="status-pill status-pill--pending"><span class="dot"></span>Pendiente</span>
+          }
+        </dd>
+      </div>
+      <div><dt>Fecha de pago</dt><dd>{{ inv.fecha_pago ? (inv.fecha_pago | appDate) : '—' }}</dd></div>
+      <div><dt>Referencia de pago</dt><dd><code>{{ inv.referencia_pago || '—' }}</code></dd></div>
+      <div><dt>Transaction ID</dt><dd><code>{{ inv.transaction_id || '—' }}</code></dd></div>
+      <div><dt>Valor pagado</dt><dd><strong class="amount-val text-success">{{ inv.valor_pagado ? (inv.valor_pagado | copCurrency) : ((inv.estado_pago === 'PAGADA' || inv.estado === 'PAGADA') ? (inv.totales.total | copCurrency) : '—') }}</strong></dd></div>
+      <div><dt>Proveedor de pago</dt><dd>{{ inv.proveedor_pago || '—' }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <h2>Pagos y retenciones</h2>
+    <p class="subtle">Liquidación con la que se registró cada pago. Los porcentajes y bases son los aplicados en su momento; cambios posteriores del catálogo no los modifican.</p>
+    @if(paymentsError()){
+      <div class="empty-state" role="alert"><p>{{ paymentsError() }}</p></div>
+    } @else if(invoicePayments().length === 0){
+      <p class="subtle">Esta factura no tiene pagos registrados.</p>
+    }
+    @for(p of invoicePayments(); track p.pagoId){
+      <article class="payment-snapshot" style="margin-top: 16px; padding: 14px; background: var(--bg-f8fafc); border: 1px solid var(--bd-e2e8f0); border-radius: 8px;">
+        <header class="page-head" style="margin-bottom: 10px;">
+          <h3>Pago <code>{{ p.pagoId.slice(0,8) }}</code></h3>
+          <span class="status-pill" [class.status-pill--paid]="p.estado==='APLICADO'" [class.status-pill--pending]="p.estado==='PENDIENTE'" [class.status-pill--voided]="p.estado==='RECHAZADO'||p.estado==='ANULADO'">{{ p.estado }}</span>
+        </header>
+        <dl class="details">
+          <div><dt>Total facturado</dt><dd>{{ p.totalFacturas | copCurrency }}</dd></div>
+          <div><dt>Total retenido</dt><dd>{{ p.totalRetenciones | copCurrency }}</dd></div>
+          <div><dt>Ajuste redondeo</dt><dd>{{ p.ajusteRedondeo | copCurrency }}</dd></div>
+          <div><dt>Neto recaudado</dt><dd><strong class="text-success">{{ p.netoRecaudado | copCurrency }}</strong></dd></div>
+          <div><dt>Fecha de pago</dt><dd>{{ p.fechaPago | appDate }}</dd></div>
+          <div><dt>Medio / cuenta</dt><dd>{{ p.medioPago }} · {{ p.cuentaBanco }}</dd></div>
+          <div><dt>Transacción</dt><dd><code>{{ p.numeroTransaccion || '—' }}</code></dd></div>
+          <div><dt>Retenciones aplicadas</dt><dd>{{ p.modoAplicacion==='PER_INVOICE' ? 'Por factura' : 'Sobre el total del pago' }}</dd></div>
+          <div><dt>Facturas del pago</dt><dd>@for(f of p.facturas; track f.facturaId){<span>{{ f.numero }} ({{ f.valorAplicado | copCurrency }}) </span>}</dd></div>
+        </dl>
+        @if(p.retenciones.length){
+          <app-payment-withholdings-table [withholdings]="p.retenciones"></app-payment-withholdings-table>
+        } @else {
+          <p class="subtle" style="margin-top: 8px;">Sin retenciones seleccionadas en este pago.</p>
+        }
+        <div *hasPermission="'WITHHOLDINGS_AUDIT_VIEW'" style="margin-top: 10px;">
+          <button type="button" class="btn btn--outline" (click)="toggleAudit(p.pagoId)" [attr.aria-expanded]="openAudits().has(p.pagoId)">
+            {{ openAudits().has(p.pagoId) ? 'Ocultar auditoría de retenciones' : 'Ver auditoría de retenciones' }}
+          </button>
+          @if (openAudits().has(p.pagoId)) {
+            <app-withholding-audit-panel [paymentId]="p.pagoId"></app-withholding-audit-panel>
+          }
+        </div>
+      </article>
+    }
+  </section>
+
+  @if(chargeBreakdown(); as cobros){
+    <section class="panel" aria-label="Detalle de cobros por bloques">
+      <h2>Conoce los cobros a detalle</h2>
+
+      <h3>Deuda anterior <span class="subtle">· {{ cobros.deudaAnterior.facturas }} factura(s) de Siigo</span></h3>
+      <dl class="details">
+        <div><dt>Cargos anteriores</dt><dd>{{ cobros.deudaAnterior.cargosAnteriores | copCurrency }}</dd></div>
+        <div><dt>Pagos recibidos</dt><dd>-{{ cobros.deudaAnterior.pagosRecibidos | copCurrency }}</dd></div>
+        <div><dt>Saldo</dt><dd><strong>{{ cobros.deudaAnterior.saldo | copCurrency }}</strong></dd></div>
+      </dl>
+
+      @for(bloque of [{ titulo: 'Cargos fijos', datos: cobros.cargosFijos, fechas: true }, { titulo: 'Otros conceptos', datos: cobros.otrosConceptos, fechas: false }]; track bloque.titulo){
+        <h3 style="margin-top: 16px;">{{ bloque.titulo }}</h3>
+        <div class="table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Descripción</th>
+                  @if(bloque.fechas){ <th>Fecha inicial</th><th>Fecha final</th> }
+                  <th class="number">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for(linea of bloque.datos.lineas; track $index; let i = $index){
+                  @if(linea.categoria && linea.categoria !== bloque.datos.lineas[i - 1]?.categoria){
+                    <tr><th [attr.colspan]="bloque.fechas ? 4 : 2" scope="rowgroup">{{ linea.categoria }}</th></tr>
+                  }
+                  <tr>
+                    <td [style.padding-left]="linea.categoria ? '24px' : null">{{ linea.descripcion }}</td>
+                    @if(bloque.fechas){
+                      <td>{{ linea.fechaInicial ? (linea.fechaInicial | appDate) : '—' }}</td>
+                      <td>{{ linea.fechaFinal ? (linea.fechaFinal | appDate) : '—' }}</td>
+                    }
+                    <td class="number">{{ linea.valor | copCurrency }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td [attr.colspan]="bloque.fechas ? 4 : 2" class="subtle">Sin conceptos</td></tr>
+                }
+                <tr>
+                  <td [attr.colspan]="bloque.fechas ? 3 : 1">Impuestos</td>
+                  <td class="number">{{ bloque.datos.impuestos | copCurrency }}</td>
+                </tr>
+                <tr>
+                  <td [attr.colspan]="bloque.fechas ? 3 : 1"><strong>Total {{ bloque.titulo | lowercase }}</strong></td>
+                  <td class="number"><strong>{{ bloque.datos.total | copCurrency }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <dl class="details" style="margin-top: 16px;">
+        <div><dt>Total de esta factura</dt><dd>{{ cobros.totalFactura | copCurrency }}</dd></div>
+        <div><dt>Total con deuda anterior</dt><dd><strong class="amount-val--strong">{{ cobros.totalAPagar | copCurrency }}</strong></dd></div>
+      </dl>
+    </section>
+  }
+
+  @if (inv.cliente.nit && inv.periodoCodigo) {
+    <app-novelties-panel [nit]="inv.cliente.nit" [periodo]="inv.periodoCodigo" (reprocessed)="onNoveltiesReprocessed()"></app-novelties-panel>
+  }
+
+  <section class="panel">
+    <h2>Detalle recibido</h2>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th class="number">Cantidad</th>
+              <th class="number">Base</th>
+              <th class="number">IVA</th>
+              <th class="number">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for(item of inv.items; track $index){
+              <tr>
+                <td><code>{{ item.codigo || '—' }}</code></td>
+                <td>{{ item.descripcion }}</td>
+                <td class="number">{{ item.cant }}</td>
+                <td class="number">{{ item.baseGravable | copCurrency }}</td>
+                <td class="number">{{ item.valorIva | copCurrency }}</td>
+                <td class="number"><strong>{{ item.valorTotal | copCurrency }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <dl class="details" style="margin-top: 16px;">
+      <div><dt>Subtotal</dt><dd>{{ inv.totales.subtotal | copCurrency }}</dd></div>
+      <div><dt>IVA</dt><dd>{{ inv.totales.iva | copCurrency }}</dd></div>
+      <div><dt>Total oficial</dt><dd><strong class="amount-val--strong">{{ inv.totales.total | copCurrency }}</strong></dd></div>
+    </dl>
+  </section>
+
+  @if(showJsonModal()){
+    <div class="modal-backdrop" (click)="closeJsonModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div>
+            <h3>JSON Formateado para SP Pagos</h3>
+            <p class="subtle">Contrato de integración entregado a la pasarela de pagos</p>
+          </div>
+          <button type="button" class="close-btn" (click)="closeJsonModal()">✕</button>
+        </header>
+        <div class="modal-body">
+          @if(loadingJson()){
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Generando payload JSON…</p>
+            </div>
+          } @else if(jsonError()){
+            <div class="empty-state">{{ jsonError() }}</div>
+          } @else if(spPagosJson(); as data){
+            <div class="json-meta">
+              <span class="status-pill" [class.status-pill--paid]="data.pagable" [class.status-pill--pending]="!data.pagable">
+                {{ data.pagable ? '✓ Pagable en pasarela' : 'No pagable' }}
+              </span>
+              <span class="status-pill status-pill--neutral">Saldo: {{ data.importes.saldoPendiente | copCurrency }}</span>
+              <span class="status-pill status-pill--neutral">{{ data.formaPago }}</span>
+            </div>
+            <pre class="json-code"><code>{{ data | json }}</code></pre>
+          }
+        </div>
+        <footer class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeJsonModal()">Cerrar</button>
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="loadingJson() || !spPagosJson()" (click)="copyJson()">
+            {{ copied() ? '✓ Copiado al portapapeles' : 'Copiar JSON' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+}

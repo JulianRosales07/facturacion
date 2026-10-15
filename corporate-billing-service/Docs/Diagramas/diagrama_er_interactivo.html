@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagrama Entidad-Relación Interactivo | Microservicio de Facturación Corporativa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-surface: rgba(19, 25, 39, 0.88);
+      --bg-surface-hover: rgba(27, 36, 56, 0.98);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.35);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --glow-color: rgba(99, 102, 241, 0.35);
+      --node-header-bg: #1e2538;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    body.light-theme {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-surface: rgba(255, 255, 255, 0.94);
+      --bg-surface-hover: #ffffff;
+      --border-subtle: rgba(0, 0, 0, 0.09);
+      --border-accent: rgba(99, 102, 241, 0.45);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --glow-color: rgba(99, 102, 241, 0.2);
+      --node-header-bg: #e2e8f0;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .grid-background {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 80%),
+        linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top App Bar */
+    header.app-bar {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      height: 64px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: 0 0 16px var(--glow-color);
+    }
+
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-info p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 12px 8px 34px;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      width: 220px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      width: 280px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .btn-pill {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn-pill:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-pill.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent-indigo);
+      color: var(--accent-indigo);
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Modules Filter Bar */
+    .module-bar {
+      position: fixed;
+      top: 92px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 90;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .filter-chip {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .filter-chip:hover {
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+    }
+
+    .filter-chip.active {
+      background: var(--bg-secondary);
+      border-color: var(--border-accent);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .filter-chip[data-module="all"].active { border-color: var(--accent-indigo); color: var(--accent-indigo); }
+    .filter-chip[data-module="clientes"].active { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .filter-chip[data-module="periodos"].active { border-color: var(--accent-amber); color: var(--accent-amber); }
+    .filter-chip[data-module="facturacion"].active { border-color: var(--accent-indigo); color: var(--accent-indigo); }
+    .filter-chip[data-module="ajustes"].active { border-color: var(--accent-purple); color: var(--accent-purple); }
+    .filter-chip[data-module="pagos"].active { border-color: var(--accent-emerald); color: var(--accent-emerald); }
+    .filter-chip[data-module="integracion"].active { border-color: var(--accent-rose); color: var(--accent-rose); }
+
+    /* Canvas Viewport */
+    #viewport-container {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    #viewport-container.panning {
+      cursor: grabbing;
+    }
+
+    #er-stage {
+      position: absolute;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* SVG Layer & Relationship Lines */
+    #svg-connections {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 12;
+    }
+
+    .rel-line {
+      fill: none !important;
+      stroke: var(--accent-indigo);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.6;
+      transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s;
+    }
+
+    .rel-line.active {
+      stroke: var(--accent-cyan) !important;
+      stroke-width: 3.5 !important;
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 8px var(--accent-cyan));
+    }
+
+    .rel-line.dimmed {
+      opacity: 0.12 !important;
+    }
+
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 13;
+    }
+
+    /* ER Table Nodes */
+    .er-nodes-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+    }
+
+    .er-card {
+      position: absolute;
+      width: 310px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.3s;
+    }
+
+    .er-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.6), 0 0 25px var(--glow-color);
+      border-color: var(--accent-indigo);
+      z-index: 50;
+    }
+
+    .er-card.selected {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px var(--accent-cyan), 0 20px 35px -5px rgba(0, 0, 0, 0.7);
+      z-index: 60;
+    }
+
+    .er-card.dimmed {
+      opacity: 0.2;
+      filter: grayscale(80%);
+    }
+
+    .er-card.highlighted {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 20px var(--glow-color);
+      opacity: 1;
+    }
+
+    /* Card Header */
+    .card-header {
+      padding: 10px 14px;
+      background: var(--node-header-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-name {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .table-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: var(--font-sans);
+    }
+
+    .badge-clientes { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .badge-periodos { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .badge-facturacion { background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); }
+    .badge-ajustes { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+    .badge-pagos { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+    .badge-integracion { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+
+    /* Columns List */
+    .card-columns {
+      padding: 6px 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .column-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 14px;
+      font-size: 11.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .column-row:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .col-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .key-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .key-pk { background: #eab308; color: #000; }
+    .key-fk { background: #3b82f6; color: #fff; }
+    .key-uk { background: #8b5cf6; color: #fff; }
+
+    .col-name {
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .col-type {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .card-footer {
+      padding: 6px 14px;
+      background: rgba(0, 0, 0, 0.15);
+      border-top: 1px solid var(--border-subtle);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Floating Zoom HUD */
+    .zoom-hud {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hud-btn {
+      width: 34px;
+      height: 34px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .hud-btn:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* Details Inspector Panel */
+    .inspector-drawer {
+      position: fixed;
+      top: 16px;
+      bottom: 16px;
+      right: 16px;
+      width: 420px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      z-index: 110;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(460px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .inspector-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .drawer-title-group h2 {
+      font-size: 18px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .drawer-title-group p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+    }
+
+    .drawer-content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .info-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .info-card strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .info-card em {
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .info-card code {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent-indigo);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .columns-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .columns-table th {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .columns-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-family: var(--font-mono);
+    }
+
+    .rel-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      margin: 4px 4px 4px 0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .rel-chip:hover {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--accent-indigo);
+    }
+
+    .sql-code-block {
+      background: #000;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Minimap Radar */
+    .minimap-panel {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 200px;
+      height: 130px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    #minimap-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .minimap-viewport-box {
+      position: absolute;
+      border: 1.5px solid var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.1);
+      pointer-events: none;
+    }
+
+    /* Legend Bar */
+    .legend-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      z-index: 90;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1px solid var(--accent-indigo);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 200;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-background"></div>
+
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <div class="brand-section">
+      <div class="brand-badge">ER</div>
+      <div class="brand-info">
+        <h1>Microservicio Facturación Corporativa</h1>
+        <p><span class="status-dot"></span> 21 Tablas PostgreSQL · Flujo de Novedades, Facturas y SIIGO</p>
+      </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="search-input" placeholder="Buscar tabla o campo (/)..." />
+    </div>
+
+    <!-- Actions & Exports -->
+    <div class="controls-group">
+      <button class="btn-pill" id="btn-motion" title="Alternar flujo de partículas y movimiento">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span id="motion-text">Animación ON</span>
+      </button>
+
+      <button class="btn-pill btn-icon" id="btn-theme" title="Cambiar tema Claro / Oscuro">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+
+      <!-- Export Buttons -->
+      <button class="btn-pill" id="btn-export-svg" title="Descargar SVG Vectorial Limpio">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export SVG
+      </button>
+
+      <button class="btn-pill btn-primary" id="btn-export-png" title="Exportar Imagen PNG en Alta Resolución">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        Export PNG HD
+      </button>
+    </div>
+  </header>
+
+  <!-- Module Filter Bar -->
+  <div class="module-bar">
+    <div class="filter-chip active" data-module="all">Todos (21)</div>
+    <div class="filter-chip" data-module="clientes">Clientes y Sedes (4)</div>
+    <div class="filter-chip" data-module="periodos">Periodos y Novedades (3)</div>
+    <div class="filter-chip" data-module="facturacion">Facturación Core (4)</div>
+    <div class="filter-chip" data-module="ajustes">Ajustes DIAN (2)</div>
+    <div class="filter-chip" data-module="pagos">Cartera y Pagos (3)</div>
+    <div class="filter-chip" data-module="integracion">Archivos Planos (5)</div>
+  </div>
+
+  <!-- Main Viewport Canvas -->
+  <div id="viewport-container">
+    <div id="er-stage">
+      <svg id="svg-connections" width="3400" height="2000">
+        <defs>
+          <marker id="arrow-end" viewBox="0 0 10 10" refX="7" refY="3.5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#6366f1" />
+          </marker>
+          <marker id="arrow-active" viewBox="0 0 10 10" refX="7" refY="3.5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#06b6d4" />
+          </marker>
+        </defs>
+        <g id="lines-group"></g>
+      </svg>
+
+      <canvas id="particle-canvas" width="3400" height="2000"></canvas>
+      <div class="er-nodes-layer" id="nodes-layer"></div>
+    </div>
+  </div>
+
+  <!-- Zoom HUD -->
+  <div class="zoom-hud">
+    <button class="hud-btn" id="btn-zoom-in" title="Acercar (+)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+    <button class="hud-btn" id="btn-zoom-reset" title="Restablecer vista (100%)">
+      <span style="font-size: 11px; font-weight: 700;">1:1</span>
+    </button>
+    <button class="hud-btn" id="btn-zoom-out" title="Alejar (-)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+    <button class="hud-btn" id="btn-zoom-fit" title="Ajustar todo a la pantalla">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Legend Bar -->
+  <div class="legend-bar">
+    <div class="legend-item"><span class="key-badge key-pk">PK</span> Llave Primaria</div>
+    <div class="legend-item"><span class="key-badge key-fk">FK</span> Llave Foránea</div>
+    <div class="legend-item"><span class="key-badge key-uk">UK</span> Índice Único</div>
+    <div class="legend-item"><span style="display:inline-block; width: 14px; height: 2px; background: var(--accent-indigo); border-radius: 2px;"></span> Relación 1:N / 1:1</div>
+    <div class="legend-item"><span class="status-dot"></span> Pulso en tiempo real</div>
+  </div>
+
+  <!-- Minimap Radar -->
+  <div class="minimap-panel">
+    <canvas id="minimap-canvas" width="200" height="130"></canvas>
+    <div class="minimap-viewport-box" id="minimap-box"></div>
+  </div>
+
+  <!-- Detailed Table Inspector Drawer -->
+  <aside class="inspector-drawer" id="inspector-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <h2 id="drawer-table-name">tabla</h2>
+        <p id="drawer-table-module">Módulo</p>
+      </div>
+      <button class="close-btn" id="btn-close-drawer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-content">
+      <div>
+        <div class="section-label">Descripción del Negocio</div>
+        <div class="info-card" id="drawer-description">
+          Descripción funcional de la tabla en el microservicio.
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Columnas y Restricciones (<span id="drawer-col-count">0</span>)</div>
+        <table class="columns-table">
+          <thead>
+            <tr>
+              <th>Clave</th>
+              <th>Campo</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody id="drawer-columns-tbody"></tbody>
+        </table>
+      </div>
+
+      <div>
+        <div class="section-label">Relaciones Salientes (Foreign Keys)</div>
+        <div id="drawer-outgoing-rels"></div>
+      </div>
+
+      <div>
+        <div class="section-label">Relaciones Entrantes (Referenciado Por)</div>
+        <div id="drawer-incoming-rels"></div>
+      </div>
+
+      <div>
+        <div class="section-label">Definición DDL (PostgreSQL)</div>
+        <pre class="sql-code-block" id="drawer-sql"></pre>
+      </div>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast-msg">Mensaje</div>
+
+  <!-- Application Logic -->
+  <script>
+    const DB_SCHEMA = {
+      marca: {
+        name: "marca",
+        module: "clientes",
+        moduleLabel: "Catálogos Base / Clientes",
+        desc: "<strong>Catálogo cerrado</strong> de las 3 marcas comerciales bajo las que opera la empresa (<em>Sistemas Palacios, Meganet, Enlaces</em>). Cada cliente pertenece a una sola marca.",
+        x: 60, y: 80,
+        columns: [
+          { name: "id", type: "SMALLINT", key: "PK", nullable: false },
+          { name: "nombre", type: "VARCHAR(50)", key: "UK", nullable: false }
+        ]
+      },
+      zona: {
+        name: "zona",
+        module: "clientes",
+        moduleLabel: "Catálogos Base / Clientes",
+        desc: "<strong>Catálogo cerrado</strong> de zonas geográficas/comerciales (<em>Pasto, Norte, Sur, Occidente, Costa</em>). El sistema contable la usa para enrutar a la cuenta de cartera correcta — por eso vive en tu base de datos, aunque tú no armes el asiento contable.",
+        x: 60, y: 260,
+        columns: [
+          { name: "id", type: "SMALLINT", key: "PK", nullable: false },
+          { name: "nombre", type: "VARCHAR(50)", key: "UK", nullable: false }
+        ]
+      },
+      cliente_corporativo: {
+        name: "cliente_corporativo",
+        module: "clientes",
+        moduleLabel: "Clientes y Suscripciones",
+        desc: "El <strong>cliente identificado por NIT</strong>. Aquí vive todo lo que no cambia factura a factura: razón social, datos de contacto, marca, zona, tipo de facturación (<code>F1</code> corporativos / <code>F20</code> Mega Red), y los porcentajes de retención que le aplican (<code>retefuente</code>, <code>reteica</code>, <code>reteiva</code>).<br><br>💡 <em>Esto es clave: cada cliente puede tener una tarifa distinta según su régimen tributario, así que se parametriza aquí en vez de quedar fijo en el código.</em>",
+        x: 440, y: 100,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "nit", type: "VARCHAR(20)", key: "UK", nullable: false },
+          { name: "razon_social", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "direccion_fiscal", type: "VARCHAR(255)", key: "", nullable: true },
+          { name: "email_facturacion", type: "VARCHAR(150)", key: "", nullable: true },
+          { name: "telefono", type: "VARCHAR(50)", key: "", nullable: true },
+          { name: "marca_id", type: "SMALLINT", key: "FK", ref: "marca.id", nullable: false },
+          { name: "zona_id", type: "SMALLINT", key: "FK", ref: "zona.id", nullable: false },
+          { name: "tipo_facturacion", type: "tipo_facturacion", key: "", nullable: false },
+          { name: "aplica_retencion", type: "BOOLEAN", key: "", nullable: false },
+          { name: "porcentaje_retefuente", type: "NUMERIC(5,2)", key: "", nullable: false },
+          { name: "porcentaje_reteica", type: "NUMERIC(5,2)", key: "", nullable: false },
+          { name: "porcentaje_reteiva", type: "NUMERIC(5,2)", key: "", nullable: false },
+          { name: "estado", type: "estado_registro", key: "", nullable: false }
+        ]
+      },
+      sede_suscripcion: {
+        name: "sede_suscripcion",
+        module: "clientes",
+        moduleLabel: "Clientes y Suscripciones",
+        desc: "Cada <strong>sede o suscripción</strong> que tiene un cliente (un cliente corporativo puede tener muchas). Guarda el <code>codigo_orden_externo</code> (el ID que trae del sistema de Órdenes) y de cuál sistema viene (<code>origen</code>: <em>SPE, Mega Red o Enlaces</em>).<br><br>🔗 <em>Es la conexión directa entre 'lo que factura tu microservicio' y 'lo que existe en el sistema legado'.</em>",
+        x: 880, y: 100,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "cliente_corporativo_id", type: "UUID", key: "FK", ref: "cliente_corporativo.id", nullable: false },
+          { name: "codigo_orden_externo", type: "VARCHAR(50)", key: "UK", nullable: false },
+          { name: "origen", type: "origen_orden", key: "UK", nullable: false },
+          { name: "nombre_sede", type: "VARCHAR(100)", key: "", nullable: true },
+          { name: "direccion", type: "VARCHAR(255)", key: "", nullable: true },
+          { name: "estado", type: "estado_registro", key: "", nullable: false }
+        ]
+      },
+      periodo_facturacion: {
+        name: "periodo_facturacion",
+        module: "periodos",
+        moduleLabel: "Periodos y Novedades",
+        desc: "Cada <strong>ciclo de facturación</strong> (ej. <code>'2026-09'</code>), con su tipo de corte (<code>ADELANTADO</code> / <code>VENCIDO</code>) y fechas. Todo lo demás en el sistema se ancla a un periodo contable.",
+        x: 440, y: 560,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "codigo", type: "VARCHAR(7)", key: "UK", nullable: false },
+          { name: "tipo_corte", type: "VARCHAR(20)", key: "", nullable: false },
+          { name: "fecha_inicio", type: "DATE", key: "", nullable: false },
+          { name: "fecha_fin", type: "DATE", key: "", nullable: false },
+          { name: "estado", type: "VARCHAR(20)", key: "", nullable: false }
+        ]
+      },
+      tipo_novedad: {
+        name: "tipo_novedad",
+        module: "periodos",
+        moduleLabel: "Catálogos Base / Periodos",
+        desc: "<strong>Catálogo de tipos de novedad</strong> que puede tener una sede operativa (<em>ALTA, BAJA, CAMBIO_PLAN, CAMBIO_SERVICIO, SUSPENSION, REACTIVACION, TRASLADO_DIRECCION</em>).",
+        x: 880, y: 820,
+        columns: [
+          { name: "id", type: "SMALLINT", key: "PK", nullable: false },
+          { name: "nombre", type: "VARCHAR(50)", key: "UK", nullable: false }
+        ]
+      },
+      novedad_orden: {
+        name: "novedad_orden",
+        module: "periodos",
+        moduleLabel: "Periodos y Novedades",
+        desc: "Registra cuando una sede tuvo un cambio (novedad) en un periodo específico — por ejemplo, si se dio de baja a mitad de mes. El campo <code>incluir_en_consolidado</code> es el que decide si esa novedad afecta o no la factura.<br><br>📌 <strong>Nota para sustentación:</strong> <em>Esta es la regla que sigue pendiente de definir con el ingeniero; hoy en la sustentación puedes explicar que 'el modelo ya tiene dónde guardar la decisión, falta que el negocio defina cuál es'.</em>",
+        x: 880, y: 520,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "sede_suscripcion_id", type: "UUID", key: "FK", ref: "sede_suscripcion.id", nullable: false },
+          { name: "tipo_novedad_id", type: "SMALLINT", key: "FK", ref: "tipo_novedad.id", nullable: false },
+          { name: "periodo_facturacion_id", type: "UUID", key: "FK", ref: "periodo_facturacion.id", nullable: false },
+          { name: "incluir_en_consolidado", type: "BOOLEAN", key: "", nullable: false },
+          { name: "observacion", type: "VARCHAR(255)", key: "", nullable: true }
+        ]
+      },
+      factura: {
+        name: "factura",
+        module: "facturacion",
+        moduleLabel: "Facturación (El Núcleo)",
+        desc: "<strong>La tabla más importante del sistema.</strong> Es la cabecera consolidada de todas las sedes de un cliente en un periodo. Tres bloques de información conviven aquí:<br><br>• <strong>Snapshot fiscal:</strong> Copia del NIT, razón social, dirección y email del cliente tal como estaban al momento de facturar — esto es obligatorio porque una factura ya emitida no puede cambiar si el cliente después actualiza sus datos (inmutabilidad legal).<br><br>• <strong>Desglose de valores:</strong> Bruto, descuento, subtotal (base gravable), IVA (19%), y las tres retenciones por separado (<code>retefuente</code>, <code>reteiva</code>, <code>reteica</code>) más su suma, hasta llegar al neto a pagar.<br><br>• <strong>Referencia a DIAN:</strong> <code>cufe</code>, <code>url_qr</code>, <code>estado_dian</code> — datos que llegan después de exportar/validar, no que tú generas.<br><br><div style='margin-top:10px; padding:10px 12px; background:rgba(99,102,241,0.12); border-left:3px solid var(--accent-indigo); border-radius:6px; font-size:12px; color:var(--text-primary); line-height:1.45;'>⭐ <strong>Detalle técnico para sustentación:</strong> Hay un índice único parcial (<code>uq_factura_cliente_periodo_activa</code>) que impide dos facturas activas del mismo cliente en el mismo periodo, pero permite crear una nueva si la anterior quedó <code>ANULADA</code> — eso te resuelve el caso de 'me equivoqué y tengo que refacturar' sin romper la regla de unicidad.</div>",
+        x: 1360, y: 320,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "cliente_corporativo_id", type: "UUID", key: "FK", ref: "cliente_corporativo.id", nullable: false },
+          { name: "periodo_facturacion_id", type: "UUID", key: "FK", ref: "periodo_facturacion.id", nullable: false },
+          { name: "tipo_facturacion", type: "tipo_facturacion", key: "", nullable: false },
+          { name: "numero_factura", type: "VARCHAR(30)", key: "UK", nullable: true },
+          { name: "nit_cliente", type: "VARCHAR(20)", key: "", nullable: false },
+          { name: "razon_social_cliente", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "datos_fiscales_snapshot", type: "JSONB", key: "", nullable: true },
+          { name: "valor_subtotal", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_iva", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_total_retenciones", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_neto", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "fecha_emision", type: "DATE", key: "", nullable: false },
+          { name: "cufe", type: "VARCHAR(100)", key: "", nullable: true },
+          { name: "estado", type: "estado_factura", key: "", nullable: false }
+        ]
+      },
+      item_facturable: {
+        name: "item_facturable",
+        module: "facturacion",
+        moduleLabel: "Facturación (El Núcleo)",
+        desc: "Cada <strong>línea dentro de una factura</strong> (un servicio, un plan, un enlace). Es <strong>polimórfica</strong>: el campo <code>tipo_item</code> dice si es <code>SERVICIO_CORPORATIVO</code>, <code>SVA_STREAMING</code> o <code>SVA_PRODUCTO</code>, y <code>atributos_extra</code> (JSONB) guarda los datos específicos de cada tipo sin necesitar columnas nuevas.<br><br>📊 También calcula su propio descuento y base gravable línea por línea, no solo a nivel de factura.",
+        x: 1820, y: 100,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: false },
+          { name: "tipo_item", type: "tipo_item_facturable", key: "", nullable: false },
+          { name: "sede_suscripcion_id", type: "UUID", key: "FK", ref: "sede_suscripcion.id", nullable: true },
+          { name: "descripcion", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "cantidad", type: "NUMERIC(10,2)", key: "", nullable: false },
+          { name: "valor_unitario", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "base_gravable", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_iva", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_total", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "atributos_extra", type: "JSONB", key: "", nullable: true }
+        ]
+      },
+      definicion_campo_extra: {
+        name: "definicion_campo_extra",
+        module: "facturacion",
+        moduleLabel: "Facturación (El Núcleo)",
+        desc: "<strong>Catálogo de campos adicionales</strong> que un cliente puede necesitar en su factura (ej. <em>'orden de compra', 'centro de costo'</em>) — cosas que no todos los clientes piden, así que no tiene sentido que sean columnas fijas de factura.",
+        x: 1360, y: 840,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "clave_campo", type: "VARCHAR(50)", key: "UK", nullable: false },
+          { name: "etiqueta", type: "VARCHAR(100)", key: "", nullable: false },
+          { name: "tipo_dato", type: "VARCHAR(20)", key: "", nullable: false },
+          { name: "obligatorio", type: "BOOLEAN", key: "", nullable: false }
+        ]
+      },
+      campo_extra_factura: {
+        name: "campo_extra_factura",
+        module: "facturacion",
+        moduleLabel: "Facturación (El Núcleo)",
+        desc: "El <strong>valor real de esos campos extra</strong> para una factura específica.<br><br>💡 <em>Ejemplo: la Factura X tiene el campo <code>'orden_compra'</code> = <code>'OC-4521'</code>.</em>",
+        x: 1360, y: 1080,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: false },
+          { name: "definicion_campo_extra_id", type: "UUID", key: "FK", ref: "definicion_campo_extra.id", nullable: false },
+          { name: "valor", type: "TEXT", key: "", nullable: false }
+        ]
+      },
+      documento_ajuste: {
+        name: "documento_ajuste",
+        module: "ajustes",
+        moduleLabel: "Documentos de Ajuste (DIAN)",
+        desc: "<strong>Notas crédito y notas débito.</strong><br><br>⚠️ <strong>Importante para sustentación:</strong> No son una edición de la factura; son <em>documentos electrónicos propios</em> ante la DIAN, con su propio identificador (<code>cude</code>), su propio QR y su propio estado. Por eso es tabla separada, no una columna en factura.",
+        x: 1820, y: 500,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: false },
+          { name: "tipo", type: "tipo_documento_ajuste", key: "", nullable: false },
+          { name: "numero_documento", type: "VARCHAR(30)", key: "UK", nullable: true },
+          { name: "concepto_dian", type: "VARCHAR(10)", key: "", nullable: false },
+          { name: "motivo", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "valor_subtotal", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_iva", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_neto", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "cude", type: "VARCHAR(100)", key: "", nullable: true },
+          { name: "estado", type: "estado_documento_ajuste", key: "", nullable: false }
+        ]
+      },
+      item_documento_ajuste: {
+        name: "item_documento_ajuste",
+        module: "ajustes",
+        moduleLabel: "Documentos de Ajuste (DIAN)",
+        desc: "Las <strong>líneas de esa nota de ajuste</strong>, cada una puede (opcionalmente) enlazarse al <code>item_facturable</code> original que está corrigiendo.",
+        x: 2280, y: 500,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "documento_ajuste_id", type: "UUID", key: "FK", ref: "documento_ajuste.id", nullable: false },
+          { name: "item_facturable_id", type: "UUID", key: "FK", ref: "item_facturable.id", nullable: true },
+          { name: "descripcion", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "cantidad", type: "NUMERIC(10,2)", key: "", nullable: false },
+          { name: "valor_unitario", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "valor_total", type: "NUMERIC(14,2)", key: "", nullable: false }
+        ]
+      },
+      pago_factura: {
+        name: "pago_factura",
+        module: "pagos",
+        moduleLabel: "Pagos y Cartera",
+        desc: "Cada <strong>pago/recaudo aplicado a una factura</strong> (transferencia, consignación, pasarela, cheque), con su valor y fecha.<br><br>💰 <em>Permite saber cuánto se ha pagado de una factura sin tener que ir a otro sistema.</em>",
+        x: 1820, y: 880,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: false },
+          { name: "referencia_pago", type: "VARCHAR(100)", key: "", nullable: false },
+          { name: "medio_pago", type: "VARCHAR(50)", key: "", nullable: false },
+          { name: "banco", type: "VARCHAR(50)", key: "", nullable: true },
+          { name: "valor", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "fecha_pago", type: "DATE", key: "", nullable: false },
+          { name: "estado", type: "estado_pago", key: "", nullable: false }
+        ]
+      },
+      certificado_retencion: {
+        name: "certificado_retencion",
+        module: "pagos",
+        moduleLabel: "Retenciones Tributarias",
+        desc: "El <strong>certificado de retención en la fuente</strong> asociado a una factura (uno por factura, de ahí el índice <code>UNIQUE</code>), con su número y URL del documento legal soporte.",
+        x: 1360, y: 80,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: false },
+          { name: "numero_certificado", type: "VARCHAR(50)", key: "", nullable: true },
+          { name: "fecha_emision", type: "DATE", key: "", nullable: true },
+          { name: "url_documento", type: "VARCHAR(500)", key: "", nullable: true },
+          { name: "estado", type: "estado_certificado", key: "", nullable: false }
+        ]
+      },
+      movimiento_tesoreria: {
+        name: "movimiento_tesoreria",
+        module: "pagos",
+        moduleLabel: "Tesorería y Extractos",
+        desc: "<strong>Movimientos de bancos/intereses.</strong><br><br>Todas sus relaciones son opcionales (puede o no estar ligado a un cliente, a una factura, a un pago) porque el origen de este dato todavía no está definido — el campo <code>origen</code> incluso acepta explícitamente <code>'NO_DEFINIDO'</code> para eso.",
+        x: 880, y: 1140,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "tipo_movimiento", type: "tipo_movimiento_tesoreria", key: "", nullable: false },
+          { name: "banco", type: "VARCHAR(50)", key: "", nullable: true },
+          { name: "cuenta_contable", type: "VARCHAR(20)", key: "", nullable: true },
+          { name: "valor", type: "NUMERIC(14,2)", key: "", nullable: false },
+          { name: "fecha_movimiento", type: "DATE", key: "", nullable: false },
+          { name: "cliente_corporativo_id", type: "UUID", key: "FK", ref: "cliente_corporativo.id", nullable: true },
+          { name: "factura_id", type: "UUID", key: "FK", ref: "factura.id", nullable: true },
+          { name: "pago_factura_id", type: "UUID", key: "FK", ref: "pago_factura.id", nullable: true },
+          { name: "archivo_importado_id", type: "UUID", key: "FK", ref: "archivo_importado.id", nullable: true }
+        ]
+      },
+      archivo_importado: {
+        name: "archivo_importado",
+        module: "integracion",
+        moduleLabel: "Archivos Planos (Entrada / Salida)",
+        desc: "<strong>Metadata de cada archivo plano recibido</strong> de Órdenes: nombre, de qué sistema vino (<code>origen</code>), cuántos registros traía, cuántos fallaron.",
+        x: 60, y: 1140,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "nombre_archivo", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "origen", type: "origen_orden", key: "", nullable: false },
+          { name: "estado", type: "estado_archivo", key: "", nullable: false },
+          { name: "total_registros", type: "INT", key: "", nullable: true },
+          { name: "registros_con_error", type: "INT", key: "", nullable: true }
+        ]
+      },
+      archivo_importado_linea: {
+        name: "archivo_importado_linea",
+        module: "integracion",
+        moduleLabel: "Archivos Planos (Entrada / Salida)",
+        desc: "El <strong>contenido real de cada fila de ese archivo</strong>, guardado en <code>JSONB</code> crudo (para tolerar que SPE, Mega Red y Enlaces no compartan exactamente el mismo formato), con su propio estado de procesamiento y, si aplica, el enlace a la sede o novedad que generó.",
+        x: 440, y: 1140,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "archivo_importado_id", type: "UUID", key: "FK", ref: "archivo_importado.id", nullable: false },
+          { name: "numero_linea", type: "INT", key: "UK", nullable: false },
+          { name: "contenido_crudo", type: "JSONB", key: "", nullable: false },
+          { name: "estado_linea", type: "estado_linea_importada", key: "", nullable: false },
+          { name: "sede_suscripcion_id", type: "UUID", key: "FK", ref: "sede_suscripcion.id", nullable: true },
+          { name: "novedad_orden_id", type: "UUID", key: "FK", ref: "novedad_orden.id", nullable: true }
+        ]
+      },
+      archivo_exportado: {
+        name: "archivo_exportado",
+        module: "integracion",
+        moduleLabel: "Archivos Planos (Entrada / Salida)",
+        desc: "El <strong>lote que se genera hacia SIIGO</strong>, con cuántas facturas y cuántos ajustes contiene.",
+        x: 1820, y: 1200,
+        columns: [
+          { name: "id", type: "UUID", key: "PK", nullable: false },
+          { name: "periodo_facturacion_id", type: "UUID", key: "FK", ref: "periodo_facturacion.id", nullable: false },
+          { name: "tipo_facturacion", type: "tipo_facturacion", key: "", nullable: false },
+          { name: "nombre_archivo", type: "VARCHAR(255)", key: "", nullable: false },
+          { name: "total_facturas", type: "INT", key: "", nullable: false },
+          { name: "total_ajustes", type: "INT", key: "", nullable: false }
+        ]
+      },
+      factura_archivo_exportado: {
+        name: "factura_archivo_exportado",
+        module: "integracion",
+        moduleLabel: "Archivos Planos (Entrada / Salida)",
+        desc: "<strong>Tabla puente (Muchos a Muchos):</strong> una factura puede quedar incluida en un lote exportado, y necesitas saber en cuál.",
+        x: 1360, y: 1360,
+        columns: [
+          { name: "factura_id", type: "UUID", key: "PK", ref: "factura.id", nullable: false },
+          { name: "archivo_exportado_id", type: "UUID", key: "PK", ref: "archivo_exportado.id", nullable: false }
+        ]
+      },
+      documento_ajuste_archivo_exportado: {
+        name: "documento_ajuste_archivo_exportado",
+        module: "integracion",
+        moduleLabel: "Archivos Planos (Entrada / Salida)",
+        desc: "<strong>Tabla puente (Muchos a Muchos):</strong> un ajuste (nota crédito/débito) puede quedar incluido en un lote exportado, y necesitas saber en cuál.",
+        x: 2280, y: 1200,
+        columns: [
+          { name: "documento_ajuste_id", type: "UUID", key: "PK", ref: "documento_ajuste.id", nullable: false },
+          { name: "archivo_exportado_id", type: "UUID", key: "PK", ref: "archivo_exportado.id", nullable: false }
+        ]
+      }
+    };
+
+    const RELATIONSHIPS = [
+      { from: "marca", to: "cliente_corporativo", fk: "marca_id", label: "agrupa" },
+      { from: "zona", to: "cliente_corporativo", fk: "zona_id", label: "enruta" },
+      { from: "cliente_corporativo", to: "sede_suscripcion", fk: "cliente_corporativo_id", label: "posee sedes" },
+      { from: "cliente_corporativo", to: "factura", fk: "cliente_corporativo_id", label: "emite a" },
+      { from: "periodo_facturacion", to: "factura", fk: "periodo_facturacion_id", label: "periodo" },
+      { from: "sede_suscripcion", to: "novedad_orden", fk: "sede_suscripcion_id", label: "novedades" },
+      { from: "tipo_novedad", to: "novedad_orden", fk: "tipo_novedad_id", label: "clasifica" },
+      { from: "periodo_facturacion", to: "novedad_orden", fk: "periodo_facturacion_id", label: "corte" },
+      { from: "factura", to: "item_facturable", fk: "factura_id", label: "detalla líneas" },
+      { from: "sede_suscripcion", to: "item_facturable", fk: "sede_suscripcion_id", label: "origen sede" },
+      { from: "definicion_campo_extra", to: "campo_extra_factura", fk: "definicion_campo_extra_id", label: "define valor" },
+      { from: "factura", to: "campo_extra_factura", fk: "factura_id", label: "metadatos" },
+      { from: "factura", to: "documento_ajuste", fk: "factura_id", label: "ajusta" },
+      { from: "documento_ajuste", to: "item_documento_ajuste", fk: "documento_ajuste_id", label: "ítems ajuste" },
+      { from: "item_facturable", to: "item_documento_ajuste", fk: "item_facturable_id", label: "corrige ítem" },
+      { from: "factura", to: "pago_factura", fk: "factura_id", label: "recaudos" },
+      { from: "factura", to: "certificado_retencion", fk: "factura_id", label: "soporte retención" },
+      { from: "archivo_importado", to: "archivo_importado_linea", fk: "archivo_importado_id", label: "filas staging" },
+      { from: "sede_suscripcion", to: "archivo_importado_linea", fk: "sede_suscripcion_id", label: "asocia sede" },
+      { from: "novedad_orden", to: "archivo_importado_linea", fk: "novedad_orden_id", label: "asocia novedad" },
+      { from: "cliente_corporativo", to: "movimiento_tesoreria", fk: "cliente_corporativo_id", label: "extracto cliente" },
+      { from: "factura", to: "movimiento_tesoreria", fk: "factura_id", label: "concilia factura" },
+      { from: "pago_factura", to: "movimiento_tesoreria", fk: "pago_factura_id", label: "concilia pago" },
+      { from: "archivo_importado", to: "movimiento_tesoreria", fk: "archivo_importado_id", label: "extracto plano" },
+      { from: "periodo_facturacion", to: "archivo_exportado", fk: "periodo_facturacion_id", label: "exporta periodo" },
+      { from: "factura", to: "factura_archivo_exportado", fk: "factura_id", label: "lote factura" },
+      { from: "archivo_exportado", to: "factura_archivo_exportado", fk: "archivo_exportado_id", label: "lote SIIGO" },
+      { from: "documento_ajuste", to: "documento_ajuste_archivo_exportado", fk: "documento_ajuste_id", label: "lote ajuste" },
+      { from: "archivo_exportado", to: "documento_ajuste_archivo_exportado", fk: "archivo_exportado_id", label: "lote SIIGO" }
+    ];
+
+    const state = {
+      zoom: 0.75,
+      panX: 80,
+      panY: 80,
+      isPanning: false,
+      startMouseX: 0,
+      startMouseY: 0,
+      selectedTable: null,
+      activeModule: "all",
+      searchQuery: "",
+      motionActive: true,
+      lightTheme: false,
+      particles: []
+    };
+
+    const stageEl = document.getElementById("er-stage");
+    const viewportEl = document.getElementById("viewport-container");
+    const nodesLayerEl = document.getElementById("nodes-layer");
+    const linesGroupEl = document.getElementById("lines-group");
+    const particleCanvas = document.getElementById("particle-canvas");
+    const pCtx = particleCanvas.getContext("2d");
+
+    function init() {
+      renderNodes();
+      updateTransform();
+      renderConnections();
+      initParticles();
+      setupEventListeners();
+      startAnimationLoop();
+      updateMinimap();
+    }
+
+    function renderNodes() {
+      nodesLayerEl.innerHTML = "";
+      Object.values(DB_SCHEMA).forEach(table => {
+        const card = document.createElement("div");
+        card.className = "er-card";
+        card.id = `node-${table.name}`;
+        card.style.left = `${table.x}px`;
+        card.style.top = `${table.y}px`;
+        card.dataset.name = table.name;
+        card.dataset.module = table.module;
+
+        const colsHtml = table.columns.map(col => {
+          let badge = "";
+          if (col.key === "PK") badge = '<span class="key-badge key-pk">PK</span>';
+          else if (col.key === "FK") badge = '<span class="key-badge key-fk">FK</span>';
+          else if (col.key === "UK") badge = '<span class="key-badge key-uk">UK</span>';
+
+          return `
+            <div class="column-row">
+              <div class="col-left">
+                ${badge}
+                <span class="col-name">${col.name}</span>
+              </div>
+              <span class="col-type">${col.type}</span>
+            </div>
+          `;
+        }).join("");
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="table-title-wrap">
+              <span class="table-badge badge-${table.module}">${table.moduleLabel.split(" ")[0]}</span>
+              <span class="table-name">${table.name}</span>
+            </div>
+          </div>
+          <div class="card-columns">${colsHtml}</div>
+          <div class="card-footer">
+            <span>${table.columns.length} campos</span>
+            <span>PostgreSQL</span>
+          </div>
+        `;
+
+        card.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectTable(table.name);
+        });
+
+        nodesLayerEl.appendChild(card);
+      });
+    }
+
+    /**
+     * Helper to compute exact anchor coordinates for connecting lines
+     */
+    function getRelationshipCoords(rel) {
+      const fromTable = DB_SCHEMA[rel.from];
+      const toTable = DB_SCHEMA[rel.to];
+      if (!fromTable || !toTable) return null;
+
+      const cardW = 310;
+      const fromH = 40 + fromTable.columns.length * 24;
+      const toH = 40 + toTable.columns.length * 24;
+
+      let startX, startY, endX, endY, cp1x, cp1y, cp2x, cp2y;
+
+      // Case 1: Target is clearly to the right
+      if (toTable.x >= fromTable.x + cardW - 20) {
+        startX = fromTable.x + cardW;
+        startY = fromTable.y + 40;
+        endX = toTable.x;
+        endY = toTable.y + 40;
+        const dx = Math.max(40, (endX - startX) * 0.5);
+        cp1x = startX + dx;
+        cp1y = startY;
+        cp2x = endX - dx;
+        cp2y = endY;
+      }
+      // Case 2: Target is clearly to the left
+      else if (fromTable.x >= toTable.x + cardW - 20) {
+        startX = fromTable.x;
+        startY = fromTable.y + 40;
+        endX = toTable.x + cardW;
+        endY = toTable.y + 40;
+        const dx = Math.max(40, (startX - endX) * 0.5);
+        cp1x = startX - dx;
+        cp1y = startY;
+        cp2x = endX + dx;
+        cp2y = endY;
+      }
+      // Case 3: Vertically stacked (Target below)
+      else if (toTable.y >= fromTable.y + fromH - 20) {
+        startX = fromTable.x + cardW * 0.5;
+        startY = fromTable.y + fromH;
+        endX = toTable.x + cardW * 0.5;
+        endY = toTable.y;
+        const dy = Math.max(30, (endY - startY) * 0.5);
+        cp1x = startX;
+        cp1y = startY + dy;
+        cp2x = endX;
+        cp2y = endY - dy;
+      }
+      // Case 4: Target above
+      else {
+        startX = fromTable.x + cardW * 0.5;
+        startY = fromTable.y;
+        endX = toTable.x + cardW * 0.5;
+        endY = toTable.y + toH;
+        const dy = Math.max(30, (startY - endY) * 0.5);
+        cp1x = startX;
+        cp1y = startY - dy;
+        cp2x = endX;
+        cp2y = endY + dy;
+      }
+
+      return {
+        startX, startY, endX, endY,
+        cp1x, cp1y, cp2x, cp2y,
+        pathD: `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`
+      };
+    }
+
+    /**
+     * Render SVG Connection Lines (with fill="none" explicit attribute)
+     */
+    function renderConnections() {
+      linesGroupEl.innerHTML = "";
+      RELATIONSHIPS.forEach((rel) => {
+        const coords = getRelationshipCoords(rel);
+        if (!coords) return;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", coords.pathD);
+        path.setAttribute("class", "rel-line");
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#6366f1");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("id", `rel-${rel.from}-${rel.to}`);
+        path.dataset.from = rel.from;
+        path.dataset.to = rel.to;
+        path.setAttribute("marker-end", "url(#arrow-end)");
+
+        linesGroupEl.appendChild(path);
+      });
+    }
+
+    /**
+     * Particle animation along lines
+     */
+    function initParticles() {
+      state.particles = [];
+      RELATIONSHIPS.forEach((rel) => {
+        for (let i = 0; i < 2; i++) {
+          state.particles.push({
+            from: rel.from,
+            to: rel.to,
+            progress: Math.random(),
+            speed: 0.003 + Math.random() * 0.004,
+            size: 2.5 + Math.random() * 1.5
+          });
+        }
+      });
+    }
+
+    function startAnimationLoop() {
+      function renderLoop() {
+        pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+
+        if (state.motionActive) {
+          const lines = document.querySelectorAll(".rel-line");
+          const pathsMap = {};
+          lines.forEach(line => {
+            pathsMap[`${line.dataset.from}-${line.dataset.to}`] = line;
+          });
+
+          state.particles.forEach(p => {
+            const pathEl = pathsMap[`${p.from}-${p.to}`];
+            if (pathEl) {
+              const isDimmed = pathEl.classList.contains("dimmed");
+              const isActive = pathEl.classList.contains("active");
+
+              p.progress += p.speed;
+              if (p.progress > 1) p.progress = 0;
+
+              const len = pathEl.getTotalLength();
+              const pt = pathEl.getPointAtLength(p.progress * len);
+
+              pCtx.beginPath();
+              pCtx.arc(pt.x, pt.y, isActive ? p.size * 1.4 : p.size, 0, Math.PI * 2);
+              pCtx.fillStyle = isActive ? "#06b6d4" : (state.lightTheme ? "#4f46e5" : "#818cf8");
+              pCtx.globalAlpha = isDimmed ? 0.05 : (isActive ? 1.0 : 0.6);
+              pCtx.fill();
+            }
+          });
+        }
+
+        requestAnimationFrame(renderLoop);
+      }
+      requestAnimationFrame(renderLoop);
+    }
+
+    function selectTable(tableName) {
+      state.selectedTable = tableName;
+      const table = DB_SCHEMA[tableName];
+      if (!table) return;
+
+      document.querySelectorAll(".er-card").forEach(card => {
+        card.classList.remove("selected", "highlighted", "dimmed");
+        if (card.dataset.name === tableName) {
+          card.classList.add("selected");
+        } else {
+          const isConnected = RELATIONSHIPS.some(r => 
+            (r.from === tableName && r.to === card.dataset.name) ||
+            (r.to === tableName && r.from === card.dataset.name)
+          );
+          if (isConnected) {
+            card.classList.add("highlighted");
+          } else {
+            card.classList.add("dimmed");
+          }
+        }
+      });
+
+      document.querySelectorAll(".rel-line").forEach(line => {
+        line.classList.remove("active", "dimmed");
+        if (line.dataset.from === tableName || line.dataset.to === tableName) {
+          line.classList.add("active");
+          line.setAttribute("stroke", "#06b6d4");
+          line.setAttribute("marker-end", "url(#arrow-active)");
+        } else {
+          line.classList.add("dimmed");
+          line.setAttribute("stroke", "#6366f1");
+          line.setAttribute("marker-end", "url(#arrow-end)");
+        }
+      });
+
+      document.getElementById("drawer-table-name").textContent = table.name;
+      document.getElementById("drawer-table-module").textContent = `${table.moduleLabel} · Microservicio Facturación`;
+      document.getElementById("drawer-description").innerHTML = table.desc;
+      document.getElementById("drawer-col-count").textContent = table.columns.length;
+
+      const tbody = document.getElementById("drawer-columns-tbody");
+      tbody.innerHTML = table.columns.map(c => `
+        <tr>
+          <td><span class="key-badge key-${c.key ? c.key.toLowerCase() : 'none'}">${c.key || '-'}</span></td>
+          <td style="color: ${c.key === 'PK' ? '#eab308' : (c.key === 'FK' ? '#38bdf8' : 'var(--text-primary)')};">${c.name}</td>
+          <td style="color: var(--text-muted);">${c.type}</td>
+        </tr>
+      `).join("");
+
+      const outgoing = RELATIONSHIPS.filter(r => r.from === tableName);
+      document.getElementById("drawer-outgoing-rels").innerHTML = outgoing.length ? outgoing.map(r => `
+        <div class="rel-chip" onclick="selectTable('${r.to}')">
+          <span>➔ ${r.to}</span>
+          <span style="color:var(--text-muted);">(${r.label})</span>
+        </div>
+      `).join("") : '<div style="font-size:12px;color:var(--text-muted);">Ninguna llave foránea saliente</div>';
+
+      const incoming = RELATIONSHIPS.filter(r => r.to === tableName);
+      document.getElementById("drawer-incoming-rels").innerHTML = incoming.length ? incoming.map(r => `
+        <div class="rel-chip" onclick="selectTable('${r.from}')">
+          <span>⬅ ${r.from}</span>
+          <span style="color:var(--text-muted);">(${r.label})</span>
+        </div>
+      `).join("") : '<div style="font-size:12px;color:var(--text-muted);">Ninguna referencia entrante</div>';
+
+      const colsSql = table.columns.map(c => {
+        let line = `    ${c.name.padEnd(26)} ${c.type}`;
+        if (c.key === "PK") line += " PRIMARY KEY";
+        if (c.key === "UK") line += " UNIQUE";
+        if (c.key === "FK" && c.ref) line += ` REFERENCES ${c.ref}`;
+        if (!c.nullable && c.key !== "PK") line += " NOT NULL";
+        return line;
+      }).join(",\n");
+
+      document.getElementById("drawer-sql").textContent = `CREATE TABLE ${table.name} (\n${colsSql}\n);`;
+      document.getElementById("inspector-drawer").classList.add("open");
+    }
+
+    function clearSelection() {
+      state.selectedTable = null;
+      document.querySelectorAll(".er-card").forEach(c => c.classList.remove("selected", "highlighted", "dimmed"));
+      document.querySelectorAll(".rel-line").forEach(l => {
+        l.classList.remove("active", "dimmed");
+        l.setAttribute("stroke", "#6366f1");
+        l.setAttribute("marker-end", "url(#arrow-end)");
+      });
+      document.getElementById("inspector-drawer").classList.remove("open");
+    }
+
+    function updateTransform() {
+      stageEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+      updateMinimap();
+    }
+
+    function filterByModule(mod) {
+      state.activeModule = mod;
+      document.querySelectorAll(".filter-chip").forEach(chip => {
+        chip.classList.toggle("active", chip.dataset.module === mod);
+      });
+
+      document.querySelectorAll(".er-card").forEach(card => {
+        if (mod === "all" || card.dataset.module === mod) {
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
+        }
+      });
+
+      renderConnections();
+    }
+
+    function updateMinimap() {
+      const canvas = document.getElementById("minimap-canvas");
+      const ctx = canvas.getContext("2d");
+      const mw = canvas.width;
+      const mh = canvas.height;
+      const stageW = 3000;
+      const stageH = 1800;
+
+      ctx.clearRect(0, 0, mw, mh);
+      ctx.fillStyle = state.lightTheme ? "#f1f5f9" : "#111622";
+      ctx.fillRect(0, 0, mw, mh);
+
+      Object.values(DB_SCHEMA).forEach(t => {
+        const mx = (t.x / stageW) * mw;
+        const my = (t.y / stageH) * mh;
+        ctx.fillStyle = state.selectedTable === t.name ? "#06b6d4" : "#6366f1";
+        ctx.fillRect(mx, my, 22, 14);
+      });
+
+      const box = document.getElementById("minimap-box");
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const boxW = Math.min(mw, (vw / (stageW * state.zoom)) * mw);
+      const boxH = Math.min(mh, (vh / (stageH * state.zoom)) * mh);
+      const boxX = Math.max(0, Math.min(mw - boxW, (-state.panX / (stageW * state.zoom)) * mw));
+      const boxY = Math.max(0, Math.min(mh - boxH, (-state.panY / (stageH * state.zoom)) * mh));
+
+      box.style.width = `${boxW}px`;
+      box.style.height = `${boxH}px`;
+      box.style.left = `${boxX}px`;
+      box.style.top = `${boxY}px`;
+    }
+
+    /**
+     * GENERATE 100% COMPLETE STANDALONE VECTOR SVG
+     * Generates a fully self-contained SVG containing both lines AND all 21 table cards!
+     */
+    function generateCompleteSVG() {
+      const isLight = state.lightTheme;
+      const bg = isLight ? "#f8fafc" : "#0a0d14";
+      const cardBg = isLight ? "#ffffff" : "#131927";
+      const cardBorder = isLight ? "#cbd5e1" : "rgba(255,255,255,0.12)";
+      const headerBg = isLight ? "#e2e8f0" : "#1e2538";
+      const textPrimary = isLight ? "#0f172a" : "#f1f5f9";
+      const textMuted = isLight ? "#64748b" : "#94a3b8";
+      const lineColor = "#6366f1";
+
+      const moduleColors = {
+        clientes: "#06b6d4",
+        periodos: "#f59e0b",
+        facturacion: "#6366f1",
+        ajustes: "#a855f7",
+        pagos: "#10b981",
+        integracion: "#f43f5e"
+      };
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2700 1600" width="2700" height="1600" style="background-color: ${bg}; font-family: 'Inter', system-ui, sans-serif;">
+  <defs>
+    <marker id="arrow-vector" viewBox="0 0 10 10" refX="7" refY="3.5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0 0, 7 3.5, 0 7" fill="${lineColor}" />
+    </marker>
+  </defs>
+
+  <rect width="2700" height="1600" fill="${bg}"/>
+
+  <!-- RELATIONSHIP LINES -->
+  <g id="relationships">
+`;
+
+      // Render relationship paths
+      RELATIONSHIPS.forEach(rel => {
+        const coords = getRelationshipCoords(rel);
+        if (!coords) return;
+        svg += `    <path d="${coords.pathD}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow-vector)" opacity="0.65"/>\n`;
+      });
+
+      svg += `  </g>\n\n  <!-- TABLE CARDS -->\n  <g id="tables">\n`;
+
+      // Render all 21 table cards as vector elements
+      Object.values(DB_SCHEMA).forEach(table => {
+        const x = table.x;
+        const y = table.y;
+        const w = 310;
+        const h = 40 + table.columns.length * 24;
+        const modColor = moduleColors[table.module] || "#6366f1";
+
+        svg += `    <!-- Table: ${table.name} -->
+    <g transform="translate(${x}, ${y})">
+      <rect width="${w}" height="${h}" rx="10" ry="10" fill="${cardBg}" stroke="${cardBorder}" stroke-width="1.5"/>
+      <path d="M 0 10 Q 0 0 10 0 L ${w - 10} 0 Q ${w} 0 ${w} 10 L ${w} 36 L 0 36 Z" fill="${headerBg}"/>
+      <rect x="12" y="10" width="10" height="16" rx="3" fill="${modColor}" opacity="0.8"/>
+      <text x="30" y="22" fill="${textPrimary}" font-family="'Fira Code', monospace" font-size="13" font-weight="bold">${table.name}</text>
+`;
+
+        table.columns.forEach((col, idx) => {
+          const cy = 56 + idx * 24;
+          let badgeFill = "#64748b";
+          let badgeText = "";
+          if (col.key === "PK") { badgeFill = "#eab308"; badgeText = "PK"; }
+          else if (col.key === "FK") { badgeFill = "#3b82f6"; badgeText = "FK"; }
+          else if (col.key === "UK") { badgeFill = "#8b5cf6"; badgeText = "UK"; }
+
+          if (badgeText) {
+            svg += `      <rect x="12" y="${cy - 11}" width="20" height="14" rx="3" fill="${badgeFill}"/>
+      <text x="16" y="${cy}" fill="#ffffff" font-family="'Fira Code', monospace" font-size="9" font-weight="bold">${badgeText}</text>
+`;
+          }
+
+          const nameColor = col.key === "PK" ? "#eab308" : (col.key === "FK" ? "#38bdf8" : textPrimary);
+          svg += `      <text x="${badgeText ? 38 : 14}" y="${cy}" fill="${nameColor}" font-family="'Fira Code', monospace" font-size="11">${col.name}</text>
+      <text x="${w - 14}" y="${cy}" text-anchor="end" fill="${textMuted}" font-family="'Fira Code', monospace" font-size="10.5">${col.type}</text>
+`;
+        });
+
+        svg += `    </g>\n`;
+      });
+
+      svg += `  </g>\n</svg>`;
+      return svg;
+    }
+
+    /**
+     * Clean Vector SVG Export
+     */
+    function exportToSVG() {
+      showToast("Generando SVG Vectorial Completo...");
+      const svgContent = generateCompleteSVG();
+      const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "diagrama_er_facturacion.svg";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      showToast("¡SVG Vectorial exportado exitosamente!");
+    }
+
+    /**
+     * High Resolution PNG Export (Direct Canvas Rendering)
+     * Avoids SVG fill bugs by drawing clean lines and cards directly with 2D Canvas context
+     */
+    function exportToPNG() {
+      showToast("Generando imagen PNG en Alta Definición (3200x1900)...");
+
+      const exportCanvas = document.createElement("canvas");
+      const ctx = exportCanvas.getContext("2d");
+      const width = 2700;
+      const height = 1600;
+      exportCanvas.width = width;
+      exportCanvas.height = height;
+
+      const isLight = state.lightTheme;
+      const bg = isLight ? "#f8fafc" : "#0a0d14";
+      const cardBg = isLight ? "#ffffff" : "#131927";
+      const cardBorder = isLight ? "#cbd5e1" : "rgba(255,255,255,0.12)";
+      const headerBg = isLight ? "#e2e8f0" : "#1e2538";
+      const textPrimary = isLight ? "#0f172a" : "#f1f5f9";
+      const textMuted = isLight ? "#64748b" : "#94a3b8";
+
+      // 1. Draw Background
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Draw Relationship Lines
+      RELATIONSHIPS.forEach(rel => {
+        const coords = getRelationshipCoords(rel);
+        if (!coords) return;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(coords.startX, coords.startY);
+        ctx.bezierCurveTo(coords.cp1x, coords.cp1y, coords.cp2x, coords.cp2y, coords.endX, coords.endY);
+        ctx.strokeStyle = "#6366f1";
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.65;
+        ctx.stroke();
+
+        // Arrow head
+        const angle = Math.atan2(coords.endY - coords.cp2y, coords.endX - coords.cp2x);
+        const arrowLen = 8;
+        ctx.beginPath();
+        ctx.moveTo(coords.endX, coords.endY);
+        ctx.lineTo(coords.endX - arrowLen * Math.cos(angle - Math.PI / 6), coords.endY - arrowLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(coords.endX - arrowLen * Math.cos(angle + Math.PI / 6), coords.endY - arrowLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = "#6366f1";
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 3. Draw Table Cards
+      Object.values(DB_SCHEMA).forEach(table => {
+        const x = table.x;
+        const y = table.y;
+        const w = 310;
+        const h = 40 + table.columns.length * 24;
+
+        ctx.save();
+        // Card Body
+        ctx.fillStyle = cardBg;
+        ctx.strokeStyle = cardBorder;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 10);
+        ctx.fill();
+        ctx.stroke();
+
+        // Card Header
+        ctx.fillStyle = headerBg;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, 36, [10, 10, 0, 0]);
+        ctx.fill();
+
+        // Table Name
+        ctx.font = "bold 13px 'Fira Code', monospace";
+        ctx.fillStyle = textPrimary;
+        ctx.fillText(table.name, x + 14, y + 23);
+
+        // Columns
+        table.columns.forEach((col, idx) => {
+          const cy = y + 58 + idx * 24;
+
+          // Key badge
+          if (col.key) {
+            ctx.fillStyle = col.key === "PK" ? "#eab308" : (col.key === "FK" ? "#3b82f6" : "#8b5cf6");
+            ctx.beginPath();
+            ctx.roundRect(x + 14, cy - 11, 20, 14, 3);
+            ctx.fill();
+
+            ctx.font = "bold 9px 'Fira Code', monospace";
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(col.key, x + 17, cy);
+          }
+
+          // Column Name
+          ctx.font = "11px 'Fira Code', monospace";
+          ctx.fillStyle = col.key === "PK" ? "#eab308" : (col.key === "FK" ? "#38bdf8" : textPrimary);
+          ctx.fillText(col.name, col.key ? x + 40 : x + 14, cy);
+
+          // Column Type
+          ctx.font = "10.5px 'Fira Code', monospace";
+          ctx.fillStyle = textMuted;
+          ctx.textAlign = "right";
+          ctx.fillText(col.type, x + w - 14, cy);
+          ctx.textAlign = "left";
+        });
+
+        ctx.restore();
+      });
+
+      // Download Canvas as PNG
+      exportCanvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "diagrama_er_facturacion_hd.png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        showToast("¡PNG HD exportado con líneas nítidas y limpias!");
+      }, "image/png");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast-msg");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3200);
+    }
+
+    function setupEventListeners() {
+      viewportEl.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".er-card") || e.target.closest(".inspector-drawer")) return;
+        state.isPanning = true;
+        state.startMouseX = e.clientX - state.panX;
+        state.startMouseY = e.clientY - state.panY;
+        viewportEl.classList.add("panning");
+        clearSelection();
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!state.isPanning) return;
+        state.panX = e.clientX - state.startMouseX;
+        state.panY = e.clientY - state.startMouseY;
+        updateTransform();
+      });
+
+      window.addEventListener("mouseup", () => {
+        state.isPanning = false;
+        viewportEl.classList.remove("panning");
+      });
+
+      viewportEl.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+        const newZoom = Math.min(Math.max(0.3, state.zoom * zoomFactor), 2.2);
+
+        const rect = viewportEl.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
+        state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
+        state.zoom = newZoom;
+
+        updateTransform();
+      }, { passive: false });
+
+      document.getElementById("btn-zoom-in").addEventListener("click", () => {
+        state.zoom = Math.min(2.2, state.zoom * 1.2);
+        updateTransform();
+      });
+
+      document.getElementById("btn-zoom-out").addEventListener("click", () => {
+        state.zoom = Math.max(0.3, state.zoom / 1.2);
+        updateTransform();
+      });
+
+      document.getElementById("btn-zoom-reset").addEventListener("click", () => {
+        state.zoom = 1.0;
+        state.panX = 60;
+        state.panY = 60;
+        updateTransform();
+      });
+
+      document.getElementById("btn-zoom-fit").addEventListener("click", () => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        state.zoom = Math.min(vw / 2800, vh / 1600) * 0.9;
+        state.panX = 40;
+        state.panY = 90;
+        updateTransform();
+      });
+
+      document.getElementById("btn-motion").addEventListener("click", () => {
+        state.motionActive = !state.motionActive;
+        document.getElementById("motion-text").textContent = state.motionActive ? "Animación ON" : "Animación OFF";
+        document.getElementById("btn-motion").classList.toggle("active", state.motionActive);
+        showToast(state.motionActive ? "Flujo de partículas activado" : "Flujo en pausa");
+      });
+
+      document.getElementById("btn-theme").addEventListener("click", () => {
+        state.lightTheme = !state.lightTheme;
+        document.body.classList.toggle("light-theme", state.lightTheme);
+        showToast(state.lightTheme ? "Tema Claro activado" : "Tema Oscuro Cyberpunk activado");
+        updateMinimap();
+      });
+
+      document.getElementById("btn-export-svg").addEventListener("click", exportToSVG);
+      document.getElementById("btn-export-png").addEventListener("click", exportToPNG);
+
+      document.querySelectorAll(".filter-chip").forEach(chip => {
+        chip.addEventListener("click", () => filterByModule(chip.dataset.module));
+      });
+
+      const searchInput = document.getElementById("search-input");
+      searchInput.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        state.searchQuery = q;
+
+        if (!q) {
+          document.querySelectorAll(".er-card").forEach(c => c.style.display = "block");
+          renderConnections();
+          return;
+        }
+
+        let firstMatch = null;
+        Object.values(DB_SCHEMA).forEach(table => {
+          const card = document.getElementById(`node-${table.name}`);
+          const matchTable = table.name.toLowerCase().includes(q);
+          const matchCols = table.columns.some(c => c.name.toLowerCase().includes(q));
+
+          if (matchTable || matchCols) {
+            card.style.display = "block";
+            if (!firstMatch) firstMatch = table;
+          } else {
+            card.style.display = "none";
+          }
+        });
+
+        renderConnections();
+
+        if (firstMatch && q.length >= 3) {
+          selectTable(firstMatch.name);
+        }
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+        } else if (e.key === "Escape") {
+          clearSelection();
+        }
+      });
+
+      document.getElementById("btn-close-drawer").addEventListener("click", clearSelection);
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

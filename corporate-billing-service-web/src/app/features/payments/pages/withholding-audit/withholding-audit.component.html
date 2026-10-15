@@ -1,0 +1,153 @@
+<div class="admin-page">
+  <header class="page-head">
+    <div>
+      <span class="page-head__eyebrow">Pagos y retenciones</span>
+      <h1 class="page-head__title">Auditoría de retenciones</h1>
+      <p class="page-head__subtitle">
+        Qué porcentaje se diligenció, cuándo, desde qué canal y quién, sobre qué pago o factura y cuánto se retuvo.
+        Es la evidencia guardada en su momento: no se reconstruye con el catálogo actual. Horas de Colombia (UTC−5).
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--outline" (click)="export('csv')" [disabled]="!!exporting()">
+        {{ exporting() === 'csv' ? 'Exportando…' : 'CSV' }}
+      </button>
+      <button type="button" class="btn btn--primary-red" (click)="export('xlsx')" [disabled]="!!exporting()">
+        {{ exporting() === 'xlsx' ? 'Generando Excel…' : 'Exportar Excel' }}
+      </button>
+    </div>
+  </header>
+
+  <form class="panel filters" (ngSubmit)="search()" aria-label="Filtros de auditoría">
+    <label class="field">
+      <span class="field__label">NIT</span>
+      <input class="field__input" name="nit" [(ngModel)]="filter.nit" placeholder="800092198">
+    </label>
+    <label class="field">
+      <span class="field__label">Factura</span>
+      <input class="field__input" name="invoice" [(ngModel)]="filter.invoice" placeholder="F1-51987">
+    </label>
+    <label class="field">
+      <span class="field__label">Pago (ID)</span>
+      <input class="field__input" name="paymentId" [(ngModel)]="filter.paymentId" placeholder="UUID del pago">
+    </label>
+    <label class="field">
+      <span class="field__label">Concepto</span>
+      <input class="field__input" name="concept" [(ngModel)]="filter.concept" placeholder="ReteFuente">
+    </label>
+    <label class="field">
+      <span class="field__label">Usuario</span>
+      <input class="field__input" name="user" [(ngModel)]="filter.user" placeholder="jperez">
+    </label>
+    <label class="field">
+      <span class="field__label">Canal</span>
+      <select class="field__input" name="channel" [(ngModel)]="filter.channel">
+        <option value="">Todos</option>
+        @for (c of channels; track c[0]) { <option [value]="c[0]">{{ c[1] }}</option> }
+      </select>
+    </label>
+    <label class="field">
+      <span class="field__label">Fecha desde</span>
+      <input class="field__input" type="date" name="from" [(ngModel)]="filter.from">
+    </label>
+    <label class="field">
+      <span class="field__label">Fecha hasta</span>
+      <input class="field__input" type="date" name="to" [(ngModel)]="filter.to">
+    </label>
+    <div class="modal-actions">
+      <button type="button" class="btn btn--outline" (click)="clear()">Limpiar</button>
+      <button type="submit" class="btn btn--primary-red">Buscar</button>
+    </div>
+  </form>
+
+  <section class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Seleccionado</th>
+            <th>NIT</th>
+            <th>Facturas</th>
+            <th>Concepto</th>
+            <th class="num">%</th>
+            <th class="num">Base</th>
+            <th class="num">Valor</th>
+            <th>Estado</th>
+            <th>Aplicado</th>
+            <th>Canal</th>
+            <th>Usuario</th>
+            <th class="num"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <tr class="skeleton-row">@for (cell of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track cell) { <td><span class="skeleton"></span></td> }</tr>
+            }
+          } @else {
+            @for (r of rows(); track r.id) {
+              <tr [class.row-inactive]="r.selectionStatus === 'CANCELLED'">
+                <td class="muted">{{ r.selectedAt | date: 'dd/MM/yyyy HH:mm' : offset }}</td>
+                <td>{{ r.clientNit || '—' }}</td>
+                <td class="muted">{{ r.invoiceNumbers.join(', ') || '—' }}</td>
+                <td><span class="strong">{{ r.conceptName }}</span> <span class="mono muted">v{{ r.conceptVersion }}</span></td>
+                <td class="num">{{ r.appliedPercentage | number: '1.0-4' }}%</td>
+                <td class="num">{{ r.calculationBase | copCurrency }}</td>
+                <td class="num">{{ r.withheldAmount | copCurrency }}</td>
+                <td>{{ statusLabels[r.selectionStatus] }}</td>
+                <td class="muted">{{ r.appliedAt ? (r.appliedAt | date: 'dd/MM/yyyy HH:mm' : offset) : '—' }}</td>
+                <td>{{ channel(r.sourceChannel) }}</td>
+                <td>{{ r.selectedBy.label }}</td>
+                <td><div class="actions"><button type="button" class="link-btn" (click)="detailPaymentId.set(r.paymentId)">Ver auditoría</button></div></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="12" class="empty">No hay retenciones con los filtros actuales.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <nav class="pager" aria-label="Paginación">
+      <span class="pager-info">
+        @if (totalItems()) {
+          Mostrando <strong>{{ page() * pageSize() + 1 }}–{{ page() * pageSize() + rows().length }}</strong>
+          de <strong>{{ totalItems() }}</strong> {{ totalItems() === 1 ? 'retención' : 'retenciones' }}
+        } @else {
+          0 retenciones
+        }
+      </span>
+      <div class="pager-controls">
+        <label class="page-size">
+          <span>Filas</span>
+          <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)" aria-label="Filas por página">
+            @for (size of pageSizes; track size) {
+              <option [ngValue]="size">{{ size }}</option>
+            }
+          </select>
+        </label>
+        <div class="pager-buttons">
+          <button type="button" class="page-btn" (click)="search(page() - 1)" [disabled]="page() === 0" aria-label="Página anterior">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          @for (item of pageNumbers(page(), totalPages()); track $index) {
+            @if (item === null) {
+              <span class="page-gap" aria-hidden="true">…</span>
+            } @else {
+              <button type="button" class="page-btn" [class.active]="item === page()" [attr.aria-current]="item === page() ? 'page' : null"
+                (click)="search(item)" [attr.aria-label]="'Página ' + (item + 1)">{{ item + 1 }}</button>
+            }
+          }
+          <button type="button" class="page-btn" (click)="search(page() + 1)" [disabled]="page() + 1 >= totalPages()" aria-label="Página siguiente">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </section>
+</div>
+
+<app-ui-modal [isOpen]="!!detailPaymentId()" title="Auditoría del pago" size="xl" (closed)="detailPaymentId.set(null)">
+  @if (detailPaymentId(); as id) {
+    <app-withholding-audit-panel [paymentId]="id"></app-withholding-audit-panel>
+  }
+</app-ui-modal>

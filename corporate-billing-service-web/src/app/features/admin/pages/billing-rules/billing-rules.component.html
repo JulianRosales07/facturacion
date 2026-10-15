@@ -1,0 +1,465 @@
+<div class="admin-page">
+  <header class="page-head">
+    <div>
+      <span class="page-head__eyebrow">Facturación Corporativa</span>
+      <h1 class="page-head__title">Reglas de Facturación e Incidencias</h1>
+      <p class="page-head__subtitle">
+        Administración de cortes contractuales (días 1 a 28), auditoría mensual de disponibilidad,
+        calendario de emisión y resolución de incidencias operativas.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--outline" (click)="loadClients(); loadCalendar(); loadIncidents()">
+        <mat-icon class="icon-inline">refresh</mat-icon> Actualizar
+      </button>
+      <button type="button" class="btn btn--primary-red" (click)="runDetection()" [disabled]="runningDetection()">
+        <mat-icon class="icon-inline">notification_important</mat-icon>
+        {{ runningDetection() ? 'Auditando...' : 'Auditar Vencimientos Ahora' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Navegación por pestañas -->
+  <div class="tab-nav">
+    <button type="button" class="tab-nav__item" [class.tab-nav__item--active]="activeTab() === 'rules'" (click)="activeTab.set('rules')">
+      <mat-icon class="icon-inline">tune</mat-icon> Clientes y Reglas
+      <span class="tab-badge">{{ clients().length }}</span>
+    </button>
+    <button type="button" class="tab-nav__item" [class.tab-nav__item--active]="activeTab() === 'calendar'" (click)="activeTab.set('calendar')">
+      <mat-icon class="icon-inline">calendar_month</mat-icon> Calendario Mensual
+    </button>
+    <button type="button" class="tab-nav__item" [class.tab-nav__item--active]="activeTab() === 'incidents'" (click)="activeTab.set('incidents')">
+      <mat-icon class="icon-inline">warning</mat-icon> Centro de Incidencias
+      @if (incidents().length > 0) {
+        <span class="tab-badge tab-badge--danger">{{ incidents().length }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- TAB 1: CLIENTES Y REGLAS -->
+  @if (activeTab() === 'rules') {
+    <section class="panel">
+      <div class="panel__header-row">
+        <div>
+          <h2 class="panel-title">Configuración de Cortes por Cliente</h2>
+          <p class="panel-desc">
+            Los clientes <strong>ORDINARIA</strong> tienen corte fijado el día 2 del mes.
+            Los clientes <strong>ESPECIAL_CORPORATIVA</strong> deben tener un día de corte explícito validado entre 1 y 28.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>NIT / Identificación</th>
+              <th>Razón Social</th>
+              <th>Tipo de Facturación</th>
+              <th>Día de Corte</th>
+              <th>Estado Configuración</th>
+              <th>Detalle Contractual</th>
+              <th class="num">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loadingClients()) {
+              @for (row of [1, 2, 3, 4]; track row) {
+                <tr class="skeleton-row">
+                  @for (cell of [1, 2, 3, 4, 5, 6, 7]; track cell) { <td><span class="skeleton"></span></td> }
+                </tr>
+              }
+            } @else {
+              @for (client of clients(); track client.id) {
+                <tr>
+                  <td class="strong">{{ client.nit }}</td>
+                  <td>{{ client.razonSocial }}</td>
+                  <td>
+                    <span class="badge-pill" [class.badge-pill--blue]="client.reglaFacturacion === 'ESPECIAL_CORPORATIVA'" [class.badge-pill--gray]="client.reglaFacturacion === 'ORDINARIA'">
+                      {{ client.reglaFacturacion === 'ESPECIAL_CORPORATIVA' ? 'Especial Corporativa' : 'Ordinaria' }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (client.diaCorteCorporativo) {
+                      <span class="badge-pill badge-pill--purple">Día {{ client.diaCorteCorporativo }}</span>
+                    } @else if (client.reglaFacturacion === 'ORDINARIA') {
+                      <span class="badge-pill badge-pill--gray">Día 2 (Estándar)</span>
+                    } @else {
+                      <span class="badge-pill badge-pill--red">Sin configurar</span>
+                    }
+                  </td>
+                  <td>
+                    @if (client.configuracionCompleta) {
+                      <span class="badge-pill badge-pill--green">
+                        <mat-icon class="badge-icon">check_circle</mat-icon> Completa
+                      </span>
+                    } @else {
+                      <span class="badge-pill badge-pill--red">
+                        <mat-icon class="badge-icon">error</mat-icon> Incompleta
+                      </span>
+                    }
+                  </td>
+                  <td class="muted">{{ client.detalleReglaCorporativa || 'Sin observaciones contractuales' }}</td>
+                  <td>
+                    <div class="actions">
+                      <button type="button" class="btn btn--outline btn--sm" (click)="openEditClient(client)">
+                        <mat-icon class="icon-inline">edit</mat-icon> Editar Regla
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="empty">No se encontraron clientes corporativos registrados.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- TAB 2: CALENDARIO MENSUAL -->
+  @if (activeTab() === 'calendar') {
+    <!-- Selector de Periodo y KPIs -->
+    <section class="panel">
+      <div class="calendar-controls">
+        <label class="field">
+          <span class="field__label">Periodo Mensual de Facturación</span>
+          <input class="field__input period-input" type="month" [value]="selectedPeriod()" (change)="onPeriodChange($any($event.target).value)">
+        </label>
+        <button type="button" class="btn btn--outline" (click)="loadCalendar()">
+          <mat-icon class="icon-inline">sync</mat-icon> Recargar Calendario
+        </button>
+      </div>
+
+      @if (calendarSummary(); as cal) {
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--total">
+            <span class="kpi-card__label">Total Clientes Activos</span>
+            <span class="kpi-card__value">{{ cal.totalClientesActivos }}</span>
+            <span class="kpi-card__sub">Periodo {{ cal.periodo }}</span>
+          </div>
+          <div class="kpi-card kpi-card--success">
+            <span class="kpi-card__label">Disponibles a Tiempo</span>
+            <span class="kpi-card__value">{{ cal.disponiblesATiempo }}</span>
+            <span class="kpi-card__sub">Corte cumplido</span>
+          </div>
+          <div class="kpi-card kpi-card--warning">
+            <span class="kpi-card__label">Disponibles con Retraso</span>
+            <span class="kpi-card__value">{{ cal.disponiblesConRetraso }}</span>
+            <span class="kpi-card__sub">Llegaron post-corte</span>
+          </div>
+          <div class="kpi-card kpi-card--info">
+            <span class="kpi-card__label">Pendientes Dentro de Plazo</span>
+            <span class="kpi-card__value">{{ cal.pendientesDentroPlazo }}</span>
+            <span class="kpi-card__sub">Aún dentro del plazo</span>
+          </div>
+          <div class="kpi-card kpi-card--danger">
+            <span class="kpi-card__label">Facturas Faltantes (Vencidas)</span>
+            <span class="kpi-card__value">{{ cal.incidenciasFacturaFaltante }}</span>
+            <span class="kpi-card__sub">Requieren gestión Siigo</span>
+          </div>
+          <div class="kpi-card kpi-card--incomplete">
+            <span class="kpi-card__label">Regla Incompleta</span>
+            <span class="kpi-card__value">{{ cal.configuracionesIncompletas }}</span>
+            <span class="kpi-card__sub">Sin corte asignado</span>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 1.5rem;">
+          <h3 class="panel-subtitle">Detalle de Facturas Esperadas y Estado de Disponibilidad</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Regla / Corte</th>
+                <th>Periodo</th>
+                <th>Factura Oficial</th>
+                <th>Estado Disponibilidad</th>
+                <th>Disponible para Pago</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of cal.clientes; track item.nit) {
+                <tr>
+                  <td>
+                    <div class="client-cell">
+                      <span class="strong">{{ item.businessName }}</span>
+                      <span class="muted small">NIT: {{ item.nit }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge-pill" [class.badge-pill--blue]="item.billingRule === 'ESPECIAL_CORPORATIVA'" [class.badge-pill--gray]="item.billingRule === 'ORDINARIA'">
+                      {{ item.billingRule === 'ESPECIAL_CORPORATIVA' ? 'Especial (Día ' + (item.corporateCutoffDay ?? '?') + ')' : 'Ordinaria (Día 2)' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="date-badge">{{ item.period }}</span>
+                  </td>
+                  <td>
+                    @if (item.invoiceNumber) {
+                      <span class="strong code-text">{{ item.invoiceNumber }}</span>
+                    } @else {
+                      <span class="muted italic">No generada / importada</span>
+                    }
+                  </td>
+                  <td>
+                    @switch (item.status) {
+                      @case ('DISPONIBLE_A_TIEMPO') {
+                        <span class="badge-pill badge-pill--green">Disponible a tiempo</span>
+                      }
+                      @case ('DISPONIBLE_CON_RETRASO') {
+                        <span class="badge-pill badge-pill--yellow">Disponible con retraso</span>
+                      }
+                      @case ('PENDIENTE_ANTES_DE_CORTE') {
+                        <span class="badge-pill badge-pill--blue">Pendiente (plazo activo)</span>
+                      }
+                      @case ('FALTANTE_DESPUES_DE_CORTE') {
+                        <span class="badge-pill badge-pill--red">Faltante (vencida)</span>
+                      }
+                      @case ('CONFIGURACION_INCOMPLETA') {
+                        <span class="badge-pill badge-pill--red">Regla Incompleta</span>
+                      }
+                      @default {
+                        <span class="badge-pill badge-pill--gray">{{ item.status }}</span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    @if (item.availableForPayment) {
+                      <span class="badge-pill badge-pill--green">Sí</span>
+                    } @else {
+                      <span class="badge-pill badge-pill--gray">No</span>
+                    }
+                  </td>
+                  <td class="muted small">
+                    {{ item.observations || '—' }}
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="empty">No hay clientes registrados en este periodo.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- TAB 3: CENTRO DE INCIDENCIAS -->
+  @if (activeTab() === 'incidents') {
+    <section class="panel">
+      <div class="panel__header-row">
+        <div>
+          <h2 class="panel-title">Incidencias y Alertas Operativas Persistentes</h2>
+          <p class="panel-desc">
+            Registradas automáticamente al vencer el corte del cliente o por inconsistencia de regla.
+            Las alertas no se duplican y se resuelven automáticamente cuando ingresa la factura oficial o manualmente por el operador.
+          </p>
+        </div>
+        <div class="filter-group">
+          <label class="field">
+            <span class="field__label">Filtrar por Estado</span>
+            <select class="field__input" [value]="filterIncidentStatus()" (change)="filterIncidentStatus.set($any($event.target).value); loadIncidents()">
+              <option value="">Todas las incidencias</option>
+              <option value="ABIERTA">Abiertas</option>
+              <option value="EN_PROCESO">En Proceso</option>
+              <option value="RESUELTA">Resueltas</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Periodo</th>
+              <th>Cliente</th>
+              <th>Tipo Incidencia</th>
+              <th>Estado</th>
+              <th>Corte Esperado</th>
+              <th>Responsable / Seguimiento</th>
+              <th>Canal de Alerta</th>
+              <th class="num">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loadingIncidents()) {
+              @for (row of [1, 2, 3]; track row) {
+                <tr class="skeleton-row">
+                  @for (cell of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track cell) { <td><span class="skeleton"></span></td> }
+                </tr>
+              }
+            } @else {
+              @for (inc of incidents(); track inc.id) {
+                <tr [class.row-resolved]="inc.estadoAtencion === 'RESUELTA'">
+                  <td class="muted">#{{ inc.id }}</td>
+                  <td class="strong">{{ inc.periodo }}</td>
+                  <td>
+                    <div class="client-cell">
+                      <span class="strong">{{ inc.razonSocial }}</span>
+                      <span class="muted small">NIT: {{ inc.nit }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    @if (inc.tipoIncidencia === 'FACTURA_FALTANTE') {
+                      <span class="badge-pill badge-pill--red">Factura Faltante</span>
+                    } @else {
+                      <span class="badge-pill badge-pill--yellow">Configuración Incompleta</span>
+                    }
+                  </td>
+                  <td>
+                    @switch (inc.estadoAtencion) {
+                      @case ('ABIERTA') {
+                        <span class="badge-pill badge-pill--red">Abierta</span>
+                      }
+                      @case ('EN_PROCESO') {
+                        <span class="badge-pill badge-pill--blue">En Proceso</span>
+                      }
+                      @case ('RESUELTA') {
+                        <span class="badge-pill badge-pill--green">Resuelta</span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    <span class="date-badge">{{ inc.fechaCorteEsperada || ('Día ' + inc.diaCorteEsperado) }}</span>
+                  </td>
+                  <td>
+                    @if (inc.responsableAsignado) {
+                      <div class="assignee-cell">
+                        <span class="strong">{{ inc.responsableAsignado }}</span>
+                        @if (inc.observacionesSeguimiento) {
+                          <span class="muted small">{{ inc.observacionesSeguimiento }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="muted italic">Sin asignar</span>
+                    }
+                  </td>
+                  <td>
+                    @if (inc.notificacionEnviada) {
+                      <span class="badge-pill badge-pill--gray" [title]="'Canal: ' + (inc.canalNotificacion || 'AUDIT_LOG')">
+                        <mat-icon class="badge-icon">notifications_active</mat-icon> {{ inc.canalNotificacion || 'Auditado' }}
+                      </span>
+                    } @else {
+                      <span class="badge-pill badge-pill--gray">Local</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="actions">
+                      @if (inc.estadoAtencion !== 'RESUELTA') {
+                        <button type="button" class="btn btn--outline btn--sm" (click)="openAssignModal(inc)">
+                          Asignar
+                        </button>
+                        <button type="button" class="btn btn--primary-green btn--sm" (click)="openResolveModal(inc)">
+                          Resolver
+                        </button>
+                      } @else {
+                        <span class="resolved-note" [title]="'Resuelto: ' + (inc.observacionesResolucion || '')">
+                          {{ inc.fechaResolucion | date: 'dd/MM/yyyy HH:mm' }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="9" class="empty">No hay incidencias que coincidan con el filtro.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>
+
+<!-- MODAL: EDITAR REGLA CLIENTE -->
+<app-ui-modal [isOpen]="clientModalOpen()" title="Configuración de Facturación del Cliente" size="md" (closed)="closeClientModal()">
+  @if (editingClient(); as client) {
+    <form [formGroup]="clientForm" (ngSubmit)="saveClientRule()" novalidate>
+      <div class="client-header-summary">
+        <div>
+          <h3 class="client-name">{{ client.razonSocial }}</h3>
+          <span class="client-nit">NIT: {{ client.nit }}</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label class="field span-2">
+          <span class="field__label">Tipo de Facturación Contractual</span>
+          <select class="field__input" formControlName="reglaFacturacion">
+            <option value="ORDINARIA">Ordinaria (Corte predeterminado el día 2 de cada mes)</option>
+            <option value="ESPECIAL_CORPORATIVA">Especial Corporativa (Corte contractual específico)</option>
+          </select>
+        </label>
+
+        @if (clientForm.get('reglaFacturacion')?.value === 'ESPECIAL_CORPORATIVA') {
+          <label class="field span-2">
+            <span class="field__label">Día de Corte Mensual (Rango permitido: 1 a 28) *</span>
+            <input class="field__input" type="number" min="1" max="28" formControlName="diaCorteCorporativo" placeholder="Ej. 10, 15, 20...">
+            @if (clientForm.get('diaCorteCorporativo')?.invalid && clientForm.get('diaCorteCorporativo')?.touched) {
+              <small class="field__error">El día de corte es obligatorio para clientes especiales y debe estar entre 1 y 28.</small>
+            }
+            <small class="field__hint">Debe corresponder exactamente al acuerdo contractual formalizado con el cliente corporativo.</small>
+          </label>
+        }
+
+        <label class="field span-2">
+          <span class="field__label">Detalle o Acuerdo Contractual</span>
+          <textarea class="field__input textarea" rows="3" formControlName="detalleReglaCorporativa" placeholder="Documente la justificación del corte, acuerdo marco, addendum o resolución..."></textarea>
+        </label>
+      </div>
+    </form>
+  }
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="closeClientModal()" [disabled]="savingClient()">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="saveClientRule()" [disabled]="savingClient()">
+      {{ savingClient() ? 'Guardando...' : 'Guardar Regla' }}
+    </button>
+  </div>
+</app-ui-modal>
+
+<!-- MODAL: ASIGNAR RESPONSABLE -->
+<app-ui-modal [isOpen]="assignModalOpen()" title="Asignar Responsable de Incidencia" size="md" (closed)="assignModalOpen.set(false)">
+  @if (assigningIncident(); as inc) {
+    <div class="form-grid">
+      <div class="span-2 incident-info-card">
+        <p><strong>Incidencia #{{ inc.id }}:</strong> {{ inc.tipoIncidencia }} para <strong>{{ inc.razonSocial }}</strong> (Periodo {{ inc.periodo }})</p>
+      </div>
+      <label class="field span-2">
+        <span class="field__label">Nombre del Responsable *</span>
+        <input class="field__input" [value]="assignedPerson()" (input)="assignedPerson.set($any($event.target).value)" placeholder="Ej. Juan Pérez (Analista de Facturación)">
+      </label>
+      <label class="field span-2">
+        <span class="field__label">Observaciones de Seguimiento</span>
+        <textarea class="field__input textarea" rows="3" [value]="followUpText()" (input)="followUpText.set($any($event.target).value)" placeholder="Estado del contacto con Siigo o cliente..."></textarea>
+      </label>
+    </div>
+  }
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="assignModalOpen.set(false)">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="confirmAssign()">Asignar Responsable</button>
+  </div>
+</app-ui-modal>
+
+<!-- MODAL: RESOLVER INCIDENCIA -->
+<app-ui-modal [isOpen]="resolveModalOpen()" title="Resolver Incidencia de Facturación" size="md" (closed)="resolveModalOpen.set(false)">
+  @if (resolvingIncident(); as inc) {
+    <div class="form-grid">
+      <div class="span-2 incident-info-card">
+        <p>Marcar incidencia de <strong>{{ inc.razonSocial }}</strong> ({{ inc.periodo }}) como resuelta.</p>
+      </div>
+      <label class="field span-2">
+        <span class="field__label">Observaciones de Resolución *</span>
+        <textarea class="field__input textarea" rows="3" [value]="resolutionText()" (input)="resolutionText.set($any($event.target).value)" placeholder="Detalle cómo se subsanó la falta de factura o la configuración..."></textarea>
+      </label>
+    </div>
+  }
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="resolveModalOpen.set(false)">Cancelar</button>
+    <button type="button" class="btn btn--primary-green" (click)="confirmResolve()">Marcar Resuelta</button>
+  </div>
+</app-ui-modal>

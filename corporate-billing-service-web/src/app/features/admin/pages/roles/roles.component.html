@@ -1,0 +1,177 @@
+<div class="admin-page">
+  <header class="page-head">
+    <div>
+      <span class="page-head__eyebrow">Administración</span>
+      <h1 class="page-head__title">Roles</h1>
+      <p class="page-head__subtitle">
+        Un rol agrupa permisos; los permisos efectivos de un usuario son la unión de sus roles activos.
+        Los roles del sistema no se pueden eliminar ni renombrar.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--outline" (click)="load()">Actualizar</button>
+      <button type="button" class="btn btn--primary-red" *hasPermission="'ROLES_CREATE'" (click)="openCreate()">Nuevo rol</button>
+    </div>
+  </header>
+
+  <section class="panel">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Rol</th>
+            <th>Descripción</th>
+            <th class="num">Usuarios asignados</th>
+            <th class="num">Permisos</th>
+            <th>Estado</th>
+            <th class="num">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3]; track row) {
+              <tr class="skeleton-row">@for (cell of [1, 2, 3, 4, 5, 6]; track cell) { <td><span class="skeleton"></span></td> }</tr>
+            }
+          } @else {
+            @for (role of roles(); track role.id) {
+              <tr [class.row-inactive]="!role.active">
+                <td>
+                  <span class="strong">{{ roleLabel(role.name) }}</span>
+                  <div class="chips"><span class="mono muted">{{ role.name }}</span> @if (role.systemRole) { <span class="chip chip--system">Sistema</span> }</div>
+                </td>
+                <td class="muted">{{ role.description || '—' }}</td>
+                <td class="num">{{ role.userCount }} usuario(s)</td>
+                <td class="num">{{ role.permissionCount }} permiso(s)</td>
+                <td>
+                  <span class="badge-pill" [class.badge-pill--green]="role.active" [class.badge-pill--gray]="!role.active">
+                    {{ role.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button type="button" class="link-btn" *hasPermission="'ROLES_VIEW'" (click)="openView(role)">Ver</button>
+                    @if (canUpdate()) {
+                      <button type="button" class="link-btn" (click)="openEdit(role)">Editar</button>
+                    }
+                    @if (canAssign()) {
+                      <button type="button" class="link-btn" (click)="openEdit(role, 'permissions')">Permisos</button>
+                    }
+                    @if (canUpdate()) {
+                      <button type="button" class="link-btn" [class.link-btn--danger]="role.active" (click)="askStatus(role)">
+                        {{ role.active ? 'Desactivar' : 'Activar' }}
+                      </button>
+                    }
+                    @if (canDelete() && !role.systemRole) {
+                      <button type="button" class="link-btn link-btn--danger" (click)="askDelete(role)">Eliminar</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty">No hay roles registrados.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Crear / editar / asignar permisos -->
+<app-ui-modal [isOpen]="formOpen()" size="xl" (closed)="formOpen.set(false)"
+  [title]="formMode() === 'permissions' ? 'Permisos de ' + roleLabel(editing()?.name ?? '') : (editing() ? 'Editar rol' : 'Nuevo rol')">
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (selfLockWarning()) {
+      <p class="notice notice--warning">
+        Tienes asignado este rol: con estos cambios podrías perder la capacidad de administrar usuarios y roles.
+        El sistema no permitirá que quede sin ningún administrador activo.
+      </p>
+    }
+    @if (formMode() === 'details') {
+      <div class="form-grid">
+        <label class="field">
+          <span class="field__label">Nombre</span>
+          <input class="field__input" formControlName="name" placeholder="ANALISTA_CARTERA" [class.field__input--error]="invalidName()">
+          @if (invalidName()) { <small class="field__error">Entre 3 y 60 caracteres: letras, números y guion bajo.</small> }
+          @if (editing()?.systemRole) { <small class="field__hint">Rol del sistema: el nombre no se modifica.</small> }
+          @else { <small class="field__hint">Se guarda en mayúsculas con guion bajo.</small> }
+        </label>
+        <label class="field">
+          <span class="field__label">Descripción</span>
+          <input class="field__input" formControlName="description">
+        </label>
+        <label class="switch-row span-2">
+          <input type="checkbox" formControlName="active"> Rol activo
+        </label>
+      </div>
+    }
+
+    @if (formMode() === 'permissions' || canAssign()) {
+      <p class="section-label">Permisos</p>
+      <div class="modules">
+        @for (module of modules(); track module.name) {
+          <div class="module">
+            <div class="module__head">
+              <span class="module__title">{{ module.name }}</span>
+              <label class="check">
+                <input type="checkbox" [checked]="moduleState(module) === 'all'" [indeterminate]="moduleState(module) === 'some'"
+                       (change)="toggleModule(module, $any($event.target).checked)">
+                Seleccionar todos
+              </label>
+            </div>
+            <div class="module__items">
+              @for (permission of module.permissions; track permission.id) {
+                <label class="check" [class.check--disabled]="!permission.active">
+                  <input type="checkbox" [checked]="selected().has(permission.id)" (change)="toggle(permission.id, $any($event.target).checked)">
+                  <span>
+                    {{ permission.name }} @if (!permission.active) { <em class="field__hint">(inactivo)</em> }
+                    <span class="check__hint mono">{{ permission.code }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (editing()) {
+      <p class="notice">No tienes el permiso para asignar permisos: solo se modifican nombre, descripción y estado.</p>
+    }
+  </form>
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="formOpen.set(false)" [disabled]="saving()">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Guardando…' : (editing() ? 'Guardar cambios' : 'Crear rol') }}
+    </button>
+  </div>
+</app-ui-modal>
+
+<!-- Detalle: usuarios y permisos -->
+<app-ui-modal [isOpen]="!!viewing()" [title]="'Rol ' + roleLabel(viewing()?.name ?? '')" size="md" (closed)="viewing.set(null)">
+  @if (viewing(); as role) {
+    <dl class="detail-list">
+      <dt>Descripción</dt><dd>{{ role.description || '—' }}</dd>
+      <dt>Estado</dt><dd>{{ role.active ? 'Activo' : 'Inactivo' }}{{ role.systemRole ? ' · rol del sistema' : '' }}</dd>
+    </dl>
+    <p class="section-label">Usuarios asignados ({{ role.users?.length ?? role.userCount }})</p>
+    <div class="chips">
+      @for (user of role.users ?? []; track user.id) { <span class="chip">{{ user.fullName }} · {{ user.username }}</span> }
+      @empty { <span class="field__hint">{{ role.users ? 'Ningún usuario' : 'Cargando…' }}</span> }
+    </div>
+    <p class="section-label">Permisos ({{ role.permissions?.length ?? role.permissionCount }})</p>
+    <div class="chips">
+      @for (permission of role.permissions ?? []; track permission.id) { <span class="chip" [title]="permission.code">{{ permission.name }}</span> }
+      @empty { <span class="field__hint">{{ role.permissions ? 'Sin permisos' : 'Cargando…' }}</span> }
+    </div>
+  }
+</app-ui-modal>
+
+<app-confirm-dialog
+  [open]="!!confirmation()"
+  [title]="confirmation()?.kind === 'delete' ? 'Eliminar rol' : 'Desactivar rol'"
+  [message]="confirmationMessage()"
+  [detail]="confirmation() && auth.hasRole(confirmation()!.role.name) ? 'Tienes asignado este rol: puedes perder permisos.' : null"
+  [confirmLabel]="confirmation()?.kind === 'delete' ? 'Eliminar' : 'Desactivar'"
+  [busy]="confirming()"
+  (confirmed)="confirm()"
+  (cancelled)="confirmation.set(null)">
+</app-confirm-dialog>

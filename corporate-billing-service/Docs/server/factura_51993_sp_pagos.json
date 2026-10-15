@@ -1,0 +1,73 @@
+{
+  "id" : "1aa9f2c5-5420-4ec0-bf6c-08197485a760",
+  "numeroFactura" : "51993",
+  "prefijo" : "FESP",
+  "numeroCompleto" : "FESP 51993",
+  "tipoFacturacion" : "F1",
+  "periodo" : "2026-09",
+  "cufe" : "720377e072ca996f78d1f873a16899a51af08fc5ca705c4ebdfa9841c2320214396cd348fac2e601082dce87023b26e3",
+  "estado" : "PAGADA",
+  "pagable" : false,
+  "cliente" : {
+    "nit" : "1088970617",
+    "razonSocial" : "CRISTIAN FERNANDO BRAVO MUÑOZ",
+    "direccionFiscal" : "LA CRUZ - NUEVO PUNTO",
+    "emailFacturacion" : "crisfe8609@gmail.com",
+    "telefono" : null
+  },
+  "fechas" : {
+    "fechaEmision" : "2026-09-10",
+    "fechaVencimiento" : "2026-09-25",
+    "vencida" : true,
+    "fechaImportacion" : "2026-10-06",
+    "fechaDisponiblePago" : "2026-10-06",
+    "fechaPago" : "2026-10-08"
+  },
+  "importes" : {
+    "subtotal" : 5694150.00,
+    "descuento" : 0.00,
+    "iva" : 0.00,
+    "totalOficial" : 5694150.00,
+    "totalNotasCredito" : 0.00,
+    "totalPagado" : 5694150.00,
+    "saldoPendiente" : 0.00,
+    "fuenteSaldo" : "CALCULADO_SISTEMA",
+    "carteraAnteriorPendiente" : 0.00,
+    "saldoTotalPorCobrar" : 0.00
+  },
+  "retenciones" : {
+    "retefuente" : 0.00,
+    "reteica" : 0.00,
+    "reteiva" : 0.00,
+    "estampillas" : 0.00,
+    "totalRetenciones" : 0.00,
+    "netoConRetenciones" : 5694150.00
+  },
+  "items" : [ {
+    "item" : 1,
+    "codigo" : "SERV-CORP",
+    "descripcion" : "Facturación de servicios corporativos",
+    "cantidad" : 1.00,
+    "unidad" : "UN",
+    "valorUnitario" : 5694150.00,
+    "baseGravable" : 5694150.00,
+    "porcentajeIva" : 0.00,
+    "valorIva" : 0.00,
+    "valorTotal" : 5694150.00
+  } ],
+  "enlaces" : {
+    "tienePdf" : true,
+    "pdfUrl" : "/api/v1/facturas/1aa9f2c5-5420-4ec0-bf6c-08197485a760/pdf",
+    "representacionGraficaUrl" : "/api/v1/facturas/1aa9f2c5-5420-4ec0-bf6c-08197485a760/representacion-grafica"
+  },
+  "formaPago" : "CREDITO",
+  "observaciones" : "Factura emitida en Siigo e importada para pago corporativo.",
+  "cartera" : {
+    "valorFacturaActual" : 5694150.00,
+    "saldoFacturaActual" : 0.00,
+    "carteraAnteriorPendiente" : 0.00,
+    "saldoTotalPorCobrar" : 0.00,
+    "totalObligacionesPendientes" : 0,
+    "obligacionesAnteriores" : [ ]
+  }
+}

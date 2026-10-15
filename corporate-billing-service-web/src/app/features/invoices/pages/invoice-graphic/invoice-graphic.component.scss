@@ -1,0 +1,122 @@
+.graphic-page {
+  padding: 1.5rem;
+  background-color: #525659;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.graphic-toolbar {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg-ffffff);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  .toolbar-left {
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8125rem;
+      color: var(--cb-text-muted, var(--tx-5a6b72));
+      text-decoration: none;
+      margin-bottom: 0.25rem;
+    }
+
+    .toolbar-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--cb-ink, var(--tx-1a2b34));
+      margin: 0;
+    }
+  }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.invoice-paper-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.invoice-paper {
+  width: 100%;
+  max-width: 850px;
+  background: var(--bg-ffffff);
+  padding: 2.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  color: var(--tx-1a1a1a);
+  min-height: 1100px;
+}
+
+.error-container {
+  width: 100%;
+  max-width: 900px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background-color: var(--cb-accent, #1F6F5C);
+    color: #fff;
+    &:hover { background-color: #154B3E; }
+  }
+
+  &.btn-outline {
+    background-color: transparent;
+    color: var(--cb-ink, var(--tx-1a2b34));
+    border-color: var(--cb-border, var(--bd-e1e8e6));
+    &:hover { background-color: var(--cb-surface-subtle, var(--bg-f1f4f3)); }
+  }
+}
+
+/* Reglas de impresión */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body, .graphic-page {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .invoice-paper-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .invoice-paper {
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+  }
+}

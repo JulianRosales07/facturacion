@@ -1,0 +1,30 @@
+<header class="page-head">
+  <div class="head-title">
+    <a routerLink="/consultar-facturas" queryParamsHandling="preserve" class="back-link">← Volver a facturas recibidas</a>
+    <h1>PDF oficial de Siigo</h1>
+    <p>Documento recibido desde la carpeta compartida.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="download()" [disabled]="!pdf()">
+    Descargar PDF
+  </button>
+</header>
+
+@if(loading()){
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Abriendo documento PDF…</p>
+  </div>
+}
+@if(error()){
+  <div class="empty-state" role="alert">
+    <h2>Documento no disponible</h2>
+    <p>{{ error() }}</p>
+    <a class="btn btn-secondary btn-sm" routerLink="/sincronizacion">Consultar sincronización</a>
+  </div>
+}
+@if(pdf(); as url){
+  <div class="table-card">
+    <iframe class="pdf-frame" [src]="url" title="Factura oficial en PDF"></iframe>
+  </div>
+  <p class="subtle" style="margin-top: 10px;">Si tu navegador no muestra el documento, puedes descargarlo con el botón superior.</p>
+}

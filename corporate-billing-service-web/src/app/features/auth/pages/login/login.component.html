@@ -1,0 +1,48 @@
+<main class="gradient-background">
+  <div class="diagonal-lines-wrapper" aria-hidden="true">
+    <span class="diagonal-line line-1"></span><span class="diagonal-line line-2"></span>
+    <span class="diagonal-line line-3"></span><span class="diagonal-line line-4"></span>
+  </div>
+  <div class="content-wrapper">
+    <section class="form-container login-card-extended" aria-label="Acceso a facturas corporativas">
+      <div class="logo-section"><img class="logo-lg" src="assets/layout/images/corporativo.png" alt="SP Empresarial" />
+      </div>
+      <form class="login-form" (submit)="login($event)">
+        <div class="credentials">
+          <div class="p-input-container floating-field">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <circle cx="12" cy="7" r="4" />
+              <path d="M4 21v-3a8 8 0 0 1 16 0v3" />
+            </svg>
+            <input id="login-username" name="username" type="text" autocomplete="username" placeholder=" " required />
+            <label for="login-username">Usuario</label>
+          </div>
+          <div class="p-input-container p-password floating-field">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              aria-hidden="true">
+              <rect x="4" y="10" width="16" height="12" rx="2" />
+              <path d="M8 10V6a4 4 0 0 1 8 0v4" />
+            </svg>
+            <input id="login-password" name="password" [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="current-password" placeholder=" " required />
+            <label for="login-password">Contrase&ntilde;a</label>
+            <button type="button" class="eye-toggle" (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              [attr.aria-pressed]="showPassword()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />@if(showPassword()){
+                <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
+        </div>
+        @if (error()) { <p class="login-notice" role="status">{{ error() }}</p> }
+        <button type="submit" class="login-button-primary">Iniciar sesi&oacute;n</button>
+      </form>
+    </section>
+  </div>
+  <img class="bottom-logo" src="assets/layout/images/sistemaspalacios.png" alt="Sistemas Palacios" />
+</main>

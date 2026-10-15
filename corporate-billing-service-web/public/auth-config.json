@@ -1,0 +1,6 @@
+{
+  "authorizationEndpoint": "",
+  "tokenEndpoint": "",
+  "clientId": "",
+  "scope": "openid profile email"
+}

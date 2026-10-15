@@ -1,0 +1,50 @@
+<header class="page-head"><div><h1>Sincronización e historial</h1><p>Lectura de facturas y PDF desde la carpeta del servidor, sin modificar los originales.</p></div><div class="actions"><button (click)="refresh()">Actualizar estado</button><button class="primary" (click)="trigger()" [disabled]="running()||triggering()">{{running()||triggering()?'Sincronizando…':'Sincronizar Siigo ahora'}}</button></div></header>
+@if(error()){<div class="error" role="alert">{{error()}}</div>}
+<section class="panel" aria-live="polite"><h2>Estado de la recepción</h2><p>{{running()||triggering()?'Hay una lectura en curso.':'Esperando el siguiente ciclo automático o una ejecución manual.'}}</p>
+@if(cycle();as c){<dl class="details"><div><dt>Último inicio</dt><dd>{{c.startedAt|date:'dd/MM/yyyy HH:mm:ss'}}</dd></div><div><dt>Finalización</dt><dd>{{c.finishedAt?(c.finishedAt|date:'dd/MM/yyyy HH:mm:ss'):'En curso'}}</dd></div><div><dt>Resultado</dt><dd><span class="badge" [class.pending]="c.status==='CON_ADVERTENCIAS'" [class.rejected]="c.status==='FALLIDA'">{{c.status}}</span></dd></div><div><dt>Facturas verificadas</dt><dd>{{c.detectedInvoices}}</dd></div><div><dt>PDF asociados</dt><dd>{{c.classifiedPdfs}}</dd></div></dl>
+@if(c.errors){<p class="error long-text">{{c.errors}}</p>}}@else{<p>No hay ciclos registrados todavía.</p>}
+<p class="subtle">El estado se actualiza cada 15 segundos. Las facturas verificadas incluyen las que ya existían.</p></section>
+<section class="panel"><h2>Historial de archivos de datos</h2><p class="subtle">Incluye cargas manuales y lecturas de carpeta realizadas desde la activación del historial. Cada rechazo corresponde al archivo completo.</p>
+@if(historyError()){<div class="error" role="alert">{{historyError()}} <button (click)="loadHistory()">Reintentar</button></div>}
+@if(loadingHistory()){<p class="loading" role="status">Cargando historial…</p>}@else if(history();as h){
+@if(h.items.length){<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Archivo / origen</th><th>Estado</th><th>Nuevas</th><th>Repetidas</th><th>Detalle</th></tr></thead><tbody>
+@for(row of h.items;track row.id){<tr><td>{{row.processedAt|date:'dd/MM/yyyy HH:mm:ss'}}</td><td>{{row.filename}}<small>{{row.source}} · {{row.username||'Sistema'}}</small></td><td><span class="badge" [class.rejected]="row.status==='RECHAZADO'" [class.pending]="row.status==='OMITIDO'">{{row.status}}</span></td><td>{{row.created}}</td><td>{{row.repeated}}</td><td class="long-text">{{row.detail||'Archivo procesado correctamente'}}</td></tr>}
+</tbody></table></div>}@else{<p class="empty">Aún no hay archivos procesados.</p>}
+<nav class="pager" aria-label="Paginación de historial">
+  <span class="pager-info">
+    @if(h.totalElements){
+      Mostrando <strong>{{ h.page * h.size + 1 }}–{{ h.page * h.size + h.items.length }}</strong>
+      de <strong>{{ h.totalElements }}</strong> {{ h.totalElements === 1 ? 'registro' : 'registros' }}
+    } @else {
+      0 registros
+    }
+  </span>
+  <div class="pager-controls">
+    <label class="page-size">
+      <span>Filas</span>
+      <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)" aria-label="Filas por página">
+        @for(size of pageSizes; track size){
+          <option [ngValue]="size">{{ size }}</option>
+        }
+      </select>
+    </label>
+    <div class="pager-buttons">
+      <button type="button" class="page-btn" (click)="loadHistory(h.page - 1)" [disabled]="h.page === 0" aria-label="Página anterior">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      @for(item of pageNumbers(h.page, h.totalPages); track $index){
+        @if(item === null){
+          <span class="page-gap" aria-hidden="true">…</span>
+        } @else {
+          <button type="button" class="page-btn" [class.active]="item === h.page" [attr.aria-current]="item === h.page ? 'page' : null"
+            (click)="loadHistory(item)" [attr.aria-label]="'Página ' + (item + 1)">{{ item + 1 }}</button>
+        }
+      }
+      <button type="button" class="page-btn" (click)="loadHistory(h.page + 1)" [disabled]="h.page + 1 >= h.totalPages" aria-label="Página siguiente">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+}
+</section><a routerLink="/consultar-facturas">Consultar las facturas recibidas</a>

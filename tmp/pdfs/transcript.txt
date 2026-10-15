@@ -1,0 +1,1541 @@
+﻿--- page-001 ---
+Este contenido se generó con IA
+Hablante 1 (00:00)
+Vale.
+Hablante 2 (00:05)
+Nosotros la anterior semana tuvimos una
+reunión como y el proveedor en este caso de
+cibatino. En el proceso que nosotros queremos
+hacer que mostrarle como tal al corporativo la
+factura, para que él haga su proceso en línea hay
+2 problemas grandes uno. Que es el proceso de
+la parte de las novedades que amarra a toda la
+parte de orden porque en órdenes como tal
+cualquier modificación que se haga.
+Hablante 2 (00:40)
+Se tiene que revisar en 1 a 1, y eso es lo que
+hace en este caso. Luzma, listo cuando ya eso
+--- page-002 ---
+está listo. Ya pasa a si ido y desde hace mira
+como tal la facturación efectiva, listo, realmente
+ese es el primer problema que es de ahí allá
+atrás, novedades y que se tiene que tocar como
+tal vez hiciste sistema viejo.
+Hablante 2 (01:04)
+EI segundo probable que nosotros tenemos otro
+problema, sino bueno, sí, sí también problema,
+porque cuando ya se tiene toda mi información
+lista, nosotros no tenemos como conectarnos a
+sinmigo. Todo se tiene que hacer leyendo los
+archivos planes, incluso hasta los PDFS. Los
+tienen dentro de una carpeta.
+Hablante 2 (01:24)
+Entonces prácticamente a nosotros nos va a
+tocar es estar leyendo continuamente esos
+autos y los planos y esas facturas listo el
+proveedor en este caso decigo nos va a dar el
+--- page-003 ---
+acceso a una carpeta o un archivo compartido
+en donde nosotros vamos a consumir esa
+información listo y la idea es que nosotros
+hagamos el consumo, cada hora. Claro. Porque,
+pues alguna novedad o algo comenzaste dentro
+de esa hora, ¿incluso no?
+Hablante 2 (01:56)
+¿Sacaría plantear o no revisar cuando existan
+novedades que se requieran del momento? Eso
+todavía no lo hemos contemplado, pero pues sí
+vamos a tener que contemplarlo. Porque
+digamos que ustedes las llaman y dicen
+necesitamos una factura a urgente tiene que
+hacerse todo el proceso y luego cargarse hacia
+acá.
+Hablante 2 (02:13)
+¿Porque si no el proveedor como tal no va a
+poder hacer el pago en LINE listo hasta ahí
+--- page-004 ---
+comprendido como esas 2 partes? En este caso,
+Julián va a tomar la segunda parte que es donde
+se arranca con los archivos ya listos del que sale
+de sí dijo porque vi prácticamente hasta la
+factura. ¿Lista listo?
+Hablante 3 (02:37)
+¿Qué vendrías el aire Excel?
+Hablante 2 (02:38)
+¿Qué vendría a ser el Excel listo? Ahorita del
+proveedor a nosotros nos entregó como tal la
+interfaz que ya entrega el programa, ¿pero
+nosotros lo vamos a consumir es directamente
+en archivo clave? Pista, una bestia se tiene la
+facturación.
+Hablante 2 (02:57)
+Y aquí es donde queríamos que nos ayuden
+porque si ya tenemos lista esa facturación.
+--- page-005 ---
+Cuando él vaya a pagar prácticamente ese valor
+que se muestre en la factura, no es el que va a
+pagar. Porque ahí se tiene una unos descuentos,
+lo que usted nos decían por X razón.
+Hablante 2 (03:18)
+Llegas aquí, razones a las que queremos que
+ahorita nos ayuden a cómo a revisar qué era lo
+que estábamos pensando y no sé si ay sí ya
+comenzamos con el ejercicio, juliano carga, por
+favor, el archivo miren desde en cuenta que
+prácticamente sería lo mismo, sino que ya el
+sistema lo va a consumir o sea, sería consumir
+la interfaz e inmediatamente. ¿Hay algo Carla?
+Hablante 3 (03:41)
+¿Decías en todos los 2000 velogos?
+Hablante 1 (03:46)
+¿Qué es lo que nos estás indicando hoy aquí que
+--- page-006 ---
+la ayuda o que?
+Hablante 2 (03:52)
+Sí, ahí lo que te estás indicando es que
+prácticamente se pueda hacer el consumo de la
+base de datos final, es decir la que sale de ese
+hijo de 2 formas, una o descarga, la base que
+sería la interfaz, la cara directa.
+Hablante 3 (04:05)
+¿EI lograr. Importamos aquí?
+Hablante 2 (04:07)
+Listo. Hola. Otra vez por archivo, plano por
+cualquiera de las 2 alternativas va a estar
+entonces.
+Hablante 2 (04:12)
+Prácticamente lo que ya tienes ahí es la
+facturación. Listo.
+--- page-007 ---
+Hablante 3 (04:17)
+Y ya los cargan. Ya están importados un cliente
+del 52028. 23 vamos a generar la factura.
+Hablante 3 (04:35)
+Entonces él ya nos muestra todos los datos que
+pues que él tiene el total valor importado el el
+fuera del nieto, seleccionados y lo confirmamos.
+Y el día la crea la factura y al final ya sale aquí,
+pues estaba aquí, no carga por la imagen que
+nos pa que faltaría pues importarle y ya crearía
+Hablante 2 (05:00)
+Factora, exactamente o sea, prácticamente
+nosotros estamos cargando toda la información
+decidido. Incluso nosotros. Vamos a leer
+también el PDF.
+--- page-008 ---
+Hablante 2 (05:08)
+Entonces en este sistema, ya vas a tener como
+tal todo el archivo que prácticamente lo que
+ustedes tienen en sus tablas más la factura
+lista. 100 el run caso, ¿ustedes a Milán
+necesitaban descargar? ¿Listo¿Ese es el perfil
+de ustedes todavía?
+Hablante 1 (05:27)
+Ya ese es la factura.
+Hablante 2 (05:29)
+Vencido, ¿decido listo listo? Entonces date
+cuenta que prácticamente en el sistema ya va a
+estar cargado todo. Todo absolutamente todo el
+sistema.
+Hablante 2 (05:40)
+Es prácticamente el sistema netamente de
+ustedes. Es que tiene que ser así porque
+--- page-009 ---
+ustedes tienen que tener su panel y de aquí
+todavía falta la vista hacia el usuario
+arrancamos con ustedes que sería que ustedes
+puedan observar que pueden cargar esa base de
+datos de 2 maneras una en el consumo por
+archivo y desde aquí también se va a leer los
+PDF.
+Hablante 3 (06:05)
+¿Y la idea de este también es que por ejemplo,
+cada factor en la misma factura le va a salir
+todos los servicios, los suscripciones que el
+mismo nie tenga no entonces aquí, por ejemplo,
+pueda que tenga macitems? Y le va a salir la
+descripción, el código a la cantidad, el valor y,
+pues, si es el producto tiene IVA y él le va a
+hacer todos los cálculos.
+Hablante 2 (06:30)
+Listo hasta ahí estaríamos con la carga con la
+--- page-010 ---
+carga inicial listo ahora, ¿sí?
+Hablante 4 (06:37)
+¿Exactamente¿Por qué esta es pérdida, bajá? O
+sea que sí, estoy mostrando toda ella es lo que
+la facturación de sí. ¿Qué les la importan a ese?
+Hablante 2 (06:47)
+¿Este empresario exactamente?
+Hablante 4 (06:49)
+Sí, porque sonaba más como que.
+Hablante 5 (06:53)
+Perfecto.
+Hablante 2 (06:55)
+Es la decisión.
+Hablante 1 (06:56)
+--- page-011 ---
+Y sigo según se genera mal ahí o sea mal no si
+ensigo se ponen dositems en la factura, van a
+aparecer 2. ¿Exactamente la competencia?
+Emsana, ¿pues sí se puede buscar así como por
+Hablante 3 (07:14)
+11 ahorita por el INE.
+Hablante 1 (07:16)
+Únicamente.
+Hablante 3 (07:17)
+Ahorita, pues so.
+Hablante 1 (07:20)
+Buena observa.
+Hablante 4 (07:23)
+Sí, que tenga matando. Sí, porque yo me ensaba
+--- page-012 ---
+de sentir.
+Hablante 5 (07:29)
+No, no, no, ¿no?
+Hablante 2 (07:32)
+No, no, ahí estamos prácticamente.
+Hablante 4 (07:35)
+He estado aquí en todas las facturas.
+Hablante 2 (07:42)
+Sí, porque, pues lastimosamente no, pues no
+terminamos conexión con ellos si no fuera
+muchísimo más fácil. ¿La sala ingenio y en la
+mañana le mostré esta parte y dijo que chimboy
+por qué, pues es que si tuviéramos una conexión
+vivap es muchísimo más fácil más rápido y es la
+información en línea? Si acaso nos demoramos
+en leerla 1 segundo.
+--- page-013 ---
+Hablante 2 (08:21)
+En ese ejercicio, entonces lo que tendríamos
+que mostrar nosotros en la factura de manzanar
+con los 2 sites que se generaron. O sea,
+empezar tiene varias.
+Hablante 4 (08:31)
+Desayuno, hay clientes que tienen en una sola
+factiva varios sitios.
+Hablante 2 (08:35)
+Ya.
+Hablante 1 (08:36)
+Oh.
+Hablante 4 (08:36)
+Pero hay otras que tienen.
+--- page-014 ---
+Hablante 2 (08:41)
+Ya.
+Hablante 1 (08:42)
+O tiene una montura varias intems y otras cimas.
+Hablante 4 (08:47)
+¿Conoces a sangre mi copa?
+Hablante 2 (08:49)
+Buenas noches, aparte si nuestra calidad.
+Hablante 3 (08:52)
+¿Cómo acuerdo y un cliente?
+Hablante 4 (08:54)
+O sea, yo cliente que se le pueda generar una
+factura cuando digamos con diecisites y aparte
+otras 3 facturas.
+--- page-015 ---
+Hablante 1 (09:01)
+De otros.
+Hablante 2 (09:06)
+Esa parte no se podría revisarla. Entonces listo,
+porque hizo venir el mapa. Todavía no lo
+tenemos listo bueno ahí como tal, ya estaría
+cargado a toda la facturación, ya estaríamos
+listos en teoría hasta ahí si nosotros vamos y
+mostramos eso en el SP pagos.
+Hablante 2 (09:24)
+Ahí sí, ya viene el ejercicio que queríamos
+realizar abrite el sppas, por favor, arriba, un
+pagos punto com. Si nosotros vamos acá y el. EI
+corporativo digital, unit.
+Hablante 2 (09:46)
+Prácticamente. Hay ya que necesitamos
+desayunar. ¿Porque necesitaríamos ver qué le
+--- page-016 ---
+mostramos a él o cómo serías de cálculo?
+Hablante 2 (09:57)
+Nosotros estábamos pensando en algo ahora.
+Sí, pásate tú a tu diseño que es donde nosotros
+vamos a darle un perfil a cada corporativo. Y ahí
+se viene 1 . Is configuraciones que son vámonos
+a las configuraciones de los de la de la setería.
+Hablante 2 (10:20)
+Prácticamente lo que nosotros en el sistema, lo
+que proponemos es crear los impuestos por
+cada cliente ajá. Para que para que cuando el
+corporativo dijiste su ning venga con una
+configuración previa. De ahí, si no se ay, sí, ya
+me meten temas contables y ahí sí es lo que
+ustedes nos digan.
+Hablante 2 (10:51)
+Porque es como decir yo ingreson. Me entonces
+--- page-017 ---
+sobre ese valor de esa factura, voy a aplicarse
+esos descuentos que son retención en la fuente.
+Hablante 1 (1 1 :00)
+O sea, ya vendrían los despantos, por.
+Hablante 4 (1 1 :02)
+Perfecto.
+Hablante 2 (1 1 :03)
+Corta por la configuración que ustedes le deben.
+Hablante 3 (1 1 :07)
+Si es que le puede ser el sistema, lo que va a
+permitir. Es como crear el cliente, por ejemplo,
+ahorita, supongamos un cliente éxito que esté
+ese cliente le vamos a definir que para este
+cliente, las reacciones del 4% que la re el reteica
+es del 6, por supuesto, entonces él ya va a tener
+esa configuración lista y ya en la parte del spi
+--- page-018 ---
+pago nomás es consume consume esa misma
+información que ya al cliente tiene.
+Hablante 2 (1 1 :34)
+Es decir, calidad, 50000 pesos ya haces todos
+esos descuentos y al final termina pagando qué
+sé yo 40000 pesos y ese salió, y el valor a pagar,
+pero entonces ya vine con una configuración
+previa. Y ahí si no sé si este nos pensando bien
+o estamos por fuera de lo que se quiere hacer.
+Hablante 1 (1 1 :53)
+Sí, sí, sí, es buena. Buena idea.
+Hablante 2 (1 1 :57)
+pero.
+Hablante 4 (1 1 :59)
+Pero que a veces nos aplican.
+--- page-019 ---
+Hablante 3 (12:03)
+Ah, no sé eso, ¿sí?
+Hablante 4 (12:09)
+Totalmente por compras, otras que pronto
+aplican una. Por soware, entonces yo diría. Sí,
+dejarle el panel de pensiones y dejarle los
+porcentajes.
+Hablante 3 (12:33)
+Hablante 1 (12:35)
+Yo creería. Pero que puedan escoge.
+Hablante 4 (12:42)
+Exacto.
+Hablante 1 (12:43)
+Sí, ¿o si no?
+--- page-020 ---
+Hablante 3 (12:46)
+¿Que quién puede escoger?
+Hablante 1 (12:48)
+EI cliente o sea que haya otra opción en que le
+pueda decir otro.
+Hablante 4 (12:53)
+Sí, es que vayan a decir.
+Hablante 6 (12:55)
+América de atención y ahí me bloquean, sí,
+entonces ahí ya se desplega otra vez.
+Hablante 3 (13:00)
+Pero pregunta hay, por ejemplo, ¿cómo
+verificarían si el cliente supongamos que yo
+tengo que pagar el 4% para hay otra opción que
+me cobran el 3? Entonces yo para mí prefiero
+--- page-021 ---
+pagar el 3 por eso.
+Hablante 1 (13:12)
+Porque no, pues el cliente no puede no puede
+hacer eso de escoger el menor valor o sea. EI
+cliente. Sí, deben realizar el pago como es
+debido si ya existe alguna novedad o si el cliente
+se equivoca, ya entramos nosotros, pues a
+realizar las como el reclamo.
+Hablante 1 (13:31)
+Porque no puede suceder.
+Hablante 6 (13:34)
+¿Lo que pasa es que cuando cuando o sea los
+sí, los entiendo no el cliente va a decir ah mejor
+me sale mejor este, pero pasa que nosotros
+prestamos, es un servicio cuando digamos, por
+ejemplo, ante la diam, ellos no pueden declarar
+que nosotros que nos compraron a nosotros,
+--- page-022 ---
+porque nosotros no vendemos bienes o bienes,
+entonces, nosotros prestamos servicios?
+¿Entonces¿Qué pasa que hay ante la dianciosi
+tienen que practicar la retención del 4? Se puede
+dar 3.5 porque es un manejo de software
+depende de cómo lo todo.
+Hablante 1 (14:07)
+Es encontrado clasificación, pero entonces eso
+si está bien. Solo que se podría dejarle solo ese
+del 4 si ya el cliente aplicar el 3.5 punto el otro
+cliente que tenga otra opción que diga otros o
+que ellos puedan médicos.
+Hablante 4 (14:32)
+Porcentaje.
+Hablante 2 (14:34)
+Ok, también.
+--- page-023 ---
+Hablante 4 (14:36)
+Cuéntale configura la fórmula facción, ¿no?
+Hablante 3 (14:40)
+¿Por qué? Porque ahí se podría hacer que, por
+ejemplo, ustedes desde acá, se crean los
+créanlos, los impuestos y que al momento de
+que el usuario la empresa vaya a pagar
+seleccione ahí tenga un menú desplegarle.
+Seleccione los el impuesto que aparezca.
+Hablante 3 (15:00)
+Entonces la creación, la creación de los
+impuestos no va a ser por cada cliente, sino
+general general para todos.
+Hablante 6 (15:07)
+Sí, por lo menos seguimos.
+Hablante 4 (1 5:1 3)
+--- page-024 ---
+¿Su tarifa?
+Hablante 2 (1 5)
+Tú no podríamos tener o sea. Que no hay una
+población dentro de los colores que lleven a la
+configuración fija.
+Hablante 5 (15:22)
+Sí.
+Hablante 6 (15:24)
+Sí, David, pero.
+Hablante 1 (15:25)
+Son muy pocos los que aplican del 3.5, por
+ejemplo.
+Hablante 2 (15:33)
+Entonces, si mejor dejarla general para todos.
+--- page-025 ---
+Hablante 3 (15:35)
+Por eso empataratarios y en quienes.
+Hablante 4 (15:37)
+Miren, porque hay veces que ellos dicen nuevos
+que se me olviden. 3 sillas para aquellos.
+Hablante 3 (15:48)
+Clevantes de la guerra antes de que no los deje
+pagar sino seleccionado.
+Hablante 4 (15:56)
+Cuando simplemente para costar los clientes
+solamente tienen que pagar por ahí o va a haber
+va a haber un. O buenas tardes. Como las.
+Hablante 2 (1 6:1 0)
+Pues ahí tendríamos un equip o sea todo digital.
+Hablante 4 (1 6:1 5)
+--- page-026 ---
+Porque hay empresas grandes que pagan desde
+sus cuentas.
+Hablante 2 (1 6:1 9)
+¿What is the Weather por transferencia?
+Hablante 4 (16:22)
+Sí.
+Hablante 2 (16:24)
+Sí, clase, sí, sí, de eso no hay lío porque al fin del
+día.
+Hablante 3 (16:30)
+¿Qué importa es que paguen? ¿Alguien pues
+dónde?
+Hablante 4 (16:37)
+Metros.
+--- page-027 ---
+Hablante 1 (16:44)
+¿Te acuerdas que decíamos al inicio que tenga
+así como? Como opciones y equilibrio, parezca
+el 4% red frecuente.
+Hablante 3 (16:56)
+HMM.
+Hablante 4 (17:01)
+Y acá las retenciones y o no, porque hay unos
+que no aplican.
+Hablante 1 (17:07)
+¿Entonces que si le sulee aquí que pongan
+valor? Y puede ser el concepto.
+Hablante 3 (1 5)
+Recomendieron, yo la tenía de esta forma, ¿no?
+Así es para una.
+--- page-028 ---
+Hablante 3 (17:31)
+Bueno, aquí le pasó una cierta suscripciones. Y
+al final le aparece nomás los impuestos ya. La
+naturaleza pues se tenía que como unos
+cuadros.
+Hablante 2 (17:45)
+Para poner lo que habría es ahí el cálculo sobre
+el valor. ¿Y esas? Cambia cada año.
+Hablante 2 (17:57)
+¿Los porcentajes?
+Hablante 6 (17:58)
+Los porcentajes no era o sea lo que tú decía en
+la última VC o sea las bases sí aumentan el
+precentaje, pero el porcentaje ¿no?
+Hablante 2 (18:09)
+Y ese incremento de saute es por tiempos o en
+--- page-029 ---
+el año puede cambiar.
+Hablante 6 (1 8:1 5)
+No o sea, pues este año sí, cambiaron lo que te
+he explicado la través que este año tuvimos 3
+bases ya o sea, iniciamos con una nos la
+cambiaron y ahorita vamos.
+Hablante 2 (18:25)
+Es decir que nosotros tendríamos que mostrarle
+A.
+Hablante 4 (18:29)
+Fue el que sé cortamos.
+Hablante 6 (18:31)
+¿Por qué necesitas necesitan recordar?
+Hablante 2 (18:36)
+Web on this She shup.
+--- page-030 ---
+Hablante 1 (18:38)
+Yo le di la idea a la IA y la IA de la seguridad.
+Hablante 2 (18:42)
+Linda.
+Hablante 3 (18:49)
+No me acordaron, tenía Brasil, ¿lo tenía sí algo
+así? ¿La había mostrado?
+Hablante 2 (19:01)
+Pero entonces, en este orden de ideas, el que
+tiene la responsabilidad de ingresar los valores
+correctos.
+Hablante 4 (1 9:1 4)
+Porque ellos no retienen ellos bañan para esa
+retención, la paranoradían. Y los próximos datos.
+--- page-031 ---
+Hablante 2 (19:21)
+Whisky, sí, ¿lo sabemos o bueno?
+Hablante 4 (19:23)
+Estamos tanto de tocar un periodo.
+Hablante 1 (19:26)
+Tú lo estás dominando mirando, ya por ejemplo,
+impacto, sí es que es bueno, pero. Es por esos
+clientes únicos que a veces como que.
+Hablante 3 (19:38)
+Y esos lentes siempre eligen esa opción.
+Hablante 1 (19:43)
+Y no podemos decirles no cambiese a la otra
+porque.
+Hablante 3 (19:48)
+Ana, por ahí igual, ¿pues¿Sabes qué es la idea la
+--- page-032 ---
+idea que acá es como?
+Hablante 1 (19:52)
+¿Es más aplicación? Y se supone que sea 0
+juntos. ¿Me perdemos decirles?
+Hablante 5 (20:04)
+Hablante 4 (20:06)
+Hoy hay otros como los municipios que ellos se
+fueron a sus valores entonces. ¿Por rura, no les
+toca redondear?
+Hablante 1 (20:16)
+A1 final de esa empresa. Por pagar, ¿ajá si soy la
+soy?
+Hablante 4 (20:23)
+Por eso no me si no va ajornar cuando.
+--- page-033 ---
+Hablante 2 (20:26)
+Ah, zacapucha. O sea que tenemos que tener en
+cuenta también un redondeo. En los valores a
+finales.
+Hablante 4 (20:35)
+Públicos que no son muchos, pero.
+Hablante 1 (20:38)
+Con los públicos es más complicado porque
+ellos a veces aplican y a veces no aplican. Por
+eso por eso también es como mejor dejar
+abierto a ellos. Dependiendo de lo que ellos
+vayan a aplicar.
+Hablante 3 (21:00)
+Pero entonces este campo no tiene que ser
+obligatorio, sino el de pues, si quiere si tiene
+retención.
+--- page-034 ---
+Hablante 1 (21:07)
+Cuando levan un lechule que sí aplicando
+atención. Cuando digan sí que no ya no los
+dejen.
+Hablante 4 (21:20)
+¿No, que se pueda que ellos puedan ver la lista
+como para que ya entré? Venga sus transportes
+residentes, pero más no de partirlas, así como
+como porcentaje de pico.
+Hablante 2 (21:34)
+Se actuó, por favor por 100% evitable por.
+Hablante 3 (21:38)
+Hablante 4 (21:50)
+Where the cálculo no, no o sea que tengas la
+--- page-035 ---
+lista de retenciones, digamos, los aceite, ellos,
+Miguel en capital, ya porque antes estampillas
+es decir, ese es indecentable porque les vamos
+a poner unos unos digan que para el prode
+desarrollo de la universidad del Senado,
+deportes justicia. Otros que por papelerían, no lo
+tienen. ¿Sabes aquí ya es una vez?
+Hablante 5 (22:22)
+Varios impuestos de 1000 im.
+Hablante 2 (22:25)
+¿Ya ok, listo, vale, entonces nosotros dejaríamos
+esto evitable? Y cada una de estas partes
+configurable. Y se guardaría un histórico porque
+sí es posible que ciclo refinan otros porcentajes
+y demás, sí se tiene que guardar el histórico de
+que esa factura se pagó con esa versión de ese
+por 100.
+--- page-036 ---
+Hablante 2 (22:50)
+Bueno, ay, estaríamos. Con esa parte. Y mi
+pregunta es listo.
+Hablante 2 (22:58)
+Digamos que ya el corporativo ejecutó toda la
+información. ¿Ingresó lo que él tenía que
+ingresar para sus deducciones y demás? Y una
+vez se paga.
+Hablante 2 (23:13)
+¿Dónde debería o mejor dicho cómo reciben
+ustedes la información cuando ya el corporativo
+paro?
+Hablante 4 (23:22)
+S archivos en los astractos. Y es de ban
+Colombia de capturación. Y en lo importante
+efectivo y empecé si tenemos acceso y lo
+descargamos el acceso.
+--- page-037 ---
+Hablante 2 (23:37)
+No sea productivamente, hacen el lenguaje
+ejercicio que esta se convierte pausa.
+Hablante 2 (23:51)
+Pido y con el center alicepe que está el día el
+corporte.
+Hablante 5 (23:59)
+O sea que lo ya es la cartera.
+Hablante 1 (24:06)
+Ya en el SP pues, aquí no es que juegue un papel
+del craso. EI SP salud es para nosotros a los
+información y poder nosotros suspender y
+arribas de resto. Nada más es con pagos no
+tiene nada que.
+Hablante 2 (24:23)
+--- page-038 ---
+¿Y la suspensión de los servicios?
+Hablante 1 (24:25)
+Suspensiones, cuando nosotros ya
+descargamos diario, los reportes 1 5 Carolina ya
+lo subimos así. Ya tomamos la factura y ya se
+postura, ya se. Descargó, y tenemos el archivo
+que se llama cartera.
+Hablante 1 (24:41)
+Ese archivo nos registra todos los servicios que
+se encuentran todas las facturas y clientes que
+se encuentran pendientes o sea. Cliente del
+nombre bueno, todos los datos y la factura que
+se encuentra pendiente si tiene 10 pues 10
+facturas pendientes. De ahí nosotros realizamos
+la clasificación y vamos 1:1 .
+Hablante 1 (24:59)
+Eh, o, sea, normativa, es la cuestión es la
+--- page-039 ---
+recordando, ¿informando llamando? Si ya este
+cliente no paga.
+Hablante 2 (25:09)
+Esperá bien es para traer 1 segundo marquetelo.
+¿Digamos listo paga? Y ya lo hacen por la
+plataforma inmediatamente.
+Hablante 2 (25:17)
+La notificación de pavo ya va a estar dentro de
+este sistema. Claro, sí, porque allá o por ahí ahí
+ya le llega ahí, ¿ya te vas?
+Hablante 1 (25:24)
+Si tú decías que sí, ya.
+Hablante 4 (25:26)
+Para realizado, ¿ya?
+Hablante 1 (25:27)
+--- page-040 ---
+Mi querida tiene saludos pendientes, pues no le
+van bien nada si tienes saltos pendientes, le va a
+noticiar.
+Hablante 2 (25:33)
+Ok, listo. Entonces digamos que sería
+perdóname.
+Hablante 4 (25:41)
+Tienen 2 fanáticos pendientes. Digamos, son 2
+meses y pago como una sola al cliente de. EI
+sistema le permitiría pagar isala necesariamente
+debe que apoyar.
+Hablante 2 (25:53)
+No, hombre.
+Hablante 4 (25:54)
+"las, 2 de resultados que vean.
+--- page-041 ---
+Hablante 2 (25:57)
+Ah, es que llevaríamos a un estado, ¿no?
+Hablante 4 (26:00)
+Sí, por la idea porque hay clientes.
+Hablante 1 (26:02)
+Hay que ser por tu in. Para que para que para
+que si es el cliente pagó una sala, queda
+pendiente todavía.
+Hablante 4 (26:18)
+De septiembre y el tapado, entonces la
+notificación se llama pagó su factura, sino
+recuerde que su factura de septiembre se fue
+independiente o gracias por su por su pago y su
+factura.
+Hablante 2 (26:39)
+Que estoy pensando listo. Ya se hace el pago de
+--- page-042 ---
+esa factura, o no le va a quedar pendiente. Ese
+proveedor comental sigue estando como tal en
+cantera y en cartera porque no ha pagado una
+de esas facturas cuando está ahí bueno.
+Hablante 2 (26:55)
+Vámonos para el primer camino que sería el
+pago. Se realiza el Pablo y ya se identifique
+identifica que ese corporativo pavoma una de
+sus facturas a las facturas completas, ya hay
+ustedes. ¿Qué necesitan o sea de lo pagado,
+¿necesitan descargar algún archivo con alguna
+estructura específica?
+Hablante 2 (27:14)
+¿Para decir que eso?
+Hablante 4 (27:16)
+Que no es el Cruce de la factura con el pago
+para despegarla.
+--- page-043 ---
+Hablante 5 (27:20)
+Ya si tú, si tú eres.
+Hablante 4 (27:22)
+Ya según recibo de ca.
+Hablante 1 (27:26)
+Ámpara para descargar encibo.
+Hablante 2 (27:29)
+Claro, porque es que verte cuenta que acá ya te
+estoy diciendo. Han visto la empresa de
+santapid debía una factura por valor de 50 el fui
+pago por ese pepagos, ya ejecutó el servicio. EI
+sistema ya te está diciendo que él ya pagó y te
+está dando el número de la transacción más.
+Hablante 2 (27:46)
+¿Su valor que siempre va a ser el que
+--- page-044 ---
+corresponda o ah no? Aquí ya no seguía al que
+el corresponde sino el que él pagó. Y entonces,
+cuando ya está hecho esa parte tú me imagino
+que debes hacer ese descargo desde pago.
+Hablante 1 (28:01)
+O sea, él no hay unos altos de la interfaz.
+Hablante 2 (28:08)
+Hablante 6 (28:09)
+La cuenta de banco que pues eso va
+parametrizado y los impuestos.
+Hablante 2 (28:14)
+De esta murilla, es decir que nosotros
+profundamente les estaríamos generando la
+interfancia para entregársela así.
+--- page-045 ---
+Hablante 4 (28:21)
+Con otras personas regresar nomás.
+Hablante 2 (28:30)
+¿Listo es eso cuando eres el camino feliz y
+digamos, tardó y temas y afecta?
+Hablante 5 (28:37)
+Siempre va a ser el feliz.
+Hablante 2 (28:40)
+La autoridad tienes que contar más.
+Hablante 1 (28:43)
+Tú le ves la dificultad de aclaraciones, pero sí
+ves un bordo normal.
+Hablante 5 (28:51)
+Tú lo subes, y ya lo hagas feliz. No vas a nada.
+--- page-046 ---
+Hablante 2 (28:55)
+¿Qué felicidad? Entonces vámonos por el otro
+camino donde el usario. No apaga.
+Hablante 2 (29:07)
+Entonces, ¿tiempos tiempos de pago por altos?
+Hablante 4 (29:12)
+La facturación es general se hace donde llega a
+anticipar. Hay unos clientes que sí, esos por
+contratación y la mayoría se va a hacer mes. ¿Se
+supone querer que estar?
+Hablante 4 (29:28)
+Y al día con el mes con el mes que van
+transcurriendo, ¿no? Volvió a quitarse uno de los
+principales. Entonces, las facturas se generan
+los primeros días del mes de una a 2, ¿no?
+Hablante 4 (29:45)
+--- page-047 ---
+De ahí, el su vencimiento a 16, lo que tratamos
+es primero de enviarismo, enviarles a todos,
+pues un mensaje que su factura ya está lista
+bueno, continúa pajo. Si ya llego aquí, general,
+general ahí estamos, los vecinos de las masivas
+que son nos frecuentan, pero en general, He aquí
+a 16 ya se supone que su factura que su factura
+ya está decida y que ya se va a hacer el proceso
+de suspendición, nosotros, por lo general del
+quién se les damos hasta el 20. Después de 20 y
+así ya no pagaron, ya pues empezamos a otra
+vez y ya hasta el día máximo 25 les empezamos
+a ya soportarte.
+Hablante 4 (30:34)
+Empezamos a cortar.
+Hablante 2 (30:36)
+EI decir factura civilista el 12 cada mes. No
+esperemos que sean.
+--- page-048 ---
+Hablante 1 (30:41)
+Pues, aquí aquí hay ese sentido.
+Hablante 4 (30:46)
+Por otro, es tan bonito.
+Hablante 5 (30:48)
+Aquí está ahí, qué bonito no, no feliz, no feliz el
+gordo, el gordo, eso el bordo no lo voy a entrar
+así como una felicidad.
+Hablante 1 (31:00)
+Espérate más aquí ya tendría que la facturación
+salir. Perfecto. Porque la facturación es la que
+nos va a dar la fecha de vencimiento de la
+factura.
+Hablante 1 (31:17)
+Y la fecha de suspensión, pues ya la ponemos,
+--- page-049 ---
+es nosotros. Ahora la ponemos nosotros que es
+hasta el 20 porque nos pasamos hasta el 25
+porque son en esos días que parecen que fuera
+hartos. Nosotros descargamos activamos
+servicios y no alcanzamos a hacer la gestión de
+los otros servicios que están pendientes de
+pago para avisarles que se les va a suspender
+por eso ya otros servicios se suspenden a partir
+del 25 hasta el 27 se les da porque hay algunos
+que dicen bien un plazo ahora.
+Hablante 1 (31:49)
+Sí puede hacer esa porque somos buenas
+gentes, pero ya con tu sistema ya no ya
+diríamos, definitivamente no se puede dar
+plazos el sistema no suspende el servicio por
+falta de pago y se va a suspender directamente.
+Entonces hay algunas facturas del vencimiento
+porque se emiten a 10 de cada mes el
+vencimiento se corre al 25. Sin embargo,
+--- page-050 ---
+entender.
+Hablante 4 (32:19)
+No es como la factura San residencial Que Fue
+Tienen 1 sola fecha.
+Hablante 1 (32:23)
+Casi fuera que se emiten.
+Hablante 4 (32:28)
+Aquí se van todos.
+Hablante 1 (32:31)
+¿Por qué se corre por el por los nuevos, lo que
+decía luzma, que ya se demora y algunos salen
+hasta el 10 por porque los nuevos tienen que
+reglan por uno, pues se espera que?
+Hablante 2 (32:42)
+¿Conocemos resoluta?
+--- page-051 ---
+Hablante 1 (32:44)
+Notoda no todas claro, pero entonces en los
+nuevos se espera que con ya pone el sistema
+que tú dijiste que ibas a arreglar y modificar para
+que los manóse el humor y tanto en el. En mi
+tierra, pues no salga ya o sea.
+Hablante 4 (33:04)
+Te podría digamos, bueno, anuncio en el mes y
+se genera una factura al sistema si el 10 se
+genera otro le puede importar otro. EI estado se
+podría arribar hacia el proceso.
+Hablante 2 (33:16)
+Channel, diferentes nuevos porque si es ya de la
+base de datos existente, se cruza acá con las
+humedades. O sea, si dentro de la base de datos
+que tienes inicial, digamos. En sonar.
+--- page-052 ---
+Hablante 2 (33:34)
+Facturas de 100000 pe. Esa entonces la altura
+de 100000 pesos cargada y nosotros la leímos
+desde archivo plan. Ya directamente, oh, desde
+el archivo conmigo.
+Hablante 2 (33:48)
+Listo, entonces viene y. ¿Yo qué año otra factura,
+señor, pero ella para él mismo no podrías para
+manzanar. ¿Por qué no es a nosotros ya la
+estamos consumiendo desde acá o sea cuando
+ya ensaladas, y sigo nosotros vamos desde
+archivo plano?
+Hablante 1 (34:07)
+Eso porque si tuvo un servicio nuevo, le va a
+capturar después, ¿sí?
+Hablante 4 (34:11)
+Claro. Porque, por ejemplo, tienes los puntos de
+--- page-053 ---
+a todos, pero vale, le instalaron otro en otra. La
+nueva que les colcaron una droguería.
+Hablante 1 (34:24)
+Y otras le salen si se emiten el primero las que
+vienen normal en general de mesa meses, pero
+si se emiten en este. Sí, es pues se genera otra
+para esa.
+Hablante 2 (34:36)
+Si, pensamientos.
+Hablante 4 (34:38)
+Y otra cosa son los contados. Playúsculos
+contra clientes señales a un contrato o un.
+Hablante 5 (34:45)
+¿Me gustó muerto? Es un Rosario. ¿Quién es el
+gordo?
+--- page-054 ---
+Hablante 4 (34:52)
+En torneo, por ejemplo, la universidad de una
+niña este termina su contratación. EI primer
+contrato porque ellos por suscripción y por
+órdenes por contrato. Terminase su contrato en
+este mes como estaba en este proceso o en el
+mes.
+Hablante 4 (35:12)
+Se me hace en el blog. No se ha fapturado, pero
+entonces va a llegar el otro mes. Saludamos
+todavía va a tener que facturar 2 periodos.
+Hablante 2 (35:21)
+¿Cómo se encerraron ustedes de la
+finalizaciones de esos contrarios?
+Hablante 1 (35:30)
+Por cliente. Sí, y es que ahí ya están. Todos
+tenemos un orden o un proceso específico.
+--- page-055 ---
+Hablante 1 (35:38)
+Eso sí nos falta porque se emite el contrato se
+supone que el contrato 10. Lo. EI comercial, lo
+que hace el primero el comercial.
+Hablante 4 (35:53)
+A1 comercialista lanzan la propuesta. Eso se va
+a estudio.
+Hablante 1 (35:59)
+No lo revisa con el comercial. Ya el contrato en
+sí sale el del jurídico. EI jurídico hace las firmas y.
+Hablante 1 (36:11)
+Pues, ya se embalsa a corporación. Y el contrato
+se envía por correo o por WhatsApp, algo que
+me debería de ser por WhatsApp. No debería ser
+nada.
+--- page-056 ---
+Hablante 4 (36:21)
+Pues que en nosotros antes, manteníamos
+acceso a ningún correo y más que todo lo
+público y van, entonces, no sabemos cuánto y
+hay veces que si se les activiaban a ser factora,
+panasta, que después se nos reunimos todos
+los contantes que lleguen a capturación y nos.
+Los votean a nosotros y nosotros tenemos que
+hacer perfecto. ¿Y por el correo, y ahí es donde
+nos damos, cuenta con un punto de la
+universidad de la luñón, casi todo lo mejor dicho
+los tiene luz no, pero luzma, el?
+Hablante 4 (36:56)
+EI contrato empedente, ella saca su partecita.
+¿Donde donde tiene que facturar con estos
+datos por tal monto? Con cuanto tiempo en
+cuantas torturas, hasta hay unas penas series
+cultura mensual otros hacen 2 facturas por
+contrada o otros hacen una sola cultura por
+--- page-057 ---
+contrato, otros hacen puntos anticipados unos
+puntos de carne, entonces, más que todavía es
+como.
+Hablante 2 (37:20)
+¿Cuándo se tiene que renovar esos contratos y
+lenguas quién les desaparece? Fue merced.
+Hablante 4 (37:26)
+¿Cierto con el clientes y comerciales?
+Hablante 1 (37:28)
+Porque los públicos los hacen ingeniero Mario,
+los privados es el el ingeniero libán pymes y
+pymes son Sebastián porque hay. Es ya por
+directamente por orden.
+Hablante 2 (37:49)
+¿Cómo bañas? Eso será mi cerebro?
+--- page-058 ---
+Hablante 1 (37:53)
+Sí, en su ese, esa parte, si es bien como. ¿Cómo
+se dice? Como bien, así como de palabra.
+Hablante 4 (38:10)
+Y en manual, ni bien ni.
+Hablante 1 (38:12)
+Como deseamos, si yo no instala, lo pay, le
+instala en manda 11 mal. Si se refier.
+Hablante 2 (38:27)
+O sea, en este no está.
+Hablante 1 (38:29)
+Búscate a ver si por qué.
+Hablante 4 (38:33)
+No sé si no tenemos.
+--- page-059 ---
+Hablante 1 (38:35)
+¿Quién tienes acceso? ¿Creo que únicamente es
+se hace en Valencia?
+Hablante 4 (38:42)
+Pero es que la parte pública más que todo es
+por seco. Ellos hacen su propuesta cabeza del
+descargante.
+Hablante 2 (38:52)
+No paren con nosotros límite público, pero y los
+privados.
+Hablante 4 (38:55)
+La ciudad.
+Hablante 1 (38:58)
+Se reingular. Se reúne el comercial con el cliente
+y le dice listo. ¿Cómo vamos a quedar este año
+con valores?
+--- page-060 ---
+Hablante 1 (39:06)
+¿Igual que el anterior año ha listo? Entonces
+haga el contrato.
+Hablante 5 (39:10)
+Saborífico.
+Hablante 1 (39:11)
+EI otro jurídico se envían los contratos cercan y
+se fueron.
+Hablante 5 (39:15)
+¿Así es?
+Hablante 2 (39:19)
+No, pues es que allí me preocuparon, claro.
+Hablante 5 (39:23)
+¿Por qué tes dan lágrimas?
+--- page-061 ---
+Hablante 2 (39:25)
+Porque es que si la parte de contrato de una
+estación sistematizada Terra cogerse un miedo
+y es que la tetenta que son les afecta ustedes
+también es facturación, y si no cómo siguieras.
+Hablante 4 (39:35)
+Sí, es un caso.
+Hablante 1 (39:39)
+Eso siempre nos cogemos la cabeza y
+seguimos. Son gordos grande.
+Hablante 2 (39:49)
+¿En qué comentarios?
+Hablante 5 (40:07)
+Estamos o sea, ¿no?
+--- page-062 ---
+Hablante 4 (40:08)
+Y nosotros estamos grandes como las los
+casitos que van pasando, pero.
+Hablante 5 (40:13)
+"signa, se estupió. Ustedes están muy bien
+destinados.
+Hablante 4 (40:17)
+Lo único es eso que tengas en cuenta que no.
+No es necesariamente a primeros días del mes
+de general, toda la facturación va a ir surgiendo
+facturas diarias primero los que son primeros
+que son de los que eso sí son rodley, que son
+azucaradas donde estás dejando 20 está
+sacando a 10 como por ahí, ¿no? Narrate, era su
+barben.
+Hablante 4 (40:43)
+Casitos dencasitos o va a haber notas o modelo.
+--- page-063 ---
+Hablante 1 (40:49)
+Con las matas es que no sé cómo tú lo vas a
+cruzar y si eso sí me preocupa. Y al cliente no
+llegue la parezca a una factura y no se haya
+cruzado la nota.
+Hablante 6 (41:05)
+O sea, tú, ¿tomas es el archivo que yo te pasé,
+verdad? Lo que pasa es que ese archivo, la
+cartera sí, las 13 que se van cruzando ya no
+tienen que aparecer ahí. Entonces la banda
+como se cruza ya no tendría.
+Hablante 1 (41:20)
+Pero si me envía. ¿O se puede administrario?
+Hablante 6 (41:24)
+¿Es que cada hora no?
+--- page-064 ---
+Hablante 2 (41:26)
+Calor.
+Hablante 6 (41:30)
+Y los residenciales masivas, esos son porque es
+que los residenciales masivas. Ellos pueden
+pagar ahorita, porque. Por las que tenemos la de
+pagos normal, pero también te van a aparecer
+por los corporativos.
+Hablante 1 (41:43)
+Pero eso no se le podría clasificar y sacar 2
+veces.
+Hablante 2 (41:47)
+Todas las están pagando por acá, por el spep
+pago ya no va a encontrar factura porque desde
+acá la está generando.
+Hablante 6 (41:54)
+--- page-065 ---
+No, pero es que también tienen factura en el
+sigo o sea. La factura de los presidenciales
+masiva están con los.
+Hablante 4 (41:59)
+Lo que pasa es que como ellos ellos se moturan
+con IVA también hace parte de constructivos,
+aún tienen su tratamiento. Pero ellos nos
+nosotros nos encargamos de descargar y
+nosotros descargamos.
+Hablante 2 (42:12)
+Jesús, Cristian, esquina sobre una persona
+¿comienza tiene un servicio?
+Hablante 1 (42:18)
+En el isnorte, ahí ya está.
+Hablante 4 (42:22)
+Para allá para.
+--- page-066 ---
+Hablante 5 (42:24)
+Para embarazos, hay una espera y ella paga así.
+Hablante 3 (42:29)
+O bajas, hay el unicentro.
+Hablante 1 (42:34)
+Mira que haya vive en una casa que era el 7, 4
+ellas divina. Bandera.
+Hablante 5 (42:42)
+¿En estas acuerdas?
+Hablante 1 (42:45)
+¿Y el estato?
+Hablante 2 (42:46)
+Pero ofrece nomás.
+--- page-067 ---
+Hablante 5 (42:48)
+No era una.
+Hablante 3 (42:50)
+¿Acá no nada más que ya quedan las casas
+quintas por jamón tino?
+Hablante 4 (42:57)
+Ay, sí, ahí ya reso.
+Hablante 2 (42:58)
+Información.
+Hablante 1 (43:17)
+¿Qué te preocupa cuéntanos?
+Hablante 2 (43:21)
+No, no, sí, sí les queda como información bien
+regada. ¿No? Sí, hay.
+--- page-068 ---
+Hablante 2 (43:26)
+Por ejemplo, todos los de contratos me parecen
+muy mal que esté haciendo. ¿Los que tendría
+que existir un módulo de contratos?
+Hablante 1 (43:33)
+Pues, ¿no crees que no? ¿Vamos a dejar
+haciendo un momento? Y el cliente dice no tiene
+que facturarse con la orden de inicio y la orden
+de indicio está en otro mes o otro día.
+Hablante 4 (43:53)
+Así lo principalmente. No son muchos, pero pero
+sí tienen.
+Hablante 2 (43:59)
+No, pero entonces ellos como se están
+albiertando en el momento de que se les va a
+vencer un contrato con un cliente corporativo o
+sea.
+--- page-069 ---
+Hablante 1 (44:07)
+Nosotros somos dale.
+Hablante 4 (44:10)
+Haz que todo lo programado, pero en el mismo,
+pero con las entidades públicas porque si ya son
+grandes tortes como la.
+Hablante 1 (44:24)
+Las universidades, ¿María? Pero ellos son más
+juiciosos del cliente o el que nos alertamos yo
+tanto.
+Hablante 4 (44:39)
+Tan belleza, por ejemplo, los privados son
+públicos. Todo eso entonces ellos tienen.
+Hablante 2 (44:45)
+La sartén. Sartén ellos. Linkey and that was o
+--- page-070 ---
+sea que prácticamente quienes alerta en este
+caso.
+Hablante 5 (44:54)
+O.
+Hablante 4 (44:55)
+Salir de conversaciones entre el cliente y
+comercial comercial que es el de.
+Hablante 3 (45:05)
+Ya se me va a acabar el servicio. Hagamos unas
+renuncias.
+Hablante 2 (45:09)
+Escuchar, ¿no?
+Hablante 4 (45:10)
+Híjole la que tiene por 3 años el contrato. En la
+guardia.
+--- page-071 ---
+Hablante 1 (45:19)
+Renadora, y si nosotros no preguntaba por esa
+papá.
+Hablante 3 (45:24)
+Pero dices a quien le preguntan, ¿no dónde
+enviarán esa?
+Hablante 1 (45:27)
+Alumnasma ilusma dice ah, es cierto que es mal
+pasa esto, ¿este es oriente? ¿Y los macomás se
+da cuenta porque cuando ya va a venir a sus
+novedades de aquí y al aparece, ella no facturar,
+tan Luis, entonces dice por qué, porque se le ve
+un ser contento? Todos los mismos mayores
+contientes que vienen.
+Hablante 3 (45:51)
+Vino nunca se hace esto. No han habido casos
+--- page-072 ---
+de que se olviden cuando se termina un contrato.
+Hablante 1 (45:57)
+Sí, sí. ¿Necesita la fuerza diciendo?
+Hablante 4 (46:03)
+Se acuerden y estamos con.
+Hablante 1 (46:05)
+¿Cuántas sentidos?
+Hablante 3 (46:15)
+¿Qué desaparecen más cosas?
+Hablante 5 (46:16)
+Por el propio miren, ¿no?
+Hablante 1 (46:21)
+Las 2, por ejemplo, las entidades públicas, ellos
+sí o sí tienen que pagar por el banco. Ahí unas
+--- page-073 ---
+unas cuantas que se lo pagan por PC, ¿sí?
+Entonces, por el momento, si es bueno que se
+siga realizando así.
+Hablante 4 (46:45)
+Lo único que me te digo que tiene que hay que
+tener en cuenta ahí este no seas una un cargue
+de factura solo una vez.
+Hablante 1 (46:53)
+¿Que se puede decir?
+Hablante 4 (46:54)
+¿Hablando, prácticamente a diario no los
+primeros días? Por lo general son que aparecen
+más y más facturas. Y también hay que tener en
+cuenta las locas crédito que se le aplique porque
+como hay esos casos que vimos que no otra vez
+de ser bueno cualquier cosa, suplica crédito?
+--- page-074 ---
+Hablante 4 (47:13)
+Eso y que hay clientes que sí van a hacer
+nosotros. Me decía por banco, necesariamente,
+y tú crees tú también.
+Hablante 3 (47:24)
+¿Pues, porque ustedes cargan esa información
+de las facturas como en los primeros meses, no
+o sea, siempre? ¿Pero esa factura le va a salir al
+mes siguiente o no?
+Hablante 4 (47:35)
+Padrísimas semanas, factura, este. De los casos
+en factores de inmediato de septiembre. Vengan.
+Hablante 4 (47:46)
+Los.
+Hablante 5 (47:47)
+La gente decía pecado.
+--- page-075 ---
+Hablante 4 (47:53)
+Pero no sé. Hay casi casitos que se van
+quedando.
+Hablante 2 (47:56)
+Y un sabor está volando, ¿no?
+Hablante 5 (47:59)
+Pobre pascita.
+Hablante 3 (48:03)
+Pero está en un gordo.
+Hablante 2 (48:13)
+¿Con lo que hay en el momento? ¿No vas a
+responder? Lo que existe en órdenes al futuro.
+Hablante 2 (48:24)
+Porque es que date cuenta que prácticamente
+--- page-076 ---
+ahorita. Nosotros ya comenzamos a vender en
+otros territorios. Y darte cuenta que incluso yo
+creo que a veces hay contrataciones que por
+territorio son diferentes.
+Hablante 2 (48:41)
+Entonces. Prácticamente. O sea lo que hiciste
+en órdenes.
+Hablante 2 (48:49)
+Se ba colgar. ¿Y no vas responder?
+Hablante 4 (48:53)
+¿Que empiezan a preguntar demandalizarlo,
+organizando porque ese sistema yo pienso que
+está demasiado cargado. ¿Incluso hay hay que
+yo sé si hay parte de la posibilidad de mirar
+donde ya haya órdenes que no estén dirigentes.
+Por fin en ese sistema de algunas mesas yo por
+lo menos bueno cargo porque ya les viene como
+--- page-077 ---
+más?
+Hablante 4 (49:18)
+Cogido, pero yo me sacé bolas porque está de
+todo el revoltigio de todo los puntos que ya no
+ya no están habitados que ya no ya no existen
+entonces. Para que no se encaricería eso ir
+manejando que se pueda visualizar un o vigente
+pregente que ya no sabe.
+Hablante 1 (49:41)
+Y que se Cruce con el ese pello. ¿Creería ahí?
+Hablante 4 (49:54)
+Que lleguemos en local con nosotros.
+Hablante 2 (50:02)
+Visto bueno, entonces de esa primera parte,
+nosotros hacemos las adecuaciones por con lo
+que nos han dicho ahora porque prácticamente
+--- page-078 ---
+se sacrificado. Ese es el resultado como les
+decía Aguilar al inicio 2 partes primero cuando
+quiera estar listo. ¿Qué sería de ahí en adelante,
+pues ya ustedes dieron las pautas que ya no
+vamos a tener configuraciones por corporativos,
+sino que vamos a dejarles prácticamente el
+cálculo listo y desde ahí a prácticamente de
+aquí?
+Hablante 2 (50:32)
+¿Arrancaría él el consumo de la información
+para pagos? ¿Vistó y de ahí un ratón?
+Hablante 1 (50:43)
+Como miraría.
+Hablante 2 (50:44)
+No estoy todavía hasta ahí llega hasta ahí.
+Llegamos ah, sí, porque entonces es que esto
+era lo primero porque si no después nos
+--- page-079 ---
+metemos ya a codificar y de ahí.
+Hablante 1 (50:53)
+Por ahí que sí se puede mirar el nombre del
+usuario.
+Hablante 3 (50:58)
+¿Qué se puede enviar?
+Hablante 2 (50:59)
+Del corporativo.
+Hablante 1 (51:01)
+Es un verdadero contrato.
+Hablante 5 (51:03)
+Eso me salió a ti no, ¿por qué sí, sí, coder un
+más tío?
+Hablante 3 (51 : 1 2)
+--- page-080 ---
+¿Piensa este la razón ahora sí?
+Hablante 4 (51 : 1 4)
+Ahí estás, oficia.
+Hablante 3 (51 5)
+Me pesa como la tenían esa particia que se. Me
+aparecen los nombres.
+Hablante 1 (51:21)
+Si sale. O sea, yo busco por nombre y me sale.
+Yo busco por nid y me sale.
+Hablante 3 (51:35)
+Que aquí es de aquí ya está el reemplazo. Por
+ejemplo, en la parte de perfil, aquí se puede
+mirar en lo que es el nombre corporativo y ser el
+nombre.
+Hablante 2 (51:47)
+--- page-081 ---
+Tu carencia aficionar las 2 filtras zuliana, por
+nombre, por ning por rango de fechas por
+factura.
+Hablante 1 (51:58)
+Porque a veces el cliente 1 6, no tengo. No tengo
+ninguna.
+Hablante 3 (52:03)
+Claro, sino que aquí.
+Hablante 2 (52:06)
+Sí.
+Hablante 6 (52:07)
+Que ya lo hicimos aquí con su.
+Hablante 1 (52:10)
+No, porque eso.
+--- page-082 ---
+Hablante 2 (52:10)
+EI nuestro es el de ellas.
+Hablante 3 (52:14)
+Empieza en la base de río, pero aquí no como se
+cargaste qué vaya, sí, ¿cómo se carga el este?
+Hablante 5 (52:23)
+Excelente. Es que ya queda, ¿ya cara ya ya ya?
+Hablante 3 (52:37)
+¿Qué como puedes hacer? Se está cargando
+este este Excel, pues en este Excel, ¿no parece
+el nombre de?
+Hablante 4 (52:43)
+Por ver si necesario.
+Hablante 3 (52:45)
+Ni del nombre.
+--- page-083 ---
+Hablante 6 (52:49)
+¿Pretenden la factura, ¿ustedes no sí?
+Hablante 3 (52:53)
+Antes de esos sociedades, estará en el micro
+servicio de empresa echar de cargar. Lo que en
+este caso no lo no lo muestra por ese motivo. Él
+está colgando este exce nada más.
+Hablante 2 (53:07)
+Porque es que. Observablemente, hermano,
+porque es que me dio cuenta que pues si no
+pues mira y para el seguimiento de alertas como.
+Hablante 4 (53:25)
+Invirtió en sí contratos por eso, porque ahí se
+desvimos a todo y ahí por cambio.
+Hablante 2 (53:32)
+--- page-084 ---
+De esta parte de aquí, en adelante, ¿va Julián?
+Casi esa.
+Hablante 3 (53:39)
+Necesito.
+Hablante 2 (53:43)
+No le necesitan porque la hierba adelante puede
+arrancar él feliz porque prácticamente porque
+Julián necesitas el archivo.
+Hablante 3 (53:54)
+Ajá me hace dinero, yo pincho vida.
+Hablante 2 (53:57)
+Ese señaló y Ernesto, ¿por qué de ahí para atrás
+dice el medio del asunto porque siempre están
+un poquito negro, no pensaba que estaba tan
+así? ¿Cómo fue? No me han invitado?
+--- page-085 ---
+Hablante 5 (54:14)
+No, no, ¿no le doy a ver qué tal?
+Hablante 2 (54:18)
+¿Quienes hablas que dicen de los contratos?
+Hablante 1 (54:23)
+Pues, una vez que.
+Hablante 4 (54:24)
+Solamente narrónimo.
+Hablante 1 (54:27)
+Y eso fue no, no es que esa reunión de eso de la
+solicitud. Eso fue la ante.
+Hablante 4 (54:39)
+Apunte.
+Hablante 5 (54:41)
+--- page-086 ---
+¿Esta diciendo?
+Hablante 6 (54:43)
+¿Qué estás por favor?
+Hablante 2 (54:47)
+Es decir.
+Hablante 3 (54:49)
+Es decir.
+Hablante 2 (54:52)
+Lo subí dentro. ¿Haría entonces es para ahora?
+Prácticamente volverme a plantear como
+aumenta 20, 27 nivel, ya bastar dentro de las
+metas.
+Hablante 1 (55:01)
+¿Piensa inició?
+--- page-087 ---
+Hablante 3 (55:04)
+Pero sí sí, ¿sí?
+Hablante 2 (55:07)
+Pero este año ya claro, porque este año ya
+incluso la idea con el inge es visualizar esto para
+diciembre.
+Hablante 1 (55:17)
+Y ahora y los y los usuarios, ya que toca este
+tema de ganet. Y.
+Hablante 6 (55:22)
+¿Quién nace?
+Hablante 2 (55:24)
+Descendientes a meses, miren. Te voy a hacer, o
+sea, es que hay que pensar bien futuro, porque
+yo estoy ya te mete bien, llegamos mis
+amanizales, mecanitos, tratamos, siempre
+--- page-088 ---
+prácticamente hice más palacios a futtroping,
+valerse, palearse, exacto, va a ser nacional, eso
+es lo que.
+Hablante 1 (55:46)
+Pero en este momento ya tenemos. ¿A ver se los
+cómo le ibas a hacer?
+Hablante 4 (55:55)
+Soy sarita de megalén hay un poquito nosotros
+igual hacemos lo mismo, no sabemos qué tal
+que haya encontrado tal que.
+Hablante 2 (56:04)
+Son de 50 bonitas se desahorita. Están así.
+Hablante 1 (56:09)
+Y mira que la faturación general hay bueno, hay
+como 2.
+--- page-089 ---
+Hablante 2 (56:14)
+No, mansa.
+Hablante 1 (56:16)
+90, postulación, ¿general¿Te acuerdas que te
+decíamos que hay este uno para corporativos y
+F4 para residenciales? Hay otro F20 para
+meganet, pero dentro de los de F uno hay 2
+clientes que son deslace.
+Hablante 3 (56:33)
+Dentro de F. Uno. Listo, y en la sed colde de
+frente enlace de.
+Hablante 2 (56:40)
+Pradera, Jesús, valle del.
+Hablante 1 (56:46)
+Te vas a partir de aparecer ahí, pero así. ¿Que
+hay una semana?
+--- page-090 ---
+Hablante 2 (56:54)
+No, así porque con el mundo.
+Hablante 1 (56:59)
+¿Sistemas palacios no tiene?
+Hablante 4 (57:02)
+Puede enlace o sea, ¿nos toca entrar nos toca
+entrar?
+Hablante 2 (57:05)
+¿Han esta grabado en la fecha cuando?
+Hablante 4 (57:08)
+¿Sabes que son 3 módulos?
+Hablante 2 (57:10)
+Exactamente. ¿Pero en viento y cambias en paz,
+vamos a estar bueno, me hagas instancia
+--- page-091 ---
+porque si no?
+Hablante 4 (57:16)
+¿Dejas visualizar todo?
+Hablante 1 (57:18)
+Perdón de local. Si no está dentro de ese peno,
+está del módulo de ese pen, no está en las.
+Hablante 5 (57:26)
+Cosas, correcto.
+Hablante 2 (57:28)
+Los excluye porque ellos prácticamente les
+salían haciendo el pago, pero por la línea
+residencial.
+Hablante 6 (57:41)
+Consigo.
+--- page-092 ---
+Hablante 2 (57:42)
+¿Las preguntas que no puedo responder?
+Hablante 3 (57:54)
+Mañana le tengo la respu.
+Hablante 1 (57:55)
+Que se puedan doctorar como.
+Hablante 6 (57:59)
+No o sea, no poder se puede, pero en que no
+creo que. ¿De eso pareciéndome traerse otra?
+Pues se podría decir solo que nadie.
+Hablante 6 (58:16)
+Pero eso es que para ellas crear un tipo de
+frente para. La ISP y otros para mí también.
+"entonces, se llena y comportamiento para crear
+otro tipo de streaming, crear otro tipo de partida
+de los eventos.
+--- page-093 ---
+Hablante 6 (58:34)
+Entonces no creo que no vas o sea. Le podría un
+momento, pero.
+Hablante 1 (58:41)
+No vas a vivir que me digan.
+Hablante 2 (58:45)
+¿Aquí? Pues primero realista, muy sefesional.
+Hablante 5 (58:52)
+Y dijiste que no se.
+Hablante 4 (59:00)
+Desiguán el corte.
+Hablante 1 (59:02)
+¿Te acuerdas que se nos puede?
+--- page-094 ---
+Hablante 2 (59:05)
+Cuando se le dije, le quiero meter midísima
+contabilidad.
+Hablante 4 (59:08)
+Ah, pues, ya arriba.
+Hablante 2 (59:18)
+Listo, pues, muchachos.

@@ -1,0 +1,17 @@
+# ==============================================================================
+# Sobrescrituras para Entorno de Desarrollo Local
+# ==============================================================================
+# Este archivo se fusiona automáticamente al ejecutar: docker compose up
+# En producción, ejecute explícitamente: docker compose -f docker-compose.yml up -d
+# ==============================================================================
+services:
+  db:
+    # Publica el puerto 5432 solo para depuración e inspección con DBeaver/pgAdmin/psql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  app:
+    environment:
+      # Niveles de log más detallados para depuración local
+      LOGGING_LEVEL_COM_SISTEMASPALACIOS_BILLING: DEBUG
+      SPRING_JPA_SHOW_SQL: "true"

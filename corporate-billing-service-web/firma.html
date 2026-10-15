@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Firma Digital Ultra Rápida</title>
+    <style>
+        /* Reset & Base System Font (Ultra-lightweight for Android 8) */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+        }
+
+        /* Container for responsive layout */
+        .app-card {
+            width: 100%;
+            max-width: 680px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .app-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-perf {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background-color: #dcfce7;
+            color: #15803d;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Canvas Drawing Area */
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background-color: #ffffff;
+            /* Subtle transparency checkerboard */
+            background-image:
+                linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+                linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+                linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            /* CRUCIAL FOR ANDROID 8: Disables browser gestures on touch */
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: crosshair;
+        }
+
+        #signatureCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Baseline reference line */
+        .canvas-guide {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            bottom: 40px;
+            border-bottom: 1px dashed #94a3b8;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 11px;
+            padding-bottom: 2px;
+            user-select: none;
+        }
+
+        .canvas-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Controls Bar */
+        .controls-grid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Color Swatches */
+        .color-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.15s ease;
+        }
+
+        .color-btn:active {
+            transform: scale(0.9);
+        }
+
+        .color-btn.active {
+            box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0284c7;
+        }
+
+        .c-black {
+            background-color: #0f172a;
+        }
+
+        .c-blue {
+            background-color: #003399;
+        }
+
+        .c-red {
+            background-color: #b91c1c;
+        }
+
+        /* Stroke buttons */
+        .stroke-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .stroke-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+        }
+
+        /* Primary Actions (Undo / Clear) */
+        .action-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn:active {
+            background: #f1f5f9;
+        }
+
+        .action-btn.danger {
+            color: #dc2626;
+            border-color: #fecaca;
+            background: #fef2f2;
+        }
+
+        /* Action Buttons (Downloads) */
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-main {
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s ease;
+        }
+
+        .btn-main:active {
+            background: #1e293b;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-secondary:active {
+            background: #e2e8f0;
+        }
+
+        /* Mini Preview */
+        .preview-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+
+        .preview-thumbnail {
+            width: 110px;
+            height: 44px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            object-fit: contain;
+            display: none;
+        }
+
+        /* Notification Toast */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+            z-index: 100;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-card">
+        <div class="app-header">
+            <div class="app-title">
+                <span>Firma Digital</span>
+                <span class="badge-perf">Cero Lag • Android 8+</span>
+            </div>
+            <div class="control-group">
+                <button id="btnUndo" class="action-btn" title="Deshacer trazo">↩ Deshacer</button>
+                <button id="btnClear" class="action-btn danger" title="Borrar todo">Borrar</button>
+            </div>
+        </div>
+
+        <!-- Canvas Wrapper with touch gesture locks -->
+        <div class="canvas-wrapper" id="canvasContainer">
+            <canvas id="signatureCanvas"></canvas>
+            <div class="canvas-guide">
+                <span>Línea base</span>
+                <span>✕</span>
+            </div>
+            <div class="canvas-hint" id="canvasHint">Dibuja tu firma aquí</div>
+        </div>
+
+        <!-- Palette and Thickness Toolbar -->
+        <div class="controls-grid">
+            <div class="control-group">
+                <span class="control-label">Color:</span>
+                <button class="color-btn c-black active" data-color="#0f172a" aria-label="Negro"></button>
+                <button class="color-btn c-blue" data-color="#003399" aria-label="Azul Formal"></button>
+                <button class="color-btn c-red" data-color="#b91c1c" aria-label="Rojo"></button>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Trazo:</span>
+                <button class="stroke-btn" data-size="1.8">Fino</button>
+                <button class="stroke-btn active" data-size="3.2">Normal</button>
+                <button class="stroke-btn" data-size="5.0">Grueso</button>
+            </div>
+        </div>
+
+        <!-- Export and Share Controls -->
+        <div class="download-grid">
+            <button id="btnDownloadPng" class="btn-main">Descargar PNG</button>
+            <button id="btnDownloadJpg" class="btn-secondary">Descargar JPG</button>
+            <button id="btnCopy" class="btn-secondary">Copiar Firma</button>
+        </div>
+
+        <!-- Mini Live Preview -->
+        <div class="preview-box">
+            <span style="font-size:0.75rem; color:#64748b;">Firma lista para exportar:</span>
+            <img id="miniPreview" class="preview-thumbnail" alt="Vista previa">
+        </div>
+    </div>
+
+    <!-- In-app Toast message -->
+    <div id="toast">Firma lista</div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // Application State
+            const state = {
+                color: '#0f172a',
+                lineWidth: 3.2,
+                isDrawing: false,
+                hasStrokes: false,
+                history: [] // Stores canvas states for undo
+            };
+
+            // Element References
+            const canvas = document.getElementById('signatureCanvas');
+            const container = document.getElementById('canvasContainer');
+            const hint = document.getElementById('canvasHint');
+            const miniPreview = document.getElementById('miniPreview');
+            const toast = document.getElementById('toast');
+
+            // 1. CONTEXT INITIALIZATION WITH DESYNCHRONIZED PIPELINE
+            // 'desynchronized: true' skips Android/Chromium compositor latency
+            let ctx;
+            try {
+                ctx = canvas.getContext('2d', { desynchronized: true, alpha: true });
+            } catch (e) {
+                ctx = canvas.getContext('2d');
+            }
+
+            // Queue for touch points to render inside requestAnimationFrame
+            const strokeQueue = [];
+            let lastX = 0;
+            let lastY = 0;
+            let cachedRect = null;
+            let dpr = 1;
+
+            // Coordinate Caching: Read layout bounding box ONCE per touch session or window resize
+            function updateCachedRect() {
+                cachedRect = canvas.getBoundingClientRect();
+            }
+
+            function setupCanvasResolution() {
+                // Safe devicePixelRatio for legacy phones: limit to 2 to prevent GPU out-of-memory
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                const width = container.clientWidth || 320;
+                const height = container.clientHeight || 240;
+
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+
+                // Reset context transformations & defaults
+                ctx.scale(dpr, dpr);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = state.color;
+                ctx.lineWidth = state.lineWidth;
+
+                updateCachedRect();
+            }
+
+            // Re-initialize dimensions
+            window.addEventListener('resize', () => {
+                const temp = state.history.length > 0 ? state.history[state.history.length - 1] : null;
+                setupCanvasResolution();
+                if (temp) {
+                    restoreFromDataUrl(temp);
+                }
+            });
+            window.addEventListener('scroll', updateCachedRect, { passive: true });
+
+            // Save canvas snapshot for undo
+            function pushHistory() {
+                // Keep history shallow on Android 8 to prevent garbage collection spikes
+                if (state.history.length > 8) {
+                    state.history.shift();
+                }
+                state.history.push(canvas.toDataURL('image/png'));
+                updateMiniPreview();
+            }
+
+            function restoreFromDataUrl(dataUrl) {
+                const img = new Image();
+                img.onload = function () {
+                    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                    ctx.drawImage(img, 0, 0, canvas.width / dpr, canvas.height / dpr);
+                    updateMiniPreview();
+                };
+                img.src = dataUrl;
+            }
+
+            // Fast coordinate extraction avoiding repeated DOM queries during move
+            function getClientCoords(e) {
+                if (!cachedRect) updateCachedRect();
+                let clientX = 0;
+                let clientY = 0;
+
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                return {
+                    x: clientX - cachedRect.left,
+                    y: clientY - cachedRect.top
+                };
+            }
+
+            // Main Animation Loop: Keeps drawing 100% sync with GPU refresh rate
+            function renderLoop() {
+                if (strokeQueue.length > 0) {
+                    ctx.strokeStyle = state.color;
+                    ctx.lineWidth = state.lineWidth;
+
+                    for (let i = 0; i < strokeQueue.length; i++) {
+                        const pt = strokeQueue[i];
+
+                        ctx.beginPath();
+                        // Quadratic curve interpolation for smooth strokes without heavy math
+                        const midX = (lastX + pt.x) / 2;
+                        const midY = (lastY + pt.y) / 2;
+                        ctx.moveTo(lastX, lastY);
+                        ctx.quadraticCurveTo(lastX, lastY, midX, midY);
+                        ctx.stroke();
+
+                        lastX = pt.x;
+                        lastY = pt.y;
+                    }
+                    // Empty queue once rendered
+                    strokeQueue.length = 0;
+                }
+
+                requestAnimationFrame(renderLoop);
+            }
+            // Start RAF loop immediately
+            requestAnimationFrame(renderLoop);
+
+            // TOUCH / MOUSE EVENT HANDLERS
+            function onPointerStart(e) {
+                // Cancel browser native scroll gestures immediately
+                if (e.cancelable) e.preventDefault();
+
+                updateCachedRect();
+                state.isDrawing = true;
+                state.hasStrokes = true;
+                hint.style.opacity = '0';
+
+                const pt = getClientCoords(e);
+                lastX = pt.x;
+                lastY = pt.y;
+
+                // Draw initial dot for taps
+                ctx.strokeStyle = state.color;
+                ctx.fillStyle = state.color;
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, state.lineWidth / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function onPointerMove(e) {
+                if (!state.isDrawing) return;
+                if (e.cancelable) e.preventDefault();
+
+                const pt = getClientCoords(e);
+                // Push point into the queue to be drawn on next hardware frame
+                strokeQueue.push(pt);
+            }
+
+            function onPointerEnd(e) {
+                if (!state.isDrawing) return;
+                state.isDrawing = false;
+                strokeQueue.length = 0;
+                pushHistory();
+            }
+
+            // ATTACH ZERO-LATENCY LISTENERS
+            // { passive: false } ensures preventDefault() stops touch-scroll latency
+            canvas.addEventListener('touchstart', onPointerStart, { passive: false });
+            canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+            canvas.addEventListener('touchend', onPointerEnd, { passive: false });
+            canvas.addEventListener('touchcancel', onPointerEnd, { passive: false });
+
+            // Mouse support for desktop / laptops
+            canvas.addEventListener('mousedown', onPointerStart);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerEnd);
+
+            // Toolbar: Color selection
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.color = btn.getAttribute('data-color');
+                });
+            });
+
+            // Toolbar: Line width selection
+            document.querySelectorAll('.stroke-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.stroke-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.lineWidth = parseFloat(btn.getAttribute('data-size'));
+                });
+            });
+
+            // Clear Canvas
+            document.getElementById('btnClear').addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                state.history = [];
+                state.hasStrokes = false;
+                hint.style.opacity = '1';
+                miniPreview.style.display = 'none';
+                showToast('Pizarra borrada');
+            });
+
+            // Undo Stroke
+            document.getElementById('btnUndo').addEventListener('click', () => {
+                if (state.history.length > 1) {
+                    state.history.pop(); // Remove current
+                    const previous = state.history[state.history.length - 1];
+                    restoreFromDataUrl(previous);
+                } else if (state.history.length === 1) {
+                    state.history.pop();
+                    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+                    state.hasStrokes = false;
+                    hint.style.opacity = '1';
+                    miniPreview.style.display = 'none';
+                }
+            });
+
+            // Crop transparent margins so the saved signature has no excessive empty white space
+            function getCroppedCanvas() {
+                const w = canvas.width;
+                const h = canvas.height;
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+
+                let minX = w, minY = h, maxX = 0, maxY = 0;
+                let found = false;
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const alpha = data[(y * w + x) * 4 + 3];
+                        if (alpha > 15) {
+                            if (x < minX) minX = x;
+                            if (x > maxX) maxX = x;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                            found = true;
+                        }
+                    }
+                }
+
+                if (!found) return null;
+
+                const pad = 12 * dpr;
+                const cropX = Math.max(0, minX - pad);
+                const cropY = Math.max(0, minY - pad);
+                const cropW = Math.min(w - cropX, (maxX - minX) + pad * 2);
+                const cropH = Math.min(h - cropY, (maxY - minY) + pad * 2);
+
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = cropW;
+                cropCanvas.height = cropH;
+                const cropCtx = cropCanvas.getContext('2d');
+                cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+                return cropCanvas;
+            }
+
+            function updateMiniPreview() {
+                const cropped = getCroppedCanvas();
+                if (cropped) {
+                    miniPreview.src = cropped.toDataURL('image/png');
+                    miniPreview.style.display = 'block';
+                }
+            }
+
+            // Download PNG (Transparent)
+            document.getElementById('btnDownloadPng').addEventListener('click', () => {
+                if (!state.hasStrokes) {
+                    showToast('Primero realiza una firma');
+                    return;
+                }
+                const exportCanvas = getCroppedCanvas() || canvas;
+                const link = document.createElement('a');
+                link.download = `firma-digital-${Date.now()}.png`;
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
+                showToast('Descargando PNG...');
+            });
+
+            // Download JPG (White background)
+            document.getElementById('btnDownloadJpg').addEventListener('click', () => {
+                if (!state.hasStrokes) {
+                    showToast('Primero realiza una firma');
+                    return;
+                }
+                const cropped = getCroppedCanvas() || canvas;
+                const bgCanvas = document.createElement('canvas');
+                bgCanvas.width = cropped.width;
+                bgCanvas.height = cropped.height;
+                const bCtx = bgCanvas.getContext('2d');
+
+                // Fill solid white
+                bCtx.fillStyle = '#ffffff';
+                bCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+                bCtx.drawImage(cropped, 0, 0);
+
+                const link = document.createElement('a');
+                link.download = `firma-digital-${Date.now()}.jpg`;
+                link.href = bgCanvas.toDataURL('image/jpeg', 0.92);
+                link.click();
+                showToast('Descargando JPG...');
+            });
+
+            // Copy to Clipboard (With safe fallback for older Android WebView)
+            document.getElementById('btnCopy').addEventListener('click', () => {
+                if (!state.hasStrokes) {
+                    showToast('Primero realiza una firma');
+                    return;
+                }
+                const exportCanvas = getCroppedCanvas() || canvas;
+
+                if (navigator.clipboard && window.ClipboardItem) {
+                    exportCanvas.toBlob(blob => {
+                        if (!blob) {
+                            showToast('Error al copiar firma');
+                            return;
+                        }
+                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+                            .then(() => showToast('¡Firma copiada al portapapeles!'))
+                            .catch(() => showToast('Descarga la imagen para usarla'));
+                    });
+                } else {
+                    showToast('Navegador antiguo: usa "Descargar PNG"');
+                }
+            });
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(toast.timer);
+                toast.timer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2200);
+            }
+
+            // Initial boot
+            setupCanvasResolution();
+        })();
+    </script>
+</body>
+
+</html>

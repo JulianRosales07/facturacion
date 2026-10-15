@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flujo Integral Siigo a SP Pagos | Archify Technical Diagram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-surface: rgba(19, 25, 39, 0.94);
+      --bg-surface-hover: rgba(28, 38, 59, 0.98);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.4);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --accent-blue: #3b82f6;
+      --glow-color: rgba(99, 102, 241, 0.35);
+      --node-header-bg: #1e2538;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    body.light-theme {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-surface: rgba(255, 255, 255, 0.96);
+      --bg-surface-hover: #ffffff;
+      --border-subtle: rgba(0, 0, 0, 0.09);
+      --border-accent: rgba(99, 102, 241, 0.45);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --glow-color: rgba(99, 102, 241, 0.2);
+      --node-header-bg: #e2e8f0;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .grid-background {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.07) 0%, transparent 80%),
+        linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top App Bar */
+    header.app-bar {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      height: 64px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-archify {
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .title-group h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-group p {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .controls-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 0 15px var(--glow-color);
+    }
+
+    /* Simulation Bar */
+    .sim-bar {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      padding: 6px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .sim-status {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sim-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    /* Canvas Viewport */
+    #viewport {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #viewport:active {
+      cursor: grabbing;
+    }
+
+    #canvas-container {
+      position: absolute;
+      width: 2800px;
+      height: 1800px;
+      transform-origin: 0 0;
+    }
+
+    svg#connections-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    canvas#particle-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* Flow Nodes */
+    .flow-node {
+      position: absolute;
+      width: 320px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 20;
+      cursor: pointer;
+      transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+    }
+
+    .flow-node:hover {
+      border-color: var(--border-accent);
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .flow-node.active-step {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+    }
+
+    .node-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 12px 12px 0 0;
+      background: var(--node-header-bg);
+    }
+
+    .node-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .node-icon {
+      font-size: 16px;
+    }
+
+    .node-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .node-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .node-body {
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .node-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .node-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    /* Inspector Side Panel */
+    aside.inspector-panel {
+      position: fixed;
+      top: 90px;
+      right: 14px;
+      width: 440px;
+      max-height: calc(100vh - 115px);
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      transform: translateX(470px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    aside.inspector-panel.open {
+      transform: translateX(0);
+    }
+
+    .inspector-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .inspector-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-inspector {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .close-inspector:hover {
+      color: var(--text-primary);
+    }
+
+    .inspector-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 9px 0;
+      cursor: pointer;
+      font-family: inherit;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+      background: var(--bg-surface);
+    }
+
+    .inspector-content {
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    pre.code-block {
+      background: #05070a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* Step Indicator Pills */
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-indigo);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-background"></div>
+
+  <!-- Top Navigation & Control Bar -->
+  <header class="app-bar">
+    <div class="brand-section">
+      <span class="badge-archify">Archify v2.4</span>
+      <div class="title-group">
+        <h1>Flujo Integral: De Siigo a SP Pagos ⚡</h1>
+        <p>Recepción de archivos contables, lectura de PDF, enriquecimiento de datos y liquidación pasarela</p>
+      </div>
+    </div>
+
+    <div class="controls-section">
+      <button class="btn" id="btn-theme-toggle">🌓 Tema</button>
+      <button class="btn" id="btn-reset-view">🎯 Centrar Vista</button>
+      <button class="btn btn-primary" id="btn-export-hd">📸 Exportar HD (3200x1800)</button>
+    </div>
+  </header>
+
+  <!-- Interactive Simulation Bar -->
+  <div class="sim-bar">
+    <div class="sim-status">
+      <span class="sim-status-dot"></span>
+      <span id="sim-step-text">Paso 1 de 6: Carpeta Siigo</span>
+    </div>
+    <button class="btn btn-primary" id="btn-play-pause">▶ Simular Flujo</button>
+    <button class="btn" id="btn-next-step">Paso Siguiente ➔</button>
+    <button class="btn" id="btn-reset-sim">↺ Reiniciar</button>
+  </div>
+
+  <!-- Viewport Pan/Zoom -->
+  <div id="viewport">
+    <div id="canvas-container">
+      <svg id="connections-svg"></svg>
+      <canvas id="particle-canvas" width="2800" height="1800"></canvas>
+
+      <!-- FASE 1: ORIGEN DE DATOS -->
+      <div class="flow-node" id="node-1" style="left: 60px; top: 220px;" data-step="1">
+        <div class="node-header" style="border-top: 3px solid var(--accent-amber);">
+          <div class="node-title-wrap">
+            <span class="node-icon">📁</span>
+            <span class="node-title">1. Servidor Compartido Siigo</span>
+          </div>
+          <span class="node-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-amber);">ORIGEN</span>
+        </div>
+        <div class="node-body">
+          Ruta de red UNC / volumen montado con los archivos producidos por Siigo:
+          <ul style="margin: 8px 0 8px 16px;">
+            <li><b>saldos_de_cartera.xlsx:</b> Cartera oficial Siigo con facturas F1 y F20 (consecutivo, NIT, vencimiento y saldo).</li>
+            <li><b>F001...0000.PDF:</b> Facturas electrónicas con formato gráfico oficial de Siigo.</li>
+          </ul>
+          <div class="node-tag-list">
+            <span class="node-tag">Reposición 60s</span>
+            <span class="node-tag">Solo Lectura</span>
+            <span class="node-tag">&lt; 20 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 2: INGESTA CONTABLE -->
+      <div class="flow-node" id="node-2" style="left: 540px; top: 120px;" data-step="2">
+        <div class="node-header" style="border-top: 3px solid var(--accent-indigo);">
+          <div class="node-title-wrap">
+            <span class="node-icon">📊</span>
+            <span class="node-title">2. Lector Oficial & Asientos</span>
+          </div>
+          <span class="node-badge" style="background: rgba(99, 102, 241, 0.2); color: var(--accent-indigo);">DATOS</span>
+        </div>
+        <div class="node-body">
+          <b>OfficialInvoiceImportService:</b>
+          <p>Lee el movimiento contable Excel o JSON normalizado. Crea la factura oficial inmutable con sus líneas, base, IVA y total exacto.</p>
+          <p style="margin-top: 6px; font-size: 11px; color: var(--accent-amber);">*Nota: El Excel no trae la razón social del cliente ni vencimiento; queda pendiente.</p>
+          <div class="node-tag-list">
+            <span class="node-tag">F1 / F20</span>
+            <span class="node-tag">BigDecimal</span>
+            <span class="node-tag">Sin Duplicados</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 3: ESCANEO Y ASOCIACIÓN DE PDF -->
+      <div class="flow-node" id="node-3" style="left: 540px; top: 400px;" data-step="3">
+        <div class="node-header" style="border-top: 3px solid var(--accent-cyan);">
+          <div class="node-title-wrap">
+            <span class="node-icon">📑</span>
+            <span class="node-title">3. Escaneo & Copia Local PDF</span>
+          </div>
+          <span class="node-badge" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan);">STORAGE</span>
+        </div>
+        <div class="node-body">
+          <b>SiigoPdfImporterService:</b>
+          <p>Ciclo horario o botón manual. Valida el PDF, calcula hash SHA-256 e inserta registro en <code>pdf_recibido</code>.</p>
+          <p style="margin-top: 6px;">Conserva copia local en <code>storage/siigo-pdfs/{id}/{hash}.pdf</code> sin tocar el archivo original.</p>
+          <div class="node-tag-list">
+            <span class="node-tag">SHA-256</span>
+            <span class="node-tag">Atomic Copy</span>
+            <span class="node-tag">Audit Trail</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 4: OCR Y ENRIQUECIMIENTO INTELIGENTE -->
+      <div class="flow-node" id="node-4" style="left: 1020px; top: 250px;" data-step="4">
+        <div class="node-header" style="border-top: 3px solid var(--accent-purple);">
+          <div class="node-title-wrap">
+            <span class="node-icon">🧠</span>
+            <span class="node-title">4. Extractor PDFBox & Enriquecimiento</span>
+          </div>
+          <span class="node-badge" style="background: rgba(168, 85, 247, 0.2); color: var(--accent-purple);">OPCIÓN B</span>
+        </div>
+        <div class="node-body">
+          <b>PdfBoxMetadataExtractor:</b>
+          <p>Extrae del documento PDF:</p>
+          <ul style="margin: 6px 0 6px 16px; font-size: 11px;">
+            <li>Razón social real del cliente</li>
+            <li>NIT con dígito de verificación</li>
+            <li>Dirección fiscal, teléfono y email</li>
+            <li>Fecha de vencimiento y CUFE DIAN</li>
+          </ul>
+          <p><b>Completa la factura y el cliente</b> en la base de datos sin alterar los importes contables.</p>
+          <div class="node-tag-list">
+            <span class="node-tag">Apache PDFBox 3</span>
+            <span class="node-tag">Enriquecimiento</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 5: BALANCE Y PAGABILIDAD -->
+      <div class="flow-node" id="node-5" style="left: 1480px; top: 250px;" data-step="5">
+        <div class="node-header" style="border-top: 3px solid var(--accent-rose);">
+          <div class="node-title-wrap">
+            <span class="node-icon">💰</span>
+            <span class="node-title">5. Cálculo de Cartera & Saldo Real</span>
+          </div>
+          <span class="node-badge" style="background: rgba(244, 63, 94, 0.2); color: var(--accent-rose);">CARTERA</span>
+        </div>
+        <div class="node-body">
+          <b>SpPagosQueryService:</b>
+          <p>Determina el saldo pendiente que el cliente debe pagar:</p>
+          <ul style="margin: 6px 0 6px 16px; font-size: 11px;">
+            <li><b>Fuente A:</b> Corte de cartera Siigo (si existe).</li>
+            <li><b>Fuente B:</b> Total Oficial - Notas Crédito - Pagos previos.</li>
+          </ul>
+          <p>Calcula el flag <code>pagable: true/false</code> y si la factura está vencida.</p>
+          <div class="node-tag-list">
+            <span class="node-tag">Saldo Real</span>
+            <span class="node-tag">Notas Crédito</span>
+            <span class="node-tag">Invariante</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 6: CONTRATO JSON Y API SP PAGOS -->
+      <div class="flow-node" id="node-6" style="left: 1940px; top: 220px;" data-step="6">
+        <div class="node-header" style="border-top: 3px solid var(--accent-emerald);">
+          <div class="node-title-wrap">
+            <span class="node-icon">🚀</span>
+            <span class="node-title">6. API REST & JSON para SP Pagos</span>
+          </div>
+          <span class="node-badge" style="background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald);">CONTRATO</span>
+        </div>
+        <div class="node-body">
+          <b>SpPagosController:</b>
+          <p><code>GET /api/v1/pasarela/facturas/{id}</code></p>
+          <p><code>GET /api/v1/pasarela/facturas?nit={nit}</code></p>
+          <p>Retorna el <b>FacturaSpPagosDto</b> completo con cliente, fechas, ítems, desglose de IVA/retenciones y URL de descarga del PDF.</p>
+          <div class="node-tag-list">
+            <span class="node-tag">ROL_PASARELA</span>
+            <span class="node-tag">JSON Limpio</span>
+            <span class="node-tag">Listo para Cobro</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESTINO: SP PAGOS -->
+      <div class="flow-node" id="node-7" style="left: 2380px; top: 220px;" data-step="7">
+        <div class="node-header" style="border-top: 3px solid var(--accent-blue);">
+          <div class="node-title-wrap">
+            <span class="node-icon">💳</span>
+            <span class="node-title">7. Pasarela de Pagos (SP Pagos)</span>
+          </div>
+          <span class="node-badge" style="background: rgba(59, 130, 246, 0.2); color: var(--accent-blue);">CLIENTE</span>
+        </div>
+        <div class="node-body">
+          <b>Portal de Pago al Cliente:</b>
+          <p>SP Pagos consume el JSON del microservicio:</p>
+          <ul style="margin: 6px 0 6px 16px; font-size: 11px;">
+            <li>Muestra la factura consolidada con su saldo.</li>
+            <li>Permite al cliente descargar su PDF oficial original.</li>
+            <li>Liquida el pago mediante PSE / Bancolombia / Tarjeta.</li>
+          </ul>
+          <div class="node-tag-list">
+            <span class="node-tag">PSE / Botón</span>
+            <span class="node-tag">Descarga PDF</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Inspector Side Panel -->
+  <aside class="inspector-panel" id="inspector-panel">
+    <div class="inspector-header">
+      <div class="inspector-title">
+        <span id="insp-icon">📋</span>
+        <span id="insp-title">Detalle del Componente</span>
+      </div>
+      <button class="close-inspector" id="btn-close-inspector">&times;</button>
+    </div>
+    <div class="inspector-tabs">
+      <button class="tab-btn active" data-tab="tab-overview">Resumen</button>
+      <button class="tab-btn" data-tab="tab-json">Payload JSON</button>
+      <button class="tab-btn" data-tab="tab-code">Código Java</button>
+      <button class="tab-btn" data-tab="tab-sql">Base de Datos</button>
+    </div>
+    <div class="inspector-content">
+      <div id="tab-overview" class="tab-pane active"></div>
+      <div id="tab-json" class="tab-pane" style="display:none;"></div>
+      <div id="tab-code" class="tab-pane" style="display:none;"></div>
+      <div id="tab-sql" class="tab-pane" style="display:none;"></div>
+    </div>
+  </aside>
+
+  <script>
+    // --- Data Definitions for Inspector ---
+    const stepData = {
+      1: {
+        title: "Servidor Compartido Siigo",
+        icon: "📁",
+        overview: `<span class="step-pill">Origen de Datos</span>
+          <p>La empresa deposita periódicamente en una carpeta de red compartida (UNC en Windows o volumen montado en Linux) los archivos emitidos por Siigo.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-amber);">Reglas de Operación:</h4>
+          <ul>
+            <li>Acceso en modo <b>solo lectura</b>: el microservicio nunca escribe ni altera archivos en esta carpeta.</li>
+            <li>Espera de seguridad de <b>60 segundos</b> desde la última modificación para evitar leer copias incompletas.</li>
+            <li>Límite de tamaño de archivo: <b>20 MB</b>.</li>
+          </ul>`,
+        json: `<pre class="code-block">// Archivo físico en el servidor:
+\\\\SERVIDOR\\FacturasCorporativas\\
+  ├── saldos_de_cartera.xlsx
+  ├── F001000000519930000.PDF
+  └── F020000000002870000.PDF</pre>`,
+        code: `<pre class="code-block">// SiigoSharedFolderReader.java
+public interface SiigoSharedFolderReader {
+    List&lt;File&gt; listPendingDataFiles();
+    List&lt;File&gt; listPendingPdfFiles();
+    String getSharedFolderPath();
+}</pre>`,
+        sql: `<pre class="code-block">-- Auditoría de ingesta (V15__historial_recepcion_archivos.sql)
+CREATE TABLE IF NOT EXISTS historial_recepcion_archivos (
+    id UUID PRIMARY KEY,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    sha256 VARCHAR(64) NOT NULL UNIQUE,
+    tamano_bytes BIGINT NOT NULL,
+    recibido_en TIMESTAMP NOT NULL
+);</pre>`
+      },
+      2: {
+        title: "Ingesta Contable (Asientos y Factura)",
+        icon: "📊",
+        overview: `<span class="step-pill">Cifras Contables Oficiales</span>
+          <p>Lee el movimiento contable oficial. Para cada comprobante F1 o F20 valida que las sumas de débito y crédito cuadren y crea el documento en BD.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-indigo);">Invariantes de Negocio:</h4>
+          <ul>
+            <li>La clave única <code>tipo + consecutivo</code> evita duplicados.</li>
+            <li>Los valores de subtotal, base gravable e IVA se registran con <code>BigDecimal</code> exacto.</li>
+            <li>El cliente se crea con razón social provisional <code>NIT ... (razón social pendiente)</code> hasta recibir el PDF.</li>
+          </ul>`,
+        json: `<pre class="code-block">[
+  {
+    "nit": "1088970617",
+    "billingType": "F1",
+    "invoiceNumber": "51993",
+    "issueDate": "2026-09-10",
+    "total": 5694150.00,
+    "items": [
+      {
+        "code": "0100040000021",
+        "description": "LA CRUZ.INT.FIB.DEDI.1.65 GB",
+        "quantity": 1,
+        "subtotal": 2722500.00,
+        "iva": 517275.00
+      }
+    ]
+  }
+]</pre>`,
+        code: `<pre class="code-block">// OfficialInvoiceImportService.java
+@Transactional
+public Invoice importDocument(OfficialInvoiceData data) {
+    String key = data.billingType().name() + ":" + data.invoiceNumber();
+    // Invariante: cuadre exacto de líneas con total
+    Money total = Money.ZERO;
+    for (var item : data.items()) {
+        total = total.plus(item.subtotal()).plus(item.iva());
+    }
+    if (!total.equals(data.total())) {
+        throw new IllegalArgumentException("El detalle no cuadra con el total");
+    }
+    ...
+}</pre>`,
+        sql: `<pre class="code-block">-- Invariante de clave externa única
+CREATE UNIQUE INDEX uq_factura_documento_externo 
+ON factura (clave_documento_externo) 
+WHERE origen_documento = 'SIIGO';</pre>`
+      },
+      3: {
+        title: "Escaneo y Copia Local del PDF",
+        icon: "📑",
+        overview: `<span class="step-pill">Preservación Inmutable</span>
+          <p>El servicio detecta los PDFs, valida que no estén vacíos ni corruptos mediante Apache PDFBox y almacena una copia local persistente identificada por su SHA-256.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-cyan);">Garantías:</h4>
+          <ul>
+            <li>No mueve ni borra los archivos originales en el servidor Siigo.</li>
+            <li>Si el PDF llega antes que el Excel, queda registrado en <code>pdf_recibido</code> como <b>PENDIENTE</b> y se reintenta automáticamente.</li>
+            <li>Al asociarse con su factura, se vincula y archiva cualquier versión previa en el histórico.</li>
+          </ul>`,
+        json: `<pre class="code-block">// Registro de archivo en pdf_recibido
+{
+  "nombreOriginal": "F001000000519930000.PDF",
+  "sha256": "4a7f21b8...",
+  "tamanoBytes": 355046,
+  "estado": "ASOCIADO",
+  "facturaId": "c3f87b22-8321-4f12-a89c-0d32158ef091",
+  "rutaLocal": "./storage/siigo-pdfs/c3f87b22.../4a7f21b8.pdf"
+}</pre>`,
+        code: `<pre class="code-block">// SiigoPdfImporterService.java
+public Optional&lt;PdfMatchResult&gt; classifyAndLinkPdf(File pdfFile) {
+    byte[] content = Files.readAllBytes(pdfFile.toPath());
+    String hash = computeSha256(content);
+    Optional&lt;Invoice&gt; invoiceOpt = matchInvoiceForPdf(pdfFile.getName(), pdfFile);
+    if (invoiceOpt.isPresent()) {
+        Invoice invoice = invoiceOpt.get();
+        String targetPath = preserveLocalCopy(invoice, content, hash);
+        linkPdfToInvoice(invoice, targetPath, pdfFile.getName(), pdfFile);
+        ...
+    }
+}</pre>`,
+        sql: `<pre class="code-block">-- Tabla de seguimiento de PDFs (V16__pdf_recibido.sql)
+CREATE TABLE pdf_recibido (
+    id UUID PRIMARY KEY,
+    nombre_original VARCHAR(255) NOT NULL,
+    sha256 VARCHAR(64) NOT NULL UNIQUE,
+    tamano_bytes BIGINT NOT NULL,
+    ruta_local VARCHAR(500) NOT NULL,
+    estado VARCHAR(20) NOT NULL, -- PENDIENTE, ASOCIADO
+    factura_id UUID REFERENCES factura(id)
+);</pre>`
+      },
+      4: {
+        title: "Extractor PDFBox & Enriquecimiento",
+        icon: "🧠",
+        overview: `<span class="step-pill">Opción B Implementada</span>
+          <p>A través de <b>PdfBoxMetadataExtractor</b>, se procesa la representación gráfica oficial del PDF para extraer los datos que el Excel no incluye.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-purple);">Campos Recuperados del PDF:</h4>
+          <ul>
+            <li><b>Razón Social:</b> Reemplaza <code>(razón social pendiente)</code> por el nombre legal real.</li>
+            <li><b>CUFE DIAN:</b> Hash SHA-384 / SHA-256 de validación electrónica.</li>
+            <li><b>Vencimiento:</b> Fecha límite oficial de pago pactada con el cliente.</li>
+            <li><b>Dirección, Teléfono y Email:</b> Actualiza los datos de contacto del cliente corporativo.</li>
+          </ul>`,
+        json: `<pre class="code-block">// Metadatos extraídos del PDF
+{
+  "numeroFactura": "FESP 51993",
+  "cufe": "720377e072ca996f78d1f873a16899a51af08fc5...",
+  "clientNit": "1088970617-6",
+  "clientBusinessName": "CRISTIAN FERNANDO BRAVO MUÑOZ",
+  "clientAddress": "LA CRUZ - NUEVO PUNTO",
+  "clientPhone": "3135963672",
+  "clientEmail": "crisfe8609@gmail.com",
+  "dueDate": "2026-09-25",
+  "totalAmount": 5694150.00
+}</pre>`,
+        code: `<pre class="code-block">// PdfBoxMetadataExtractor.java
+PdfExtractedMetadata extractFromText(String text) {
+    String cufe = firstGroup(CUFE_EXPLICIT_PATTERN, text);
+    String invoiceNum = firstGroup(SIIGO_INVOICE_NUM_PATTERN, text);
+    Matcher client = CLIENT_BLOCK_PATTERN.matcher(text);
+    if (client.find()) {
+        businessName = client.group(1).trim();
+        nit = client.group(2).replaceAll("[.,]", "") + "-" + client.group(3);
+        address = client.group(4).trim();
+        phone = client.group(5).replaceAll("\\\\s+", "");
+    }
+    LocalDate dueDate = parseDate(firstGroup(DUE_DATE_PATTERN, text));
+    ...
+}</pre>`,
+        sql: `<pre class="code-block">-- Factura enriquecida en BD
+UPDATE factura 
+SET cufe = '720377e0...',
+    fecha_vencimiento = '2026-09-25',
+    razon_social_cliente = 'CRISTIAN FERNANDO BRAVO MUÑOZ',
+    direccion_fiscal_cliente = 'LA CRUZ - NUEVO PUNTO'
+WHERE id = 'c3f87b22-8321-4f12-a89c-0d32158ef091';</pre>`
+      },
+      5: {
+        title: "Cálculo de Cartera & Saldo Real",
+        icon: "💰",
+        overview: `<span class="step-pill">Invariante de Cobro</span>
+          <p>Determina con exactitud el valor que el cliente debe pagar antes de que la pasarela proceda con el cobro.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-rose);">Fuente de Verdad (Sprint 13):</h4>
+          <ul>
+            <li><b>Prioridad 1:</b> Si existe un corte de cartera oficial de Siigo (<code>saldos_de_cartera.xlsx</code>), su saldo es la verdad contable absoluta.</li>
+            <li><b>Prioridad 2:</b> Si aún no hay corte, se computa: <code>Total - Notas Crédito Aplicadas - Pagos Previos</code>.</li>
+            <li>Si el saldo es 0, la factura se marca como no pagable y no genera doble cobro.</li>
+          </ul>`,
+        json: `<pre class="code-block">{
+  "totalOficial": 5694150.00,
+  "totalNotasCredito": 0.00,
+  "totalPagado": 0.00,
+  "saldoPendiente": 5694150.00,
+  "fuenteSaldo": "CORTE_CARTERA_SIIGO",
+  "pagable": true,
+  "vencida": false
+}</pre>`,
+        code: `<pre class="code-block">// Invoice.java
+public Money getPendingBalance() {
+    if (siigoBalance != null) {
+        return siigoBalance.isPositive() ? siigoBalance : Money.ZERO;
+    }
+    return getComputedPendingBalance();
+}
+
+public Money getComputedPendingBalance() {
+    Money balance = totalAmount.subtract(getCreditNoteAmount()).subtract(getPaidAmount());
+    return balance.isPositive() ? balance : Money.ZERO;
+}</pre>`,
+        sql: `<pre class="code-block">-- Verificación de cruce y saldo
+SELECT f.valor_total, f.saldo_siigo,
+       COALESCE(SUM(cn.valor_neto), 0) AS notas_credito,
+       COALESCE(SUM(pi.monto_aplicado), 0) AS pagos
+FROM factura f
+LEFT JOIN documento_ajuste cn ON cn.factura_id = f.id AND cn.estado = 'APLICADA'
+LEFT JOIN pago_factura pi ON pi.factura_id = f.id
+WHERE f.id = 'c3f87b22...'
+GROUP BY f.valor_total, f.saldo_siigo;</pre>`
+      },
+      6: {
+        title: "API REST & JSON para SP Pagos",
+        icon: "🚀",
+        overview: `<span class="step-pill">Contrato de Integración</span>
+          <p>Expone endpoints dedicados bajo <code>/api/v1/pasarela/facturas</code> protegidos por OAuth2 con rol <code>ROL_PASARELA</code>.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-emerald);">Capacidades del Endpoint:</h4>
+          <ul>
+            <li>Consulta por ID o búsqueda por NIT del cliente.</li>
+            <li>Filtro <code>soloPendientes=true</code> por defecto.</li>
+            <li>Provee enlaces directos y seguros para descargar el PDF original o visualizar la plantilla HTML.</li>
+          </ul>`,
+        json: `<pre class="code-block">{
+  "id": "c3f87b22-8321-4f12-a89c-0d32158ef091",
+  "numeroCompleto": "FESP 51993",
+  "periodo": "2026-09",
+  "cufe": "720377e072ca996f78d1f873...",
+  "pagable": true,
+  "cliente": {
+    "nit": "1088970617-6",
+    "razonSocial": "CRISTIAN FERNANDO BRAVO MUÑOZ",
+    "direccionFiscal": "LA CRUZ - NUEVO PUNTO",
+    "emailFacturacion": "crisfe8609@gmail.com"
+  },
+  "importes": {
+    "subtotal": 4785000.00,
+    "iva": 909150.00,
+    "totalOficial": 5694150.00,
+    "saldoPendiente": 5694150.00
+  },
+  "enlaces": {
+    "tienePdf": true,
+    "pdfUrl": "/api/v1/facturas/c3f87b22.../pdf"
+  }
+}</pre>`,
+        code: `<pre class="code-block">// SpPagosController.java
+@RestController
+@RequestMapping("/api/v1/pasarela/facturas")
+@PreAuthorize("hasAnyAuthority('ROL_PASARELA', 'ROL_ANALISTA', 'ROL_ADMINISTRADOR')")
+public class SpPagosController {
+
+    @GetMapping("/{id}")
+    public ResponseEntity&lt;FacturaSpPagosDto&gt; getInvoiceForPayment(@PathVariable UUID id) {
+        return ResponseEntity.ok(spPagosQueryService.getInvoiceForPayment(id));
+    }
+}</pre>`,
+        sql: `<pre class="code-block">-- Seguridad y auditoría del rol pasarela
+-- Token JWT requerido con claim roles: ["ROL_PASARELA"]
+-- Restricción obligatoria de filtro por NIT si solo posee ROL_PASARELA</pre>`
+      },
+      7: {
+        title: "Pasarela de Pagos (SP Pagos)",
+        icon: "💳",
+        overview: `<span class="step-pill">Experiencia del Cliente</span>
+          <p>El cliente accede a la plataforma de SP Pagos e ingresa su NIT para pagar sus servicios.</p>
+          <h4 style="margin: 12px 0 6px 0; color: var(--accent-blue);">Flujo de Pago:</h4>
+          <ul>
+            <li>SP Pagos consume <code>GET /api/v1/pasarela/facturas?nit={nit}&soloPendientes=true</code>.</li>
+            <li>Renderiza la información clara con el saldo pendiente real.</li>
+            <li>Permite al usuario descargar la factura oficial en PDF.</li>
+            <li>Inicia la transacción de recaudo (PSE / Tarjeta / Transferencia).</li>
+          </ul>`,
+        json: `<pre class="code-block">// Respuesta consumida por SP Pagos para renderizar pantalla
+[
+  {
+    "numeroFactura": "51993",
+    "razonSocial": "CRISTIAN FERNANDO BRAVO MUÑOZ",
+    "saldoPendiente": 5694150.00,
+    "fechaVencimiento": "2026-09-25",
+    "botonPagarHabilitado": true,
+    "descargaPdf": "https://billing.sistemaspalacios.com/api/v1/facturas/c3f87b22.../pdf"
+  }
+]</pre>`,
+        code: `<pre class="code-block">// En SP Pagos (consumo HTTP):
+const res = await fetch(\`/api/v1/pasarela/facturas?nit=\${nit}\`, {
+  headers: { 'Authorization': \`Bearer \${jwtToken}\` }
+});
+const facturasPendientes = await res.json();
+// Mostrar botón de pago con facturasPendientes[0].importes.saldoPendiente</pre>`,
+        sql: `<pre class="code-block">-- Una vez el cliente paga en SP Pagos:
+-- SP Pagos invoca: POST /api/v1/pagos
+-- Registra el pago con número de transacción y actualiza factura a 'PAGADA'</pre>`
+      }
+    };
+
+    // --- Graph Layout & Connections ---
+    const connections = [
+      { from: 'node-1', to: 'node-2', label: '1. Movimiento Contable (Excel/JSON)', color: '#6366f1' },
+      { from: 'node-1', to: 'node-3', label: '2. Escaneo de PDFs (F001/F020)', color: '#06b6d4' },
+      { from: 'node-2', to: 'node-4', label: '3. Factura base creada (Valores contables)', color: '#a855f7' },
+      { from: 'node-3', to: 'node-4', label: '4. Archivo PDF emparejado por identidad', color: '#a855f7' },
+      { from: 'node-4', to: 'node-5', label: '5. Factura enriquecida (Razón Social + CUFE)', color: '#f43f5e' },
+      { from: 'node-5', to: 'node-6', label: '6. Validación de Saldo Pendiente Real', color: '#10b981' },
+      { from: 'node-6', to: 'node-7', label: '7. Consumo JSON para Pago del Cliente', color: '#3b82f6' }
+    ];
+
+    // --- State Variables ---
+    let zoom = 0.9;
+    let panX = 40;
+    let panY = 50;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let activeStep = 1;
+    let isSimulating = false;
+    let simInterval = null;
+
+    const viewport = document.getElementById('viewport');
+    const container = document.getElementById('canvas-container');
+    const svg = document.getElementById('connections-svg');
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    const inspector = document.getElementById('inspector-panel');
+
+    // --- Particle System ---
+    let particles = [];
+
+    class Particle {
+      constructor(path, color) {
+        this.path = path;
+        this.color = color;
+        this.progress = Math.random();
+        this.speed = 0.003 + Math.random() * 0.002;
+        this.size = 3.5;
+      }
+      update() {
+        this.progress += this.speed;
+        if (this.progress > 1) this.progress = 0;
+      }
+      draw(context) {
+        const p = this.getPoint(this.progress);
+        context.beginPath();
+        context.arc(p.x, p.y, this.size, 0, Math.PI * 2);
+        context.fillStyle = this.color;
+        context.shadowColor = this.color;
+        context.shadowBlur = 8;
+        context.fill();
+        context.shadowBlur = 0;
+      }
+      getPoint(t) {
+        // Cubic Bézier calculation
+        const p0 = this.path.p0;
+        const p1 = this.path.p1;
+        const p2 = this.path.p2;
+        const p3 = this.path.p3;
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
+        return {
+          x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+          y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+        };
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      connections.forEach(conn => {
+        const pathData = getBezierPath(conn.from, conn.to);
+        if (pathData) {
+          for (let i = 0; i < 4; i++) {
+            particles.push(new Particle(pathData, conn.color));
+          }
+        }
+      });
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    // --- Node Helpers ---
+    function getNodeAnchor(id, isSource) {
+      const el = document.getElementById(id);
+      if (!el) return { x: 0, y: 0 };
+      const left = parseFloat(el.style.left);
+      const top = parseFloat(el.style.top);
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      if (isSource) {
+        return { x: left + width, y: top + height / 2 };
+      } else {
+        return { x: left, y: top + height / 2 };
+      }
+    }
+
+    function getBezierPath(fromId, toId) {
+      const src = getNodeAnchor(fromId, true);
+      const dst = getNodeAnchor(toId, false);
+      const dx = Math.abs(dst.x - src.x) * 0.5;
+      return {
+        p0: src,
+        p1: { x: src.x + dx, y: src.y },
+        p2: { x: dst.x - dx, y: dst.y },
+        p3: dst
+      };
+    }
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.forEach(conn => {
+        const pathData = getBezierPath(conn.from, conn.to);
+        if (!pathData) return;
+        const d = `M ${pathData.p0.x} ${pathData.p0.y} C ${pathData.p1.x} ${pathData.p1.y}, ${pathData.p2.x} ${pathData.p2.y}, ${pathData.p3.x} ${pathData.p3.y}`;
+        
+        // Background glow
+        const glowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        glowPath.setAttribute('d', d);
+        glowPath.setAttribute('fill', 'none');
+        glowPath.setAttribute('stroke', conn.color);
+        glowPath.setAttribute('stroke-width', '4');
+        glowPath.setAttribute('stroke-opacity', '0.25');
+        svg.appendChild(glowPath);
+
+        // Core path
+        const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        mainPath.setAttribute('d', d);
+        mainPath.setAttribute('fill', 'none');
+        mainPath.setAttribute('stroke', conn.color);
+        mainPath.setAttribute('stroke-width', '2');
+        mainPath.setAttribute('stroke-dasharray', '5,5');
+        svg.appendChild(mainPath);
+      });
+    }
+
+    // --- Transform & Viewport Controls ---
+    function updateTransform() {
+      container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    }
+
+    viewport.addEventListener('mousedown', e => {
+      if (e.target.closest('.flow-node')) return;
+      isPanning = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isPanning = false;
+    });
+
+    viewport.addEventListener('wheel', e => {
+      e.preventDefault();
+      const zoomFactor = 1.08;
+      if (e.deltaY < 0) {
+        zoom = Math.min(zoom * zoomFactor, 2.0);
+      } else {
+        zoom = Math.max(zoom / zoomFactor, 0.4);
+      }
+      updateTransform();
+    });
+
+    document.getElementById('btn-reset-view').addEventListener('click', () => {
+      zoom = 0.85;
+      panX = 30;
+      panY = 60;
+      updateTransform();
+    });
+
+    // --- Theme Toggle ---
+    document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+    });
+
+    // --- Node Selection & Inspector ---
+    function selectStep(step) {
+      activeStep = step;
+      document.querySelectorAll('.flow-node').forEach(n => {
+        if (parseInt(n.dataset.step) === step) {
+          n.classList.add('active-step');
+        } else {
+          n.classList.remove('active-step');
+        }
+      });
+
+      const data = stepData[step];
+      if (data) {
+        document.getElementById('insp-title').innerText = data.title;
+        document.getElementById('insp-icon').innerText = data.icon;
+        document.getElementById('tab-overview').innerHTML = data.overview;
+        document.getElementById('tab-json').innerHTML = data.json;
+        document.getElementById('tab-code').innerHTML = data.code;
+        document.getElementById('tab-sql').innerHTML = data.sql;
+        inspector.classList.add('open');
+      }
+
+      document.getElementById('sim-step-text').innerText = `Paso ${step} de 7: ${data ? data.title : ''}`;
+    }
+
+    document.querySelectorAll('.flow-node').forEach(node => {
+      node.addEventListener('click', () => {
+        selectStep(parseInt(node.dataset.step));
+      });
+    });
+
+    document.getElementById('btn-close-inspector').addEventListener('click', () => {
+      inspector.classList.remove('open');
+    });
+
+    // Tabs inside Inspector
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).style.display = 'block';
+      });
+    });
+
+    // --- Simulation Controls ---
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const btnNextStep = document.getElementById('btn-next-step');
+    const btnResetSim = document.getElementById('btn-reset-sim');
+
+    btnPlayPause.addEventListener('click', () => {
+      if (isSimulating) {
+        clearInterval(simInterval);
+        isSimulating = false;
+        btnPlayPause.innerText = '▶ Reanudar Flujo';
+      } else {
+        isSimulating = true;
+        btnPlayPause.innerText = '⏸ Pausar Flujo';
+        simInterval = setInterval(() => {
+          let next = activeStep + 1;
+          if (next > 7) next = 1;
+          selectStep(next);
+        }, 3200);
+      }
+    });
+
+    btnNextStep.addEventListener('click', () => {
+      let next = activeStep + 1;
+      if (next > 7) next = 1;
+      selectStep(next);
+    });
+
+    btnResetSim.addEventListener('click', () => {
+      if (isSimulating) {
+        clearInterval(simInterval);
+        isSimulating = false;
+        btnPlayPause.innerText = '▶ Simular Flujo';
+      }
+      selectStep(1);
+    });
+
+    // --- HD Export (3200x1800 Direct 2D Rendering) ---
+    document.getElementById('btn-export-hd').addEventListener('click', () => {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = 3200;
+      exportCanvas.height = 1800;
+      const expCtx = exportCanvas.getContext('2d');
+
+      // Background
+      expCtx.fillStyle = '#0a0d14';
+      expCtx.fillRect(0, 0, 3200, 1800);
+
+      // Grid Pattern
+      expCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      expCtx.lineWidth = 1;
+      for (let x = 0; x < 3200; x += 40) {
+        expCtx.beginPath(); expCtx.moveTo(x, 0); expCtx.lineTo(x, 1800); expCtx.stroke();
+      }
+      for (let y = 0; y < 1800; y += 40) {
+        expCtx.beginPath(); expCtx.moveTo(0, y); expCtx.lineTo(3200, y); expCtx.stroke();
+      }
+
+      // Title Banner
+      expCtx.fillStyle = '#6366f1';
+      expCtx.font = 'bold 36px Inter, sans-serif';
+      expCtx.fillText('Flujo Integral: De Siigo a SP Pagos (Microservicio Facturación)', 80, 80);
+      expCtx.fillStyle = '#94a3b8';
+      expCtx.font = '20px Inter, sans-serif';
+      expCtx.fillText('Arquitectura de recepción contable, lectura de PDF enriquecida y liquidación en pasarela', 80, 120);
+
+      // Draw Bézier Connections
+      connections.forEach(conn => {
+        const pathData = getBezierPath(conn.from, conn.to);
+        if (!pathData) return;
+        expCtx.beginPath();
+        expCtx.moveTo(pathData.p0.x, pathData.p0.y);
+        expCtx.bezierCurveTo(pathData.p1.x, pathData.p1.y, pathData.p2.x, pathData.p2.y, pathData.p3.x, pathData.p3.y);
+        expCtx.strokeStyle = conn.color;
+        expCtx.lineWidth = 3;
+        expCtx.stroke();
+      });
+
+      // Draw Nodes
+      document.querySelectorAll('.flow-node').forEach(node => {
+        const left = parseFloat(node.style.left);
+        const top = parseFloat(node.style.top);
+        const width = node.offsetWidth;
+        const height = node.offsetHeight;
+
+        // Card Body
+        expCtx.fillStyle = '#131927';
+        expCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        expCtx.lineWidth = 2;
+        expCtx.beginPath();
+        expCtx.roundRect(left, top, width, height, 12);
+        expCtx.fill();
+        expCtx.stroke();
+
+        // Card Header
+        expCtx.fillStyle = '#1e2538';
+        expCtx.beginPath();
+        expCtx.roundRect(left, top, width, 45, [12, 12, 0, 0]);
+        expCtx.fill();
+
+        // Title
+        const titleEl = node.querySelector('.node-title');
+        if (titleEl) {
+          expCtx.fillStyle = '#f1f5f9';
+          expCtx.font = 'bold 15px Inter, sans-serif';
+          expCtx.fillText(titleEl.innerText, left + 14, top + 28);
+        }
+
+        // Summary text
+        const bodyEl = node.querySelector('.node-body');
+        if (bodyEl) {
+          expCtx.fillStyle = '#94a3b8';
+          expCtx.font = '13px Inter, sans-serif';
+          expCtx.fillText(bodyEl.innerText.substring(0, 70) + '...', left + 14, top + 75);
+        }
+      });
+
+      // Trigger Download
+      const link = document.createElement('a');
+      link.download = 'flujo_siigo_a_sp_pagos_archify_hd.png';
+      link.href = exportCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // --- Window Init ---
+    window.addEventListener('load', () => {
+      drawConnections();
+      initParticles();
+      animateParticles();
+      updateTransform();
+      selectStep(1);
+    });
+
+    window.addEventListener('resize', () => {
+      drawConnections();
+      initParticles();
+    });
+  </script>
+</body>
+</html>

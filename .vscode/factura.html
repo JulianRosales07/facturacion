@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SP · Facturación corporativa</title>
+
+    <style>
+        :root {
+            --rojo: #e32636;
+            --rojo-suave: #fff0f2;
+            --fondo: #f5f6f8;
+            --texto: #20232b;
+            --gris: #737987;
+            --borde: #e8eaf0;
+            --verde: #15815d;
+            --ambar: #a86a08;
+            --azul: #3267b1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--fondo);
+            color: var(--texto);
+            font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            outline-offset: 3px;
+        }
+
+        button:focus-visible,
+        a:focus-visible {
+            outline: 3px solid #ed8590;
+        }
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: 245px;
+            background: #181a20;
+            color: white;
+            padding: 28px 17px;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 28px;
+        }
+
+        .logo b {
+            background: var(--rojo);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 23px;
+        }
+
+        .logo strong {
+            font-size: 16px;
+        }
+
+        .logo small {
+            display: block;
+            color: #9398a5;
+            margin-top: 4px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            letter-spacing: 1.8px;
+            color: #8d93a0;
+            padding: 18px 13px 9px;
+        }
+
+        nav button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            border: 0;
+            background: none;
+            color: #b8bec9;
+            text-align: left;
+            padding: 13px;
+            border-radius: 9px;
+            margin: 3px 0;
+        }
+
+        nav button span {
+            width: 21px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        nav button.active {
+            background: var(--rojo);
+            color: white;
+        }
+
+        nav button:hover:not(.active) {
+            background: #292c35;
+            color: white;
+        }
+
+        .side-foot {
+            margin-top: auto;
+            padding: 18px 12px 0;
+            border-top: 1px solid #34363e;
+            color: #a6acb8;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        main {
+            margin-left: 245px;
+        }
+
+        .topbar {
+            background: white;
+            border-bottom: 1px solid var(--borde);
+            padding: 17px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar strong {
+            font-size: 13px;
+        }
+
+        .avatar {
+            display: inline-grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            background: #f0f1f4;
+            border-radius: 50%;
+            font-weight: 700;
+            margin-left: 12px;
+        }
+
+        .content {
+            padding: 30px 32px;
+            max-width: 1600px;
+            margin: auto;
+        }
+
+        .heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 27px;
+            letter-spacing: -.8px;
+            margin: 0 0 7px;
+        }
+
+        h2 {
+            font-size: 17px;
+            margin: 0;
+        }
+
+        h3 {
+            font-size: 14px;
+            margin: 0 0 15px;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        .muted {
+            color: var(--gris);
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .kicker {
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            color: var(--rojo);
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            border: 1px solid var(--borde);
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: var(--texto);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: #f4f5f7;
+        }
+
+        .btn.primary {
+            background: var(--rojo);
+            border-color: var(--rojo);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: #cb1e2e;
+        }
+
+        .btn.danger {
+            background: var(--rojo-suave);
+            color: var(--rojo);
+            border-color: #ffd4da;
+        }
+
+        .btn.link {
+            border: none;
+            background: none;
+            color: var(--rojo);
+            padding: 6px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            align-items: center;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 17px;
+            margin-bottom: 24px;
+        }
+
+        .card,
+        .panel {
+            background: white;
+            border: 1px solid var(--borde);
+            border-radius: 13px;
+        }
+
+        .card {
+            padding: 21px;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: 750;
+            letter-spacing: -.7px;
+            margin: 14px 0 7px;
+            overflow-wrap: anywhere;
+        }
+
+        .card .icon {
+            float: right;
+            background: #f5f5f8;
+            padding: 6px 10px;
+            border-radius: 8px;
+            color: var(--rojo);
+        }
+
+        .panel {
+            margin-bottom: 21px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            padding: 21px 23px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .panel-body {
+            padding: 23px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 21px;
+        }
+
+        .notice {
+            padding: 13px 17px;
+            border: 1px solid #f1deb7;
+            border-radius: 9px;
+            background: #fffaf0;
+            color: #84621c;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 12px;
+        }
+
+        .notice.info {
+            background: #f0f5fc;
+            border-color: #dbe6f5;
+            color: #3a5d8b;
+        }
+
+        .notice.success {
+            background: #edf8f1;
+            border-color: #cee9d9;
+            color: #216d4d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: .3px;
+            white-space: nowrap;
+            background: #f0f1f4;
+            color: #626876;
+        }
+
+        .badge.green {
+            background: #e9f7ef;
+            color: var(--verde);
+        }
+
+        .badge.red {
+            background: var(--rojo-suave);
+            color: var(--rojo);
+        }
+
+        .badge.blue {
+            background: #edf3fe;
+            color: var(--azul);
+        }
+
+        .badge.amber {
+            background: #fff5df;
+            color: var(--ambar);
+        }
+
+        .filters {
+            padding: 17px 23px;
+            border-bottom: 1px solid var(--borde);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        input,
+        select,
+        textarea {
+            border: 1px solid #dce0e7;
+            border-radius: 7px;
+            padding: 10px 12px;
+            background: white;
+            color: var(--texto);
+            max-width: 100%;
+        }
+
+        input[type=search] {
+            min-width: 260px;
+            flex: 1;
+        }
+
+        .table-wrap {
+            overflow: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        th {
+            font-size: 10px;
+            color: var(--gris);
+            letter-spacing: .65px;
+            background: #fafbfc;
+            padding: 13px 22px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 16px 22px;
+            border-bottom: 1px solid #f0f1f4;
+            font-size: 12px;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #fdfdfe;
+        }
+
+        td strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 45px;
+            color: var(--gris);
+        }
+
+        .wrap {
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .step {
+            padding: 17px;
+            border: 1px solid var(--borde);
+            border-radius: 9px;
+        }
+
+        .step b {
+            display: grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 50%;
+            background: var(--rojo-suave);
+            color: var(--rojo);
+            margin-bottom: 13px;
+        }
+
+        .step strong {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .bar-row {
+            margin: 0 0 21px;
+        }
+
+        .bar-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 9px;
+            font-size: 12px;
+        }
+
+        .track {
+            height: 8px;
+            background: #f0f1f5;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            background: var(--rojo);
+            border-radius: 10px;
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 13px;
+            margin: 0;
+        }
+
+        dt {
+            color: var(--gris);
+        }
+
+        dd {
+            margin: 0;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .total {
+            padding-top: 15px;
+            border-top: 1px solid var(--borde);
+            font-size: 17px;
+        }
+
+        dialog {
+            border: 0;
+            border-radius: 15px;
+            padding: 0;
+            width: min(980px, 94vw);
+            max-height: 90vh;
+            box-shadow: 0 30px 100px #1114;
+            color: var(--texto);
+        }
+
+        dialog::backdrop {
+            background: #11182788;
+            backdrop-filter: blur(3px);
+        }
+
+        .dialog-head {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--borde);
+            z-index: 1;
+        }
+
+        .dialog-body {
+            padding: 25px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 17px;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            font-size: 12px;
+            color: #596171;
+        }
+
+        label.full {
+            grid-column: 1 / -1;
+        }
+
+        label input,
+        label select {
+            width: 100%;
+        }
+
+        textarea {
+            min-height: 85px;
+            resize: vertical;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 23px;
+        }
+
+        .error {
+            color: #c32032;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+
+        .separator {
+            height: 1px;
+            background: var(--borde);
+            margin: 25px 0;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            max-width: 450px;
+            background: #20252e;
+            color: white;
+            padding: 15px 22px;
+            border-radius: 10px;
+            z-index: 30;
+            box-shadow: 0 6px 30px #0002;
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar {
+                width: 215px;
+            }
+
+            main {
+                margin-left: 215px;
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 245px;
+            }
+
+            .sidebar.open {
+                transform: none;
+                box-shadow: 0 0 0 100vmax #0006;
+            }
+
+            main {
+                margin-left: 0;
+            }
+
+            .mobile-menu {
+                display: inline-block;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .topbar {
+                padding: 14px 15px;
+            }
+
+            .heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card .value {
+                font-size: 20px;
+            }
+
+            .steps {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dialog-body {
+                padding: 17px;
+            }
+
+            .topbar .muted {
+                display: none;
+            }
+
+            td,
+            th {
+                padding: 13px;
+            }
+
+            .filters {
+                padding: 15px;
+            }
+
+            input[type=search] {
+                min-width: 100%;
+                width: 100%;
+            }
+
+            .toast {
+                left: 15px;
+                right: 15px;
+                bottom: 15px;
+            }
+        }
+
+        @media (max-width: 420px) {
+
+            .cards,
+            .steps {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <b>SP</b>
+            <div>
+                <strong>Facturación</strong>
+                <small>Sistemas Palacios</small>
+            </div>
+        </div>
+
+        <nav id="nav" aria-label="Navegación principal"></nav>
+
+        <div class="side-foot">
+            corporate-billing-service<br>
+            <span class="badge red">ENTORNO DEMO</span>
+            <p id="storageLabel">Datos locales del navegador</p>
+        </div>
+    </aside>
+
+    <main>
+        <header class="topbar">
+            <div class="actions">
+                <button class="btn mobile-menu" onclick="document.getElementById('sidebar').classList.toggle('open')"
+                    aria-label="Abrir o cerrar menú">☰</button>
+
+                <strong>Operación corporativa</strong>
+                <span class="muted">/ Facturación B2B</span>
+            </div>
+
+            <div>
+                <span class="badge amber">DEMO · SIN CONEXIÓN</span>
+                <span class="avatar">SP</span>
+            </div>
+        </header>
+
+        <div class="content" id="app"></div>
+    </main>
+
+    <dialog id="modal" aria-labelledby="modalTitle">
+        <div class="dialog-head">
+            <h2 id="modalTitle"></h2>
+            <button class="btn" onclick="cerrar()" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="dialog-body" id="modalBody"></div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+
+    <script>
+        "use strict";
+
+        /* ==========================================================
+           UTILIDADES Y ESTADO
+           ========================================================== */
+
+        const $ = id => document.getElementById(id);
+
+        const escapar = valor => String(valor ?? "").replace(
+            /[&<>"']/g,
+            caracter => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            })[caracter]
+        );
+
+        // Importes de demostración guardados como enteros en centavos.
+        // El backend debe validar y calcular con BigDecimal.
+        const dinero = centavos => new Intl.NumberFormat("es-CO", {
+            style: "currency",
+            currency: "COP",
+            maximumFractionDigits: 2
+        }).format(centavos / 100);
+
+        const uid = () =>
+            globalThis.crypto?.randomUUID?.() ||
+            `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+        const CLAVE = "sp-corporate-billing-completo-v2";
+        const PERIODO = "2026-08";
+
+        let vista = "resumen";
+        let consulta = "";
+        let estadoFiltro = "";
+        let temporizador;
+        let previsualizacionActual = null;
+        let almacenamientoDisponible = true;
+
+        const menus = [
+            ["resumen", "◫", "Resumen"],
+            ["generar", "＋", "Generar factura"],
+            ["facturas", "▤", "Facturas consolidadas"],
+            ["clientes", "▦", "Clientes y sedes"],
+            ["ordenes", "⇄", "Órdenes y novedades"],
+            ["lotes", "↗", "Lotes Siigo"],
+            ["ajustes", "↶", "Notas crédito"],
+            ["tributaria", "％", "Configuración tributaria"]
+        ];
+
+        function inicial() {
+            return {
+                version: 2,
+
+                clientes: [
+                    {
+                        id: "c1",
+                        nit: "900000101",
+                        nombre: "Corporativo Andino · Demo",
+                        municipio: "Pasto",
+                        direccion: "Dirección fiscal de demostración",
+                        tipo: "F1",
+                        marca: "Sistemas Palacios",
+                        email: "facturacion@example.com"
+                    },
+                    {
+                        id: "c2",
+                        nit: "900000102",
+                        nombre: "Red Comercial del Sur · Demo",
+                        municipio: "Pasto",
+                        direccion: "Dirección fiscal de demostración",
+                        tipo: "F1",
+                        marca: "Enlaces",
+                        email: "cartera@example.com"
+                    },
+                    {
+                        id: "c3",
+                        nit: "900000103",
+                        nombre: "Mayorista del Pacífico · Demo",
+                        municipio: "Tumaco",
+                        direccion: "Dirección fiscal de demostración",
+                        tipo: "F20",
+                        marca: "Meganet",
+                        email: "administracion@example.com"
+                    }
+                ],
+
+                sedes: [
+                    {
+                        id: "s1",
+                        cliente: "c1",
+                        nombre: "Sede principal",
+                        orden: "SPE-1021",
+                        nic: "—",
+                        origen: "SPE",
+                        mensual: 180000000,
+                        certificacion: "2026-01-01",
+                        instalacion: 0
+                    },
+                    {
+                        id: "s2",
+                        cliente: "c1",
+                        nombre: "Sede norte",
+                        orden: "SPE-1022",
+                        nic: "—",
+                        origen: "SPE",
+                        mensual: 90000000,
+                        certificacion: "2026-08-16",
+                        instalacion: 10000000
+                    },
+                    {
+                        id: "s3",
+                        cliente: "c2",
+                        nombre: "Centro administrativo",
+                        orden: "ENL-0801",
+                        nic: "—",
+                        origen: "ENLACES",
+                        mensual: 125000000,
+                        certificacion: "2026-02-01",
+                        instalacion: 0
+                    },
+                    {
+                        id: "s4",
+                        cliente: "c3",
+                        nombre: "Nodo Tumaco",
+                        orden: "MR-0201",
+                        nic: "NIC-00892",
+                        origen: "MEGA_RED",
+                        mensual: 320000000,
+                        certificacion: "2026-03-01",
+                        instalacion: 0
+                    }
+                ],
+
+                novedades: [
+                    {
+                        id: "n1",
+                        sede: "s2",
+                        tipo: "ALTA",
+                        fecha: "2026-08-16",
+                        observacion:
+                            "Cobro desde certificación. Prorrateo por días calendario."
+                    }
+                ],
+
+                vigencias: [],
+                facturas: [],
+                lotes: [],
+                ajustes: []
+            };
+        }
+
+        let datos;
+
+        try {
+            const almacenados = localStorage.getItem(CLAVE);
+            datos = almacenados ? JSON.parse(almacenados) : inicial();
+
+            if (
+                datos.version !== 2 ||
+                !["clientes", "sedes", "novedades", "vigencias", "facturas", "lotes", "ajustes"]
+                    .every(nombre => Array.isArray(datos[nombre]))
+            ) {
+                datos = inicial();
+            }
+        } catch {
+            datos = inicial();
+            almacenamientoDisponible = false;
+        }
+
+        function guardar() {
+            try {
+                localStorage.setItem(CLAVE, JSON.stringify(datos));
+                almacenamientoDisponible = true;
+            } catch {
+                almacenamientoDisponible = false;
+                avisar("Los cambios quedan solo en esta sesión: el navegador no permitió guardarlos.");
+            }
+
+            actualizarAlmacenamiento();
+        }
+
+        function actualizarAlmacenamiento() {
+            $("storageLabel").textContent = almacenamientoDisponible
+                ? "Datos locales del navegador"
+                : "Cambios solo en esta sesión";
+        }
+
+        function avisar(texto) {
+            $("toast").textContent = texto;
+            $("toast").hidden = false;
+            clearTimeout(temporizador);
+            temporizador = setTimeout(() => $("toast").hidden = true, 5000);
+        }
+
+        function abrir(titulo, contenido) {
+            $("modalTitle").textContent = titulo;
+            $("modalBody").innerHTML = contenido;
+            if (!$("modal").open) $("modal").showModal();
+        }
+
+        function cerrar() {
+            $("modal").close();
+        }
+
+        function etiqueta(estado) {
+            const colores = {
+                CONSOLIDADA: "green",
+                ANULADA: "red",
+                BORRADOR: "amber",
+                GENERADO: "blue",
+                CONFIRMADO: "green",
+                ACTIVO: "green",
+                ALTA: "blue"
+            };
+
+            return `<span class="badge ${colores[estado] || ""}">
+    ${escapar(estado)}
+  </span>`;
+        }
+
+        function tabla(cabeceras, filas) {
+            return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>${cabeceras.map(c => `<th>${c}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${filas.length ? filas.join("") : `
+            <tr>
+              <td colspan="${cabeceras.length}" class="empty">
+                No hay registros para esta selección.
+              </td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+    </div>
+  `;
+        }
+
+        function cabecera(titulo, descripcion, accion = "") {
+            return `
+    <div class="heading">
+      <div>
+        <div class="kicker">SP / FACTURACIÓN CORPORATIVA</div>
+        <h1>${titulo}</h1>
+        <div class="muted">${descripcion}</div>
+      </div>
+      ${accion}
+    </div>
+  `;
+        }
+
+        function panel(titulo, contenido, accion = "") {
+            return `
+    <section class="panel">
+      <div class="panel-head">
+        <h2>${titulo}</h2>
+        ${accion}
+      </div>
+      ${contenido}
+    </section>
+  `;
+        }
+
+        function tarjetas(elementos) {
+            return `
+    <div class="cards">
+      ${elementos.map(([titulo, valor, descripcion, icono]) => `
+        <div class="card">
+          ${icono ? `<span class="icon">${icono}</span>` : ""}
+          <span class="muted small">${titulo}</span>
+          <div class="value">${valor}</div>
+          <span class="muted small">${descripcion}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+        }
+
+        function navegar(id) {
+            cerrar();
+            vista = id;
+            consulta = "";
+            estadoFiltro = "";
+            previsualizacionActual = null;
+            $("sidebar").classList.remove("open");
+            render();
+        }
+
+        function render() {
+            $("nav").innerHTML = menus.map(([id, icono, titulo]) => `
+    ${id === "tributaria" ? '<div class="nav-label">ADMINISTRACIÓN</div>' : ""}
+    <button class="${vista === id ? "active" : ""}"
+            ${vista === id ? 'aria-current="page"' : ""}
+            onclick="navegar('${id}')">
+      <span aria-hidden="true">${icono}</span>
+      ${titulo}
+    </button>
+  `).join("");
+
+            const vistas = {
+                resumen,
+                generar: pantallaGenerar,
+                facturas,
+                clientes,
+                ordenes,
+                lotes,
+                ajustes,
+                tributaria
+            };
+
+            $("app").innerHTML = vistas[vista]();
+            actualizarAlmacenamiento();
+        }
+
+        /* ==========================================================
+           RESUMEN
+           ========================================================== */
+
+        function resumen() {
+            const activas = datos.facturas.filter(f => f.estado !== "ANULADA");
+            const sumar = campo => activas.reduce((total, f) => total + f[campo], 0);
+
+            return cabecera(
+                "Tu operación, en un solo lugar",
+                "Consolida por NIT. Revisa valores. Prepara la salida a Siigo.",
+                '<button class="btn primary" onclick="formGenerar()">＋ Generar factura</button>'
+            ) + `
+    <div class="notice info">
+      Clientes ficticios y periodo de ejemplo agosto de 2026.
+      Esta interfaz no está conectada a Órdenes ni a Siigo.
+    </div>
+  ` + tarjetas([
+                ["Clientes corporativos", datos.clientes.length, "F1 corporativos · F20 mayoristas", "▦"],
+                ["Facturas activas", activas.length, "Consolidadas en esta demostración", "▤"],
+                ["Valor oficial", dinero(sumar("total")), "Subtotal + IVA", "↗"],
+                ["Neto de referencia", dinero(sumar("neto")), "Después de retenciones", "％"]
+            ]) + panel(
+                "Flujo de facturación",
+                `<div class="panel-body steps">
+      ${[
+                    ["Revisar entradas", "Suscripciones y novedades de Órdenes.", "ordenes"],
+                    ["Generar factura", "Previsualiza y confirma por NIT.", "generar"],
+                    ["Preparar lote", "Agrupa y revisa el movimiento contable.", "lotes"],
+                    ["Confirmar Siigo", "Registra consecutivo y referencia PDF.", "lotes"]
+                ].map(([titulo, descripcion, destino], indice) => `
+        <div class="step">
+          <b>${indice + 1}</b>
+          <strong>${titulo}</strong>
+          <p class="muted small">${descripcion}</p>
+          <button class="btn link" onclick="navegar('${destino}')">
+            Abrir →
+          </button>
+        </div>
+      `).join("")}
+    </div>`
+            ) + `
+    <div class="grid">
+      ${panel(
+                "Facturas recientes",
+                tablaFacturas(datos.facturas.slice(-5).reverse()),
+                '<button class="btn link" onclick="navegar(\'facturas\')">Ver todas →</button>'
+            )}
+
+      ${panel(
+                "Distribución por comprobante",
+                `<div class="panel-body">
+          ${["F1", "F20"].map(tipo => {
+                    const cantidad = activas.filter(f => f.tipo === tipo).length;
+                    const porcentaje = activas.length ? cantidad / activas.length * 100 : 0;
+
+                    return `
+              <div class="bar-row">
+                <div class="bar-top">
+                  <strong>${tipo} · ${tipo === "F1" ? "Corporativos" : "Mayoristas"}</strong>
+                  <span>${cantidad} facturas</span>
+                </div>
+                <div class="track">
+                  <div class="fill" style="width:${porcentaje}%"></div>
+                </div>
+              </div>
+            `;
+                }).join("")}
+
+          <div class="notice info">
+            Las retenciones reducen el neto de referencia.
+            El valor oficial y el asiento conservan subtotal + IVA.
+          </div>
+        </div>`
+            )}
+    </div>
+  `;
+        }
+
+        /* ==========================================================
+           CÁLCULO DEL ESCENARIO DE DEMOSTRACIÓN
+           ========================================================== */
+
+        function calcular(cliente) {
+            const items = [];
+
+            for (const sede of datos.sedes.filter(s => s.cliente === cliente.id)) {
+                if (sede.certificacion > "2026-08-31") continue;
+
+                const diaInicio = sede.certificacion.startsWith(PERIODO)
+                    ? Number(sede.certificacion.slice(-2))
+                    : 1;
+
+                const dias = 32 - diaInicio;
+                const base = Math.round(sede.mensual * dias / 31);
+                const iva = Math.round(base * 19 / 100);
+
+                items.push({
+                    sedeId: sede.id,
+                    sede: sede.nombre,
+                    descripcion: dias < 31
+                        ? `Servicio · prorrateo ${dias}/31 días`
+                        : "Servicio mensual",
+                    base,
+                    iva
+                });
+
+                if (sede.instalacion) {
+                    items.push({
+                        sedeId: sede.id,
+                        sede: sede.nombre,
+                        descripcion: "Instalación · cuota del periodo",
+                        base: sede.instalacion,
+                        iva: Math.round(sede.instalacion * 19 / 100)
+                    });
+                }
+            }
+
+            const subtotal = items.reduce((total, item) => total + item.base, 0);
+            const iva = items.reduce((total, item) => total + item.iva, 0);
+            const total = subtotal + iva;
+
+            const retenciones = datos.vigencias
+                .filter(v =>
+                    v.cliente === cliente.id &&
+                    v.desde <= "2026-08-31" &&
+                    (!v.hasta || v.hasta >= "2026-08-31") &&
+                    (
+                        !v.municipio ||
+                        v.municipio.toLowerCase() === cliente.municipio.toLowerCase()
+                    )
+                )
+                .map(v => {
+                    const base = v.concepto === "RETEIVA" ? iva : subtotal;
+
+                    return {
+                        concepto: v.concepto,
+                        porcentaje: v.porcentaje,
+                        valor: base >= v.minima
+                            ? Math.round(base * v.porcentaje / 100)
+                            : 0
+                    };
+                });
+
+            const retenido = retenciones.reduce((suma, r) => suma + r.valor, 0);
+
+            return {
+                items,
+                subtotal,
+                iva,
+                total,
+                retenciones,
+                retenido,
+                neto: total - retenido
+            };
+        }
+
+        /* ==========================================================
+           GENERAR FACTURA: PARÁMETROS → PREVIA → CONFIRMACIÓN
+           ========================================================== */
+
+        function formGenerar() {
+            navegar("generar");
+        }
+
+        function pantallaGenerar() {
+            return cabecera(
+                "Generar factura consolidada",
+                "Selecciona el alcance, revisa la liquidación y confirma la generación."
+            ) + `
+    <div class="notice info">
+      Escenario disponible: agosto de 2026, prorrateo por días calendario
+      inclusivos e IVA de ejemplo del 19%, sin descuentos.
+      La cuota de instalación corresponde únicamente a este periodo.
+      Los cortes se registran como parámetro; la liquidación de ejemplo
+      utiliza el mismo periodo de servicio.
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>1. Parámetros de facturación</h2>
+        <span class="badge blue">CONSOLIDACIÓN POR NIT</span>
+      </div>
+
+      <div class="panel-body">
+        <form id="formGeneracion"
+              onsubmit="confirmarGeneracion(event)"
+              onchange="invalidarPrevisualizacion()">
+
+          <div class="form-grid">
+            <label>
+              Periodo
+              <select name="periodo">
+                <option value="2026-08">Agosto de 2026</option>
+              </select>
+            </label>
+
+            <label>
+              Tipo de comprobante
+              <select name="tipo">
+                <option value="F1">F1 · Corporativos</option>
+                <option value="F20">F20 · Mega Red / mayoristas</option>
+              </select>
+            </label>
+
+            <label>
+              Tipo de corte
+              <select name="corte">
+                <option value="VENCIDO">Mes vencido</option>
+                <option value="ADELANTADO">Mes adelantado</option>
+              </select>
+            </label>
+
+            <label>
+              Cliente a facturar
+              <select name="cliente">
+                <option value="">
+                  Todos los clientes del tipo seleccionado
+                </option>
+                ${datos.clientes.map(c => `
+                  <option value="${c.id}">
+                    ${escapar(c.nombre)} · ${escapar(c.nit)}
+                  </option>
+                `).join("")}
+              </select>
+            </label>
+          </div>
+
+          <div id="errorFormulario" class="error" role="alert"></div>
+
+          <div class="form-footer">
+            <button type="button" class="btn" onclick="navegar('facturas')">
+              Ver facturas
+            </button>
+
+            <button type="button"
+                    class="btn primary"
+                    onclick="previsualizarGeneracion()">
+              Calcular y previsualizar →
+            </button>
+          </div>
+
+          <div id="previsualizacion"
+               aria-live="polite"
+               style="margin-top:25px"></div>
+
+          <div id="confirmacionGeneracion" hidden>
+            <div class="notice info">
+              Se conservarán los datos fiscales y los importes revisados.
+              El documento quedará CONSOLIDADO en la demo, pendiente de
+              numeración y emisión oficial en Siigo.
+            </div>
+
+            <div class="form-footer">
+              <button type="submit" id="botonGenerar" class="btn primary">
+                Confirmar y generar factura
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  `;
+        }
+
+        function invalidarPrevisualizacion() {
+            previsualizacionActual = null;
+            $("previsualizacion").innerHTML = "";
+            $("confirmacionGeneracion").hidden = true;
+            $("errorFormulario").textContent = "";
+        }
+
+        function prepararGeneracion(parametros) {
+            const seleccionados = datos.clientes.filter(c =>
+                c.tipo === parametros.tipo &&
+                (!parametros.cliente || c.id === parametros.cliente)
+            );
+
+            const disponibles = [];
+            const omitidos = [];
+            const errores = [];
+
+            if (!seleccionados.length) {
+                errores.push("El cliente seleccionado no corresponde al tipo de comprobante.");
+            }
+
+            for (const cliente of seleccionados) {
+                const existente = datos.facturas.some(f =>
+                    f.cliente === cliente.id &&
+                    f.periodo === parametros.periodo &&
+                    f.estado !== "ANULADA"
+                );
+
+                if (existente) {
+                    omitidos.push(cliente.nombre);
+                    continue;
+                }
+
+                const calculo = calcular(cliente);
+
+                if (!calculo.items.length) {
+                    errores.push(`${cliente.nombre}: no tiene ítems facturables.`);
+                    continue;
+                }
+
+                if (calculo.neto < 0) {
+                    errores.push(`${cliente.nombre}: las retenciones superan el valor oficial.`);
+                    continue;
+                }
+
+                disponibles.push({ cliente, calculo });
+            }
+
+            return { disponibles, omitidos, errores };
+        }
+
+        function tablaItems(items) {
+            return tabla(
+                ["Sede / concepto", "Base", "IVA", "Total"],
+                items.map(item => `
+      <tr>
+        <td>
+          <strong>${escapar(item.sede)}</strong>
+          <span class="muted">${escapar(item.descripcion)}</span>
+        </td>
+        <td class="num">${dinero(item.base)}</td>
+        <td class="num">${dinero(item.iva)}</td>
+        <td class="num">${dinero(item.base + item.iva)}</td>
+      </tr>
+    `)
+            );
+        }
+
+        function previsualizarGeneracion() {
+            invalidarPrevisualizacion();
+
+            const parametros = Object.fromEntries(new FormData($("formGeneracion")));
+            const resultado = prepararGeneracion(parametros);
+            const { disponibles, omitidos, errores } = resultado;
+
+            const avisos = `
+    ${omitidos.length ? `
+      <div class="notice">
+        <strong>No se volverán a generar:</strong>
+        ${omitidos.map(escapar).join(", ")}.
+        Ya tienen una factura activa en este periodo.
+        Para refacturar, primero anula la anterior.
+      </div>
+    ` : ""}
+
+    ${errores.length ? `
+      <div class="notice">${errores.map(escapar).join("<br>")}</div>
+    ` : ""}
+  `;
+
+            if (!disponibles.length) {
+                $("previsualizacion").innerHTML = avisos;
+                $("errorFormulario").textContent =
+                    "No hay facturas disponibles para generar con esta selección.";
+                return;
+            }
+
+            const sumar = campo => disponibles.reduce(
+                (total, registro) => total + registro.calculo[campo],
+                0
+            );
+
+            $("previsualizacion").innerHTML = `
+    <div class="separator"></div>
+    <h2 style="margin-bottom:18px">2. Revisión antes de generar</h2>
+
+    ${avisos}
+
+    ${tarjetas([
+                ["Facturas por generar", disponibles.length, "Una por cliente y periodo", ""],
+                ["Valor oficial", dinero(sumar("total")), "Subtotal + IVA", ""],
+                ["Retenciones", dinero(sumar("retenido")), "Solo para calcular el neto", ""],
+                ["Neto de referencia", dinero(sumar("neto")), "Después de retenciones", ""]
+            ])}
+
+    ${disponibles.map(({ cliente, calculo }) => `
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>${escapar(cliente.nombre)}</h2>
+            <p class="muted small" style="margin-bottom:0">
+              NIT ${escapar(cliente.nit)}
+              · ${escapar(parametros.periodo)}
+              · ${escapar(parametros.corte)}
+            </p>
+          </div>
+          <span class="badge blue">${escapar(cliente.tipo)}</span>
+        </div>
+
+        ${tablaItems(calculo.items)}
+
+        <div class="panel-body">
+          <dl>
+            <dt>Subtotal</dt>
+            <dd>${dinero(calculo.subtotal)}</dd>
+
+            <dt>IVA</dt>
+            <dd>${dinero(calculo.iva)}</dd>
+
+            <dt class="total">Valor oficial</dt>
+            <dd class="total">${dinero(calculo.total)}</dd>
+
+            ${calculo.retenciones.length
+                    ? calculo.retenciones.map(r => `
+                <dt>${escapar(r.concepto)} · ${r.porcentaje}%</dt>
+                <dd>− ${dinero(r.valor)}</dd>
+              `).join("")
+                    : "<dt>Retenciones</dt><dd>Sin conceptos asignados</dd>"
+                }
+
+            <dt>Neto después de retenciones</dt>
+            <dd>${dinero(calculo.neto)}</dd>
+          </dl>
+        </div>
+      </section>
+    `).join("")}
+  `;
+
+            if (!errores.length) {
+                previsualizacionActual = {
+                    parametros: { ...parametros },
+                    firma: JSON.stringify(resultado)
+                };
+
+                $("confirmacionGeneracion").hidden = false;
+                $("botonGenerar").textContent = disponibles.length === 1
+                    ? "Confirmar y generar factura"
+                    : `Confirmar y generar ${disponibles.length} facturas`;
+            }
+        }
+
+        function confirmarGeneracion(evento) {
+            evento.preventDefault();
+
+            if (!previsualizacionActual) {
+                avisar("Primero calcula y revisa la previsualización.");
+                return;
+            }
+
+            const parametros = Object.fromEntries(new FormData(evento.target));
+            const resultado = prepararGeneracion(parametros);
+
+            if (
+                JSON.stringify(parametros) !== JSON.stringify(previsualizacionActual.parametros) ||
+                JSON.stringify(resultado) !== previsualizacionActual.firma
+            ) {
+                previsualizarGeneracion();
+                avisar("La selección o los datos cambiaron. Revisa la nueva previsualización.");
+                return;
+            }
+
+            if (resultado.errores.length || !resultado.disponibles.length) return;
+
+            $("botonGenerar").disabled = true;
+
+            const nuevas = resultado.disponibles.map(({ cliente, calculo }) => ({
+                id: uid(),
+                cliente: cliente.id,
+                nombre: cliente.nombre,
+                nit: cliente.nit,
+                email: cliente.email,
+                municipio: cliente.municipio,
+                direccion: cliente.direccion,
+                periodo: parametros.periodo,
+                tipo: parametros.tipo,
+                corte: parametros.corte,
+                estado: "CONSOLIDADA",
+                numero: "",
+                cufe: "",
+                pdf: "",
+                creado: new Date().toISOString(),
+                ...calculo
+            }));
+
+            datos.facturas.push(...nuevas);
+            guardar();
+            navegar("facturas");
+
+            abrir(
+                "Generación completada",
+                `
+      <div class="notice success">
+        Se generaron ${nuevas.length} factura(s) consolidada(s) de demostración.
+      </div>
+
+      ${tabla(
+                    ["Cliente", "Tipo", "Valor oficial", ""],
+                    nuevas.map(f => `
+          <tr>
+            <td><strong>${escapar(f.nombre)}</strong>${escapar(f.nit)}</td>
+            <td>${etiqueta(f.tipo)}</td>
+            <td class="num">${dinero(f.total)}</td>
+            <td>
+              <button class="btn link" onclick="detalle('${f.id}')">
+                Ver factura →
+              </button>
+            </td>
+          </tr>
+        `)
+                )}
+
+      <p class="muted small">
+        Siguiente paso: preparar un lote para revisar la salida contable.
+        Los documentos todavía no son facturas oficiales de Siigo.
+      </p>
+
+      <div class="form-footer">
+        <button class="btn" onclick="cerrar()">Ver listado</button>
+        <button class="btn primary" onclick="navegar('lotes')">
+          Ir a lotes Siigo →
+        </button>
+      </div>
+    `
+            );
+        }
+
+        /* ==========================================================
+           FACTURAS Y DETALLE
+           ========================================================== */
+
+        function tablaFacturas(lista) {
+            return tabla(
+                ["Cliente / NIT", "Periodo", "Tipo", "Valor oficial", "Estado", ""],
+                lista.map(f => `
+      <tr>
+        <td>
+          <strong>${escapar(f.nombre)}</strong>
+          <span class="muted">${escapar(f.nit)}</span>
+        </td>
+        <td>
+          ${escapar(f.periodo)}<br>
+          <span class="muted small">${escapar(f.corte)}</span>
+        </td>
+        <td>${etiqueta(f.tipo)}</td>
+        <td class="num">${dinero(f.total)}</td>
+        <td>${etiqueta(f.estado)}</td>
+        <td>
+          <button class="btn link" onclick="detalle('${f.id}')">
+            Ver detalle →
+          </button>
+        </td>
+      </tr>
+    `)
+            );
+        }
+
+        function facturas() {
+            return cabecera(
+                "Facturas consolidadas",
+                "Control por cliente, periodo y tipo de comprobante.",
+                '<button class="btn primary" onclick="formGenerar()">＋ Generar factura</button>'
+            ) + `
+    <section class="panel">
+      <div class="filters">
+        <input type="search"
+               placeholder="Buscar por NIT o razón social…"
+               aria-label="Buscar facturas"
+               oninput="consulta=this.value.toLowerCase();actualizarFacturas()">
+
+        <select aria-label="Filtrar estado"
+                onchange="estadoFiltro=this.value;actualizarFacturas()">
+          <option value="">Todos los estados</option>
+          <option>CONSOLIDADA</option>
+          <option>ANULADA</option>
+        </select>
+      </div>
+
+      <div id="listaFacturas">
+        ${tablaFacturas(datos.facturas.slice().reverse())}
+      </div>
+    </section>
+  `;
+        }
+
+        function actualizarFacturas() {
+            const lista = datos.facturas.filter(f =>
+                `${f.nombre} ${f.nit}`.toLowerCase().includes(consulta) &&
+                (!estadoFiltro || f.estado === estadoFiltro)
+            );
+
+            $("listaFacturas").innerHTML = tablaFacturas(lista.reverse());
+        }
+
+        function detalle(id) {
+            const f = datos.facturas.find(f => f.id === id);
+            if (!f) return;
+
+            const enLote = datos.lotes.some(l => l.facturas.includes(id));
+
+            const cuentas = f.tipo === "F1"
+                ? ["4105011501", "2408010515", "1305051004"]
+                : ["Por configurar", "Por configurar", "Por configurar"];
+
+            abrir("Detalle de factura consolidada", `
+    <div class="heading">
+      <div>
+        <h2>${escapar(f.nombre)}</h2>
+        <p class="muted small">
+          NIT ${escapar(f.nit)} · ${escapar(f.periodo)}
+          · ${escapar(f.tipo)} · ${escapar(f.corte)}
+        </p>
+      </div>
+      ${etiqueta(f.estado)}
+    </div>
+
+    ${f.estado === "ANULADA" ? `
+      <div class="notice">Anulada: ${escapar(f.motivo)}</div>
+    ` : ""}
+
+    <p class="small muted">
+      Datos fiscales conservados al generar:<br>
+      ${escapar(f.direccion)} · ${escapar(f.municipio)}<br>
+      ${escapar(f.email)}
+    </p>
+
+    ${panel("Ítems por sede", tablaItems(f.items))}
+
+    <div class="grid">
+      ${panel("Valor oficial", `
+        <div class="panel-body">
+          <dl>
+            <dt>Subtotal</dt><dd>${dinero(f.subtotal)}</dd>
+            <dt>IVA</dt><dd>${dinero(f.iva)}</dd>
+            <dt class="total">Total factura</dt>
+            <dd class="total">${dinero(f.total)}</dd>
+          </dl>
+        </div>
+      `)}
+
+      ${panel("Referencia de neto a pagar", `
+        <div class="panel-body">
+          <dl>
+            ${f.retenciones.length
+                    ? f.retenciones.map(r => `
+                <dt>${escapar(r.concepto)} · ${r.porcentaje}%</dt>
+                <dd>− ${dinero(r.valor)}</dd>
+              `).join("")
+                    : "<dt>Retenciones</dt><dd>Sin conceptos asignados</dd>"
+                }
+            <dt class="total">Neto</dt>
+            <dd class="total">${dinero(f.neto)}</dd>
+          </dl>
+        </div>
+      `)}
+    </div>
+
+    ${panel(
+                    "Asiento contable · sin retenciones",
+                    tabla(["Cuenta / concepto", "Débito", "Crédito"], [
+                        ...f.items.map(i => `
+          <tr>
+            <td>${cuentas[0]} · ${escapar(i.sede)}</td>
+            <td class="num">—</td>
+            <td class="num">${dinero(i.base)}</td>
+          </tr>
+        `),
+                        `<tr>
+          <td>${cuentas[1]} · IVA</td>
+          <td class="num">—</td>
+          <td class="num">${dinero(f.iva)}</td>
+        </tr>`,
+                        `<tr>
+          <td>${cuentas[2]} · Cartera</td>
+          <td class="num">${dinero(f.total)}</td>
+          <td class="num">—</td>
+        </tr>`,
+                        `<tr>
+          <td><strong>Totales balanceados</strong></td>
+          <td class="num"><strong>${dinero(f.total)}</strong></td>
+          <td class="num"><strong>${dinero(f.subtotal + f.iva)}</strong></td>
+        </tr>`
+                    ])
+                )}
+
+    <div class="notice info">
+      Cuentas F1 de ejemplo pendientes de validación.
+      F20 requiere configurar sus cuentas.
+      No se incluyen cuentas de orden mientras su propósito siga pendiente.
+    </div>
+
+    <p class="small wrap">
+      <strong>Consecutivo:</strong>
+      ${escapar(f.numero || "Pendiente de Siigo")}<br>
+
+      <strong>CUFE:</strong>
+      ${escapar(f.cufe || "Pendiente")}<br>
+
+      <strong>Referencia PDF:</strong>
+      ${escapar(f.pdf || "Pendiente de asociación")}
+    </p>
+
+    <div class="actions">
+      <button class="btn" onclick="descargarFactura('${id}')">
+        Exportar revisión CSV
+      </button>
+
+      <button class="btn"
+              ${f.estado === "ANULADA" ? "disabled" : ""}
+              onclick="formNota('${id}')">
+        ＋ Nota crédito demo
+      </button>
+
+      <button class="btn danger"
+              ${f.estado === "ANULADA" || enLote ? "disabled" : ""}
+              onclick="formAnular('${id}')">
+        Anular
+      </button>
+
+      ${f.estado === "ANULADA" ? `
+        <button class="btn primary" onclick="formGenerar()">
+          Ir a refacturar
+        </button>
+      ` : ""}
+    </div>
+
+    ${enLote ? `
+      <p class="muted small">
+        El documento pertenece a un lote. La demo bloquea su anulación
+        para conservar la consistencia del lote.
+      </p>
+    ` : ""}
+  `);
+        }
+
+        function formAnular(id) {
+            abrir("Anular factura", `
+    <div class="notice">
+      Esta acción habilita generar otra factura para el mismo cliente
+      y periodo. Solo afecta esta demostración.
+    </div>
+
+    <form onsubmit="anular(event,'${id}')">
+      <label>
+        Motivo
+        <textarea name="motivo" required minlength="5" maxlength="255"></textarea>
+      </label>
+
+      <div class="form-footer">
+        <button type="button" class="btn" onclick="detalle('${id}')">
+          Volver
+        </button>
+        <button class="btn danger">Confirmar anulación</button>
+      </div>
+    </form>
+  `);
+        }
+
+        function anular(evento, id) {
+            evento.preventDefault();
+
+            const motivo = new FormData(evento.target).get("motivo").trim();
+
+            if (motivo.length < 5) {
+                avisar("Escribe un motivo de al menos 5 caracteres.");
+                return;
+            }
+
+            const f = datos.facturas.find(f => f.id === id);
+
+            if (
+                !f ||
+                f.estado === "ANULADA" ||
+                datos.lotes.some(l => l.facturas.includes(id))
+            ) return;
+
+            f.estado = "ANULADA";
+            f.motivo = motivo;
+            f.anulado = new Date().toISOString();
+
+            guardar();
+            cerrar();
+            render();
+            avisar("Factura anulada. Puedes generar un nuevo consolidado.");
+        }
+
+        /* ==========================================================
+           NOTAS CRÉDITO
+           ========================================================== */
+
+        function formNota(id) {
+            const f = datos.facturas.find(f => f.id === id);
+            if (!f || f.estado === "ANULADA") return;
+
+            abrir("Crear nota crédito de demostración", `
+    <p class="muted">
+      Ligada a ${escapar(f.nombre)} · ${escapar(f.periodo)}.
+      Se guarda como borrador y no altera la factura original.
+    </p>
+
+    <form onsubmit="crearNota(event,'${id}')">
+      <div class="form-grid">
+        <label class="full">
+          Ítem a acreditar
+          <select name="item">
+            ${f.items.map((i, indice) => `
+              <option value="${indice}">
+                ${escapar(i.sede)} · ${escapar(i.descripcion)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Porcentaje del ítem
+          <input name="porcentaje" type="number"
+                 min="0.01" max="100" step="0.01"
+                 value="100" required>
+        </label>
+
+        <label class="full">
+          Motivo
+          <textarea name="motivo" minlength="5"
+                    maxlength="255" required></textarea>
+        </label>
+      </div>
+
+      <div class="form-footer">
+        <button type="button" class="btn" onclick="detalle('${id}')">Volver</button>
+        <button class="btn primary">Guardar borrador</button>
+      </div>
+    </form>
+  `);
+        }
+
+        function crearNota(evento, id) {
+            evento.preventDefault();
+
+            const p = Object.fromEntries(new FormData(evento.target));
+            const f = datos.facturas.find(f => f.id === id);
+            if (!f || f.estado === "ANULADA") return;
+
+            const indice = Number(p.item);
+            const item = f.items[indice];
+            const porcentaje = Number(p.porcentaje);
+            const motivo = p.motivo.trim();
+
+            if (!item || motivo.length < 5 || porcentaje <= 0 || porcentaje > 100) {
+                avisar("Revisa el ítem, el porcentaje y el motivo.");
+                return;
+            }
+
+            const anteriores = datos.ajustes.filter(a =>
+                a.factura === id && a.item === indice
+            );
+
+            const usado = anteriores.reduce((suma, a) => suma + a.porcentaje, 0);
+
+            if (Math.round((usado + porcentaje) * 100) > 10000) {
+                avisar("Los borradores acumulados superan el 100% de este ítem.");
+                return;
+            }
+
+            const baseAcumulada = Math.round(item.base * (usado + porcentaje) / 100);
+            const ivaAcumulado = Math.round(item.iva * (usado + porcentaje) / 100);
+
+            const base = baseAcumulada - anteriores.reduce((suma, a) => suma + a.base, 0);
+            const iva = ivaAcumulado - anteriores.reduce((suma, a) => suma + a.iva, 0);
+
+            datos.ajustes.push({
+                id: uid(),
+                factura: id,
+                item: indice,
+                porcentaje,
+                cliente: f.nombre,
+                motivo,
+                base,
+                iva,
+                total: base + iva,
+                estado: "BORRADOR"
+            });
+
+            guardar();
+            navegar("ajustes");
+            avisar("Nota crédito guardada como borrador.");
+        }
+
+        function ajustes() {
+            return cabecera(
+                "Notas crédito",
+                "Borradores ligados a los ítems de una factura."
+            ) + panel(
+                "Documentos de ajuste",
+                tabla(
+                    ["Cliente", "Motivo", "Subtotal", "IVA", "Total", "Estado", ""],
+                    datos.ajustes.map(a => `
+        <tr>
+          <td>${escapar(a.cliente)}</td>
+          <td class="wrap">${escapar(a.motivo)}</td>
+          <td class="num">${dinero(a.base)}</td>
+          <td class="num">${dinero(a.iva)}</td>
+          <td class="num">${dinero(a.total)}</td>
+          <td>${etiqueta(a.estado)}</td>
+          <td>
+            <button class="btn link" onclick="detalle('${a.factura}')">
+              Ver factura
+            </button>
+          </td>
+        </tr>
+      `)
+                )
+            ) + `
+    <div class="notice info">
+      Crea una nota desde el detalle de una factura.
+      Su aplicación y emisión oficial requieren el backend y Siigo.
+    </div>
+  `;
+        }
+
+        /* ==========================================================
+           CLIENTES Y SEDES
+           ========================================================== */
+
+        function clientes() {
+            return cabecera(
+                "Clientes y sedes",
+                "Vista local de los maestros provenientes de Órdenes."
+            ) + panel(
+                "Directorio corporativo",
+                tabla(
+                    ["Razón social / NIT", "Marca", "Municipio", "Tipo", "Sedes", ""],
+                    datos.clientes.map(c => `
+        <tr>
+          <td><strong>${escapar(c.nombre)}</strong>${escapar(c.nit)}</td>
+          <td>${escapar(c.marca)}</td>
+          <td>${escapar(c.municipio)}</td>
+          <td>${etiqueta(c.tipo)}</td>
+          <td>${datos.sedes.filter(s => s.cliente === c.id).length}</td>
+          <td>
+            <button class="btn link" onclick="verSedes('${c.id}')">
+              Ver sedes →
+            </button>
+          </td>
+        </tr>
+      `)
+                )
+            ) + `
+    <div class="notice info">
+      Los maestros se actualizan desde Órdenes.
+      En este prototipo puedes consultar sedes y asignar escenarios
+      de retención desde Configuración tributaria.
+    </div>
+  `;
+        }
+
+        function verSedes(id) {
+            const c = datos.clientes.find(c => c.id === id);
+            if (!c) return;
+
+            abrir(
+                c.nombre,
+                tabla(
+                    ["Sede / orden", "Origen / NIC", "Certificación", "Mensualidad", "Cuota del periodo"],
+                    datos.sedes.filter(s => s.cliente === id).map(s => `
+        <tr>
+          <td><strong>${escapar(s.nombre)}</strong>${escapar(s.orden)}</td>
+          <td>${escapar(s.origen)}<br>${escapar(s.nic)}</td>
+          <td>${escapar(s.certificacion)}</td>
+          <td class="num">${dinero(s.mensual)}</td>
+          <td class="num">${dinero(s.instalacion)}</td>
+        </tr>
+      `)
+                ) + `
+      <div class="notice info" style="margin-top:20px">
+        La fecha de certificación determina el inicio del cobro del escenario.
+        No se usa la fecha de creación de la orden.
+      </div>
+    `
+            );
+        }
+
+        /* ==========================================================
+           ÓRDENES Y NOVEDADES
+           ========================================================== */
+
+        function ordenes() {
+            return cabecera(
+                "Órdenes y novedades",
+                "Suscripciones, fechas efectivas y trazabilidad de entrada."
+            ) + `
+    <div class="notice info">
+      API como integración principal y archivo como respaldo.
+      Los contratos están pendientes: esta interfaz muestra
+      únicamente el escenario de entrada precargado.
+    </div>
+  ` + tarjetas([
+                ["Suscripciones locales", datos.sedes.length, "Copia local de demostración", ""],
+                ["Novedades", datos.novedades.length, "Periodo agosto de 2026", ""],
+                ["Origen API", "Pendiente", "Sin conexión configurada", ""],
+                ["Archivo de respaldo", "Pendiente", "Formato por definir", ""]
+            ]) + panel(
+                "Novedades · agosto 2026",
+                tabla(
+                    ["Sede", "Tipo", "Fecha efectiva", "Observación"],
+                    datos.novedades.map(n => `
+        <tr>
+          <td>${escapar(datos.sedes.find(s => s.id === n.sede)?.nombre || "—")}</td>
+          <td>${etiqueta(n.tipo)}</td>
+          <td>${escapar(n.fecha)}</td>
+          <td class="wrap">${escapar(n.observacion)}</td>
+        </tr>
+      `)
+                )
+            ) + panel(
+                "Conexiones",
+                `<div class="panel-body">
+      <div class="actions">
+        <button class="btn" disabled>Sincronizar Órdenes</button>
+        <button class="btn" disabled>Importar archivo</button>
+      </div>
+      <p class="muted small">
+        Estas acciones se habilitarán al integrar los endpoints
+        y el esquema de archivos reales.
+      </p>
+    </div>`
+            );
+        }
+
+        /* ==========================================================
+           LOTES SIIGO
+           ========================================================== */
+
+        function lotes() {
+            return cabecera(
+                "Lotes Siigo",
+                "Agrupa comprobantes por periodo, tipo y corte.",
+                '<button class="btn primary" onclick="formLote()">＋ Preparar lote demo</button>'
+            ) + `
+    <div class="notice">
+      El formato definitivo, la asignación del consecutivo y las cuentas F20
+      están pendientes. Los lotes exportan exclusivamente un CSV de revisión,
+      no el archivo oficial para importar en Siigo.
+    </div>
+  ` + panel(
+                "Lotes de exportación",
+                tabla(
+                    ["Lote", "Periodo / corte", "Tipo", "Facturas", "Estado", ""],
+                    datos.lotes.map((l, indice) => `
+        <tr>
+          <td><strong>DEMO-${String(indice + 1).padStart(3, "0")}</strong></td>
+          <td>${escapar(l.periodo)}<br>${escapar(l.corte)}</td>
+          <td>${escapar(l.tipo)}</td>
+          <td>${l.facturas.length}</td>
+          <td>${etiqueta(l.estado)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn link" onclick="exportarLote('${l.id}')">
+                CSV revisión
+              </button>
+              <button class="btn link" onclick="verLote('${l.id}')">
+                Ver →
+              </button>
+            </div>
+          </td>
+        </tr>
+      `)
+                )
+            );
+        }
+
+        function formLote() {
+            abrir("Preparar lote de demostración", `
+    <form onsubmit="crearLote(event)">
+      <div class="form-grid">
+        <label>
+          Periodo
+          <select name="periodo"><option>2026-08</option></select>
+        </label>
+
+        <label>
+          Tipo
+          <select name="tipo"><option>F1</option><option>F20</option></select>
+        </label>
+
+        <label>
+          Corte
+          <select name="corte">
+            <option>VENCIDO</option>
+            <option>ADELANTADO</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="muted small">
+        Se incluyen facturas consolidadas que todavía no pertenecen a otro lote.
+      </p>
+
+      <div class="form-footer">
+        <button type="button" class="btn" onclick="cerrar()">Cancelar</button>
+        <button class="btn primary">Preparar lote</button>
+      </div>
+    </form>
+  `);
+        }
+
+        function crearLote(evento) {
+            evento.preventDefault();
+
+            const p = Object.fromEntries(new FormData(evento.target));
+
+            const ids = datos.facturas.filter(f =>
+                f.estado === "CONSOLIDADA" &&
+                f.periodo === p.periodo &&
+                f.tipo === p.tipo &&
+                f.corte === p.corte &&
+                !datos.lotes.some(l => l.facturas.includes(f.id))
+            ).map(f => f.id);
+
+            if (!ids.length) {
+                avisar("No hay facturas disponibles para ese periodo, tipo y corte.");
+                return;
+            }
+
+            datos.lotes.push({
+                id: uid(),
+                ...p,
+                facturas: ids,
+                estado: "GENERADO"
+            });
+
+            guardar();
+            cerrar();
+            render();
+            avisar("Lote de demostración preparado.");
+        }
+
+        function verLote(id) {
+            const lote = datos.lotes.find(l => l.id === id);
+            if (!lote) return;
+
+            abrir("Confirmación de lote · demo", `
+    <div class="notice info">
+      Registra una respuesta de prueba por factura.
+      El lote queda confirmado cuando todas tienen consecutivo y CUFE.
+      Esto no envía información a Siigo.
+    </div>
+
+    ${tabla(
+                ["Cliente", "Consecutivo", "Confirmación", ""],
+                lote.facturas.map(idFactura => {
+                    const f = datos.facturas.find(f => f.id === idFactura);
+
+                    return `
+          <tr>
+            <td>${escapar(f.nombre)}</td>
+            <td>${escapar(f.numero || "Pendiente")}</td>
+            <td>${etiqueta(f.numero && f.cufe ? "CONFIRMADO" : "GENERADO")}</td>
+            <td>
+              <button class="btn link"
+                      onclick="formConfirmar('${f.id}','${lote.id}')">
+                Registrar →
+              </button>
+            </td>
+          </tr>
+        `;
+                })
+            )}
+  `);
+        }
+
+        function formConfirmar(id, idLote) {
+            const f = datos.facturas.find(f => f.id === id);
+            if (!f) return;
+
+            abrir("Registrar respuesta de prueba", `
+    <form onsubmit="confirmar(event,'${id}','${idLote}')">
+      <div class="form-grid">
+        <label>
+          Consecutivo
+          <input name="numero" required maxlength="30"
+                 value="${escapar(f.numero)}"
+                 placeholder="${f.tipo === "F1" ? "FESP" : "FEMG"} 123">
+        </label>
+
+        <label>
+          Estado de envío
+          <input value="Envío exitoso · simulado" readonly>
+        </label>
+
+        <label class="full">
+          CUFE de prueba
+          <input id="cufePrueba" name="cufe" required
+                 pattern="[a-fA-F0-9]{96}" maxlength="96"
+                 value="${escapar(f.cufe)}"
+                 title="96 caracteres hexadecimales">
+        </label>
+
+        <div>
+          <button type="button" class="btn"
+                  onclick="rellenarCufePrueba()">
+            Completar CUFE ficticio
+          </button>
+        </div>
+
+        <label class="full">
+          Referencia PDF, opcional
+          <input name="pdf" maxlength="500"
+                 value="${escapar(f.pdf)}"
+                 placeholder="Referencia de prueba a la carpeta compartida">
+        </label>
+      </div>
+
+      <p class="muted small">
+        El CUFE de prueba no tiene validez fiscal.
+        Solo se conserva el texto de la referencia PDF:
+        no se verifica ni se abre el archivo.
+      </p>
+
+      <div class="form-footer">
+        <button type="button" class="btn" onclick="verLote('${idLote}')">
+          Volver
+        </button>
+        <button class="btn primary">Guardar respuesta demo</button>
+      </div>
+    </form>
+  `);
+        }
+
+        function rellenarCufePrueba() {
+            const caracteres = "0123456789abcdef";
+            $("cufePrueba").value = Array.from(
+                { length: 96 },
+                () => caracteres[Math.floor(Math.random() * caracteres.length)]
+            ).join("");
+        }
+
+        function confirmar(evento, id, idLote) {
+            evento.preventDefault();
+
+            const p = Object.fromEntries(new FormData(evento.target));
+            const f = datos.facturas.find(f => f.id === id);
+            const lote = datos.lotes.find(l => l.id === idLote);
+
+            if (!f || !lote) return;
+
+            const numero = p.numero.trim().replace(/\s+/g, " ").toUpperCase();
+            const cufe = p.cufe.toLowerCase();
+
+            if (!numero) {
+                avisar("Ingresa un consecutivo.");
+                return;
+            }
+
+            if (datos.facturas.some(x =>
+                x.id !== id && x.tipo === f.tipo && x.numero === numero
+            )) {
+                avisar("Ese consecutivo ya está asignado.");
+                return;
+            }
+
+            if (datos.facturas.some(x => x.id !== id && x.cufe === cufe)) {
+                avisar("Ese CUFE de prueba ya está asignado a otra factura.");
+                return;
+            }
+
+            f.numero = numero;
+            f.cufe = cufe;
+            f.pdf = p.pdf.trim();
+
+            lote.estado = lote.facturas.every(idFactura => {
+                const factura = datos.facturas.find(x => x.id === idFactura);
+                return factura.numero && factura.cufe;
+            }) ? "CONFIRMADO" : "GENERADO";
+
+            guardar();
+            render();
+            verLote(idLote);
+            avisar("Respuesta de demostración registrada.");
+        }
+
+        /* ==========================================================
+           CONFIGURACIÓN TRIBUTARIA DE DEMOSTRACIÓN
+           ========================================================== */
+
+        function tributaria() {
+            return cabecera(
+                "Configuración tributaria",
+                "Escenarios de retención por cliente y vigencia.",
+                '<button class="btn primary" onclick="formVigencia()">＋ Agregar escenario</button>'
+            ) + `
+    <div class="notice">
+      Los porcentajes son datos de prueba ingresados por el usuario.
+      El prototipo usa clasificación INTERNET y fecha de corte 2026-08-31.
+      El modelo completo de conceptos, vigencias globales y perfiles
+      por clasificación requiere el backend.
+    </div>
+  ` + panel(
+                "Asignaciones de demostración",
+                tabla(
+                    ["Cliente", "Concepto", "Municipio", "Base mínima", "Porcentaje", "Vigencia", ""],
+                    datos.vigencias.map(v => `
+        <tr>
+          <td>${escapar(datos.clientes.find(c => c.id === v.cliente)?.nombre || "—")}</td>
+          <td>${escapar(v.concepto)}</td>
+          <td>${escapar(v.municipio || "General")}</td>
+          <td class="num">${dinero(v.minima)}</td>
+          <td>${v.porcentaje}%</td>
+          <td>${escapar(v.desde)}<br>${escapar(v.hasta || "Sin fecha final")}</td>
+          <td>
+            <button class="btn link" onclick="formVigencia('${v.id}')">
+              Editar
+            </button>
+          </td>
+        </tr>
+      `)
+                )
+            ) + `
+    <div class="notice info">
+      Modificar estos escenarios solo afecta facturas nuevas.
+      Las facturas existentes conservan sus importes y detalle de retenciones.
+      Para probar sin retención, configura un porcentaje del 0%.
+    </div>
+  `;
+        }
+
+        function formVigencia(id) {
+            const v = datos.vigencias.find(v => v.id === id) || {
+                cliente: "c1",
+                concepto: "RETEFUENTE",
+                municipio: "",
+                minima: 0,
+                porcentaje: 0,
+                desde: "2026-01-01",
+                hasta: ""
+            };
+
+            abrir(id ? "Editar escenario tributario" : "Agregar escenario tributario", `
+    <form onsubmit="guardarVigencia(event,'${id || ""}')">
+      <div class="form-grid">
+        <label class="full">
+          Cliente
+          <select name="cliente">
+            ${datos.clientes.map(c => `
+              <option value="${c.id}" ${c.id === v.cliente ? "selected" : ""}>
+                ${escapar(c.nombre)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Concepto
+          <select name="concepto">
+            ${["RETEFUENTE", "RETEICA", "RETEIVA", "ESTAMPILLA"].map(c => `
+              <option ${c === v.concepto ? "selected" : ""}>${c}</option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Municipio, vacío = general
+          <input name="municipio" maxlength="60"
+                 value="${escapar(v.municipio)}">
+        </label>
+
+        <label>
+          Base mínima (COP)
+          <input type="number" name="minima"
+                 min="0" max="100000000000" step="0.01"
+                 required value="${v.minima / 100}">
+        </label>
+
+        <label>
+          Porcentaje de prueba (%)
+          <input type="number" name="porcentaje"
+                 min="0" max="100" step="0.01"
+                 required value="${v.porcentaje}">
+        </label>
+
+        <label>
+          Vigente desde
+          <input type="date" name="desde" required value="${v.desde}">
+        </label>
+
+        <label>
+          Vigente hasta
+          <input type="date" name="hasta" value="${v.hasta}">
+        </label>
+      </div>
+
+      <p class="muted small">
+        En este escenario, RETEIVA usa el IVA como base.
+        Los demás conceptos usan el subtotal.
+      </p>
+
+      <div id="errorVigencia" class="error" role="alert"></div>
+
+      <div class="form-footer">
+        <button type="button" class="btn" onclick="cerrar()">Cancelar</button>
+        <button class="btn primary">Guardar escenario</button>
+      </div>
+    </form>
+  `);
+        }
+
+        function guardarVigencia(evento, id) {
+            evento.preventDefault();
+
+            const p = Object.fromEntries(new FormData(evento.target));
+
+            if (p.hasta && p.hasta < p.desde) {
+                $("errorVigencia").textContent =
+                    "La fecha final debe ser igual o posterior a la inicial.";
+                return;
+            }
+
+            const solapado = datos.vigencias.some(v =>
+                v.id !== id &&
+                v.cliente === p.cliente &&
+                v.concepto === p.concepto &&
+                v.desde <= (p.hasta || "9999-12-31") &&
+                p.desde <= (v.hasta || "9999-12-31")
+            );
+
+            if (solapado) {
+                $("errorVigencia").textContent =
+                    "Ya existe una vigencia superpuesta para ese cliente y concepto.";
+                return;
+            }
+
+            const vigencia = {
+                ...p,
+                id: id || uid(),
+                minima: Math.round(Number(p.minima) * 100),
+                porcentaje: Number(p.porcentaje),
+                municipio: p.municipio.trim()
+            };
+
+            if (id) {
+                datos.vigencias = datos.vigencias.map(v => v.id === id ? vigencia : v);
+            } else {
+                datos.vigencias.push(vigencia);
+            }
+
+            guardar();
+            cerrar();
+            render();
+            avisar("Escenario tributario guardado.");
+        }
+
+        /* ==========================================================
+           EXPORTACIÓN DE REVISIÓN — NO ES EL PLANO OFICIAL SIIGO
+           ========================================================== */
+
+        function csv(nombre, filas) {
+            const celda = valor => {
+                let texto = String(valor ?? "");
+
+                // Neutraliza fórmulas en contenido de texto editable.
+                if (/^\s*[=+\-@]/.test(texto) || /^[\t\r]/.test(texto)) {
+                    texto = "'" + texto;
+                }
+
+                return '"' + texto.replace(/"/g, '""') + '"';
+            };
+
+            const contenido = "\uFEFF" + filas
+                .map(fila => fila.map(celda).join(";"))
+                .join("\r\n");
+
+            const url = URL.createObjectURL(new Blob(
+                [contenido],
+                { type: "text/csv;charset=utf-8" }
+            ));
+
+            const enlace = document.createElement("a");
+            enlace.href = url;
+            enlace.download = nombre;
+            document.body.append(enlace);
+            enlace.click();
+            enlace.remove();
+
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function filasRevision(ids) {
+            const filas = [
+                ["DEMO - REVISION CONTABLE - NO IMPORTAR EN SIIGO"],
+                ["NIT", "Cliente", "Periodo", "Tipo", "Concepto", "Naturaleza", "Valor COP"]
+            ];
+
+            ids.forEach(id => {
+                const f = datos.facturas.find(f => f.id === id);
+                if (!f) return;
+
+                f.items.forEach(item => {
+                    filas.push([
+                        f.nit,
+                        f.nombre,
+                        f.periodo,
+                        f.tipo,
+                        item.sede + " / " + item.descripcion,
+                        "C",
+                        (item.base / 100).toFixed(2)
+                    ]);
+                });
+
+                filas.push([
+                    f.nit, f.nombre, f.periodo, f.tipo,
+                    "IVA", "C", (f.iva / 100).toFixed(2)
+                ]);
+
+                filas.push([
+                    f.nit, f.nombre, f.periodo, f.tipo,
+                    "CARTERA", "D", (f.total / 100).toFixed(2)
+                ]);
+            });
+
+            return filas;
+        }
+
+        function descargarFactura(id) {
+            const f = datos.facturas.find(f => f.id === id);
+            if (!f) return;
+
+            csv(
+                `revision-factura-${f.nit}-${f.periodo}-demo.csv`,
+                filasRevision([id])
+            );
+        }
+
+        function exportarLote(id) {
+            const lote = datos.lotes.find(l => l.id === id);
+            if (!lote) return;
+
+            csv(
+                `revision-lote-${lote.tipo}-${lote.periodo}-demo.csv`,
+                filasRevision(lote.facturas)
+            );
+        }
+
+        /* ==========================================================
+           INICIO
+           ========================================================== */
+
+        render();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,84 @@
+<div class="cn-page">
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-title">Notas Crédito y Ajustes</h1>
+      <p class="page-subtitle">Documentos de ajuste contable, descuentos y devoluciones ligadas a facturación consolidada (Sprint 5, HU-20).</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <app-error-banner [message]="errorMessage()!" (retry)="onSearchByInvoice()"></app-error-banner>
+  }
+
+  <app-ui-card [elevated]="true" class="search-card">
+    <div class="search-row">
+      <div class="form-group flex-1">
+        <label class="form-label required">ID / UUID de la Factura</label>
+        <div class="input-with-button">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Ingrese el UUID de la factura para ver sus notas de crédito asociadas..."
+            [(ngModel)]="searchInvoiceId"
+            (keyup.enter)="onSearchByInvoice()"
+          />
+          <button class="btn btn-primary" (click)="onSearchByInvoice()" [disabled]="loading() || !searchInvoiceId.trim()">
+            @if (loading()) {
+              <mat-icon class="spin-icon">autorenew</mat-icon>
+            } @else {
+              <mat-icon>search</mat-icon>
+            }
+            Buscar Notas Crédito
+          </button>
+        </div>
+      </div>
+    </div>
+  </app-ui-card>
+
+  <app-ui-card title="Notas de Crédito Encontradas" [elevated]="true">
+    @if (loading()) {
+      <div class="loading-state">
+        <app-ui-spinner message="Consultando notas crédito..."></app-ui-spinner>
+      </div>
+    } @else if (creditNotes().length === 0) {
+      <div class="empty-state">
+        <mat-icon>receipt</mat-icon>
+        <p>No se han consultado notas de crédito o la factura no tiene ajustes registrados.</p>
+        <small class="text-muted">Para emitir una nota de crédito nueva, ingrese al Detalle de la Factura correspondiente.</small>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Motivo del Ajuste</th>
+              <th class="text-right">Valor Bruto</th>
+              <th class="text-right">IVA Ajustado</th>
+              <th class="text-right">Valor Neto Descontado</th>
+              <th>Estado</th>
+              <th>Fecha de Emisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cn of creditNotes(); track cn.id) {
+              <tr>
+                <td class="font-mono font-bold">{{ cn.numeroDocumento || 'Borrador' }}</td>
+                <td>{{ cn.motivo }}</td>
+                <td class="text-right font-mono">{{ cn.valorBruto | copCurrency }}</td>
+                <td class="text-right font-mono">{{ cn.valorIva | copCurrency }}</td>
+                <td class="text-right font-mono font-bold text-danger">-{{ cn.valorNeto | copCurrency }}</td>
+                <td>
+                  <app-ui-badge [variant]="cn.estado === 'APLICADO' ? 'success' : 'info'">
+                    {{ cn.estado }}
+                  </app-ui-badge>
+                </td>
+                <td class="text-xs text-muted">{{ cn.creadoEn | appDate }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-ui-card>
+</div>

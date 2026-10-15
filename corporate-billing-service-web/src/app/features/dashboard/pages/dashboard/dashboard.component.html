@@ -1,0 +1,344 @@
+<div class="summary-page">
+  <!-- Header Bar -->
+  <header class="page-head summary-header">
+    <div class="summary-header__text">
+      <div class="summary-header__badge-row">
+        <span class="live-pill" aria-hidden="true">
+          <span class="live-pill__dot"></span>
+          Sistema en línea
+        </span>
+        <span class="summary-header__subtitle">Repositorio de facturación electrónica</span>
+      </div>
+      <h1 class="summary-header__title">Recepción de facturas</h1>
+      <p class="summary-header__desc">Seguimiento en tiempo real de las facturas publicadas por Siigo en la carpeta corporativa.</p>
+    </div>
+    
+    <div class="summary-header__actions">
+      <button type="button" class="btn btn--refresh" (click)="load()" [disabled]="loading()" aria-label="Actualizar datos del dashboard">
+        <svg class="btn-icon" [class.spin]="loading()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        <span>Actualizar</span>
+      </button>
+      <a class="button primary btn btn--primary" routerLink="/sincronizacion">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+          <path d="M16 21h5v-5"/>
+        </svg>
+        <span>Ir a sincronización</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Error Banner -->
+  @if(error()){
+    <div class="error-banner" role="alert">
+      <div class="error-banner__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="error-banner__content">
+        <p class="error-banner__text">{{error()}}</p>
+      </div>
+      <button type="button" class="btn btn--retry" (click)="load()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        Reintentar
+      </button>
+    </div>
+  }
+
+  <!-- Loading Skeletons (CLS < 0.1) -->
+  @if(loading()){
+    <div class="kpis-grid skeleton-grid" role="status" aria-label="Cargando indicadores">
+      <p class="sr-only">Cargando información…</p>
+      @for(i of [1, 2, 3, 4]; track i){
+        <div class="kpi-card skeleton-card">
+          <div class="skeleton-shimmer skeleton-shimmer--title"></div>
+          <div class="skeleton-shimmer skeleton-shimmer--val"></div>
+          <div class="skeleton-shimmer skeleton-shimmer--link"></div>
+        </div>
+      }
+    </div>
+    <div class="table-card skeleton-table-card">
+      <div class="skeleton-shimmer skeleton-shimmer--table-head"></div>
+      <div class="skeleton-shimmer skeleton-shimmer--row"></div>
+      <div class="skeleton-shimmer skeleton-shimmer--row"></div>
+      <div class="skeleton-shimmer skeleton-shimmer--row"></div>
+    </div>
+  } @else {
+    <!-- Loaded State -->
+    @if(summary(); as s){
+      <section class="stats kpis-grid" aria-label="Indicadores ejecutivos">
+        <!-- KPI 1: Facturas Recibidas -->
+        <article class="panel stat kpi-box kpi-box--primary">
+          <div class="kpi-box__top">
+            <span class="kpi-box__label">Facturas recibidas</span>
+            <div class="kpi-box__icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+          </div>
+          <strong class="kpi-box__number">{{s.totalInvoices}}</strong>
+          <div class="kpi-box__bottom">
+            <a class="kpi-box__action-link" routerLink="/consultar-facturas">
+              <span>Consultar todas</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- KPI 2: Con PDF Asociado -->
+        <article class="panel stat kpi-box kpi-box--success">
+          <div class="kpi-box__top">
+            <span class="kpi-box__label">Con PDF asociado</span>
+            <div class="kpi-box__icon-wrap kpi-box__icon-wrap--emerald" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <path d="m9 15 2 2 4-4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="kpi-box__number-row">
+            <strong class="kpi-box__number">{{s.withPdf}}</strong>
+            @if(s.totalInvoices > 0){
+              <span class="kpi-box__pill-badge kpi-box__pill-badge--emerald">
+                {{pdfCoverage()}}% cobertura
+              </span>
+            }
+          </div>
+          <div class="kpi-box__bottom">
+            <a class="kpi-box__action-link" routerLink="/consultar-facturas" [queryParams]="{pdfAvailable:true}">
+              <span>Ver documentos</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- KPI 3: PDF Pendientes -->
+        <article class="panel stat kpi-box kpi-box--warning">
+          <div class="kpi-box__top">
+            <span class="kpi-box__label">PDF pendientes de recibir</span>
+            <div class="kpi-box__icon-wrap kpi-box__icon-wrap--amber" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+          </div>
+          <div class="kpi-box__number-row">
+            <strong class="kpi-box__number">{{s.pendingPdf}}</strong>
+            @if(s.pendingPdf > 0){
+              <span class="kpi-box__pill-badge kpi-box__pill-badge--amber">
+                Por asociar
+              </span>
+            }
+          </div>
+          <div class="kpi-box__bottom">
+            <a class="kpi-box__action-link" routerLink="/consultar-facturas" [queryParams]="{pdfAvailable:false}">
+              <span>Revisar pendientes</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- KPI 4: Estado Sincronización Siigo -->
+        <article class="panel stat kpi-box kpi-box--sync">
+          <div class="kpi-box__top">
+            <span class="kpi-box__label">Sincronización Siigo</span>
+            <div class="kpi-box__icon-wrap kpi-box__icon-wrap--blue" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              </svg>
+            </div>
+          </div>
+          @if(cycle(); as c){
+            <div class="kpi-box__sync-status">
+              <span class="badge" [class.badge--success]="c.status==='EXITOSA'" [class.pending]="c.status!=='EXITOSA'">
+                <span class="badge__dot" aria-hidden="true"></span>
+                {{c.status}}
+              </span>
+              <p class="kpi-box__sync-meta">{{c.startedAt | appDate}}</p>
+            </div>
+          } @else {
+            <p class="kpi-box__subtext">Sin sincronización reciente</p>
+          }
+          <div class="kpi-box__bottom">
+            <a class="kpi-box__action-link" routerLink="/sincronizacion">
+              <span>Ver estado e historial</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+        </article>
+      </section>
+    }
+
+    <!-- Fallback if error -->
+    @if(error()){
+      <div class="stats kpis-grid">
+        @for(label of ['Facturas recibidas', 'Con PDF asociado', 'PDF pendientes de recibir']; track label){
+          <section class="panel stat kpi-box">
+            <p class="kpi-box__label">{{label}}</p>
+            <strong class="kpi-box__number" aria-label="No disponible">&mdash;</strong>
+            <small class="kpi-box__subtext">Sin datos disponibles</small>
+          </section>
+        }
+      </div>
+      <section class="panel error-card">
+        <h2>Consulta de facturas</h2>
+        <p>Las cifras y los documentos se mostrarán cuando el servidor autorice la consulta.</p>
+        <a class="button primary" routerLink="/consultar-facturas">Abrir consulta de facturas</a>
+      </section>
+    } @else {
+      <!-- Sync Status Banner if details available -->
+      @if(cycle(); as c){
+        <section class="panel sync-summary-banner">
+          <div class="sync-summary-banner__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="sync-summary-banner__content">
+            <div class="sync-summary-banner__header">
+              <h2>Última sincronización</h2>
+              <span class="badge" [class.badge--success]="c.status==='EXITOSA'" [class.pending]="c.status!=='EXITOSA'">
+                {{c.status}}
+              </span>
+            </div>
+            <p class="sync-summary-banner__desc">
+              Iniciado el {{c.startedAt | appDate}} · 
+              <strong>{{c.detectedInvoices || 0}}</strong> facturas verificadas · 
+              <strong>{{c.classifiedPdfs || 0}}</strong> PDF asociados.
+            </p>
+            @if(c.errors){
+              <p class="long-text sync-summary-banner__alert">{{c.errors}}</p>
+            }
+          </div>
+          <a class="button sync-summary-banner__action" routerLink="/sincronizacion">
+            Ver detalle
+          </a>
+        </section>
+      }
+
+      <!-- Recent Invoices Section -->
+      <section class="panel table-card">
+        <div class="table-card__header">
+          <div>
+            <h2 class="table-card__title">Facturas más recientes por fecha de emisión</h2>
+            <p class="table-card__subtitle">Últimos comprobantes fiscales recibidos y validados en el sistema.</p>
+          </div>
+          <div class="table-card__actions">
+            <a class="btn btn--outline" routerLink="/consultar-facturas">
+              Ver todas las facturas
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        @if(recent().length){
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Factura</th>
+                  <th scope="col">Cliente / Receptor</th>
+                  <th scope="col">Emisión</th>
+                  <th scope="col" class="number">Total</th>
+                  <th scope="col">Estado PDF</th>
+                  <th scope="col" class="text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for(inv of recent(); track inv.id){
+                  <tr class="data-row">
+                    <td>
+                      <a class="invoice-link-badge" routerLink="/consultar-facturas" [queryParams]="{search: inv.clientNit || inv.invoiceNumber}">
+                        <span class="invoice-link-badge__type">{{inv.billingType}}</span>
+                        <span class="invoice-link-badge__number">{{inv.invoiceNumber}}</span>
+                      </a>
+                    </td>
+                    <td>
+                      <div class="company-name">{{inv.businessName}}</div>
+                      <small class="company-subtext nit-cell">NIT {{inv.clientNit}}</small>
+                    </td>
+                    <td class="date-cell">{{inv.issueDate | appDate}}</td>
+                    <td class="number amount-cell">{{inv.total | copCurrency}}</td>
+                    <td>
+                      @if(inv.pdfAvailable){
+                        <span class="status-pill status-pill--available">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          Disponible
+                        </span>
+                      } @else {
+                        <span class="status-pill status-pill--pending">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                          </svg>
+                          Pendiente
+                        </span>
+                      }
+                    </td>
+                    <td class="text-right">
+                      <a class="table-action-btn" routerLink="/consultar-facturas" [queryParams]="{search: inv.clientNit || inv.invoiceNumber}" aria-label="Ver factura en facturas recibidas">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <!-- Empty State (Complies with UI/UX Pro Max guidelines & test assertions) -->
+          <div class="empty-state-wrapper">
+            <div class="empty-icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <p class="empty">Aún no se han recibido facturas. Ejecuta la sincronización o importa un archivo desde Consultar facturas.</p>
+            <div class="empty-actions">
+              <a class="button primary" routerLink="/sincronizacion">Sincronizar ahora</a>
+              <a class="button" routerLink="/consultar-facturas">Ir a facturas</a>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  }
+</div>

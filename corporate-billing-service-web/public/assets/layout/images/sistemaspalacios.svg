@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 70" fill="none">
+  <!-- Ribbon swooshes on left -->
+  <path d="M 8 46 L 85 18 L 78 24 L 16 48 Z" fill="#e52329" />
+  <path d="M 12 56 L 100 28 L 92 34 L 22 58 Z" fill="#e52329" />
+  <path d="M 52 14 L 88 58 L 80 58 L 46 16 Z" fill="#e52329" />
+
+  <!-- SISTEMAS Text -->
+  <text
+    x="84"
+    y="28"
+    fill="#ffffff"
+    font-size="24"
+    font-weight="900"
+    font-style="italic"
+    font-family="'Arial Black', 'Impact', sans-serif"
+    letter-spacing="1"
+  >
+    SISTEMAS
+  </text>
+
+  <!-- PALACIOS Text (3D Red with White Stroke) -->
+  <text
+    x="84"
+    y="60"
+    fill="#e52329"
+    stroke="#ffffff"
+    stroke-width="1.2"
+    paint-order="stroke fill"
+    font-size="34"
+    font-weight="900"
+    font-style="italic"
+    font-family="'Arial Black', 'Impact', sans-serif"
+    letter-spacing="1.5"
+  >
+    PALACIOS
+  </text>
+</svg>

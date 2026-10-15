@@ -1,0 +1,50 @@
+<div class="wh-wrap">
+  <table class="wh-table">
+    <thead>
+      <tr>
+        <th>Retención</th>
+        <th class="num">%</th>
+        <th class="num">Base</th>
+        <th class="num">Retenido</th>
+        <th>Fechas</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of withholdings(); track $index) {
+        <tr>
+          <td>
+            <span class="wh-main">{{ r.nombre }}</span>
+            <span class="wh-sub">{{ r.facturaId ? 'Factura ' + (r.facturaNumero || '') : 'Total del pago' }} · V{{ r.version }}</span>
+          </td>
+          <td class="num">
+            <span class="wh-main">{{ r.porcentaje | number: '1.0-4' }}%</span>
+            @if (r.porcentajeMaximo != null) { <span class="wh-sub">máx. {{ r.porcentajeMaximo | number: '1.0-4' }}%</span> }
+            @if (enteredDiffers(r)) { <span class="wh-sub">ingresó {{ r.porcentajeIngresado | number: '1.0-4' }}%</span> }
+          </td>
+          <td class="num">
+            <span class="wh-main">{{ r.baseCalculada | copCurrency }}</span>
+            <span class="wh-sub">mín. {{ r.baseMinima | copCurrency }}</span>
+          </td>
+          <td class="num"><span class="wh-main">{{ r.valorRetenido | copCurrency }}</span></td>
+          <td class="wh-dates">
+            @if (r.seleccionadoEn) {
+              <span><span class="wh-label">Seleccionada</span> {{ r.seleccionadoEn | date: 'dd/MM/yyyy HH:mm:ss' : offset }}</span>
+            }
+            <span><span class="wh-label">Aplicada</span> {{ r.aplicadoEn ? (r.aplicadoEn | date: 'dd/MM/yyyy HH:mm:ss' : offset) : '—' }}</span>
+            <span class="wh-sub">{{ channel(r) }}{{ r.seleccionadoPor && r.canal ? ' · ' + r.seleccionadoPor : '' }}</span>
+          </td>
+          <td>
+            @if (r.aplica) {
+              <span class="wh-pill wh-pill--ok">{{ r.estadoSeleccion === 'CANCELLED' ? 'Anulada' : r.estadoSeleccion === 'SELECTED' ? 'Pago pendiente' : 'Aplicada' }}</span>
+            } @else {
+              <span class="wh-pill wh-pill--no">No aplicó</span>
+              @if (r.motivoNoAplica) { <span class="wh-sub">{{ r.motivoNoAplica }}</span> }
+            }
+            @if (r.motivoAjuste) { <span class="wh-sub">Ajuste: {{ r.motivoAjuste }}</span> }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

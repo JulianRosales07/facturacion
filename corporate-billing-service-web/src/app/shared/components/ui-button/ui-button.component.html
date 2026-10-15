@@ -1,0 +1,16 @@
+<button
+  [type]="type"
+  [disabled]="disabled || loading"
+  (click)="onClick($event)"
+  class="btn btn--{{ variant }} btn--{{ size }}"
+  [class.btn--loading]="loading"
+>
+  @if (loading) {
+    <mat-spinner [diameter]="size === 'sm' ? 14 : 18" class="btn__spinner"></mat-spinner>
+  } @else if (icon) {
+    <mat-icon class="btn__icon">{{ icon }}</mat-icon>
+  }
+  <span class="btn__text">
+    <ng-content></ng-content>
+  </span>
+</button>

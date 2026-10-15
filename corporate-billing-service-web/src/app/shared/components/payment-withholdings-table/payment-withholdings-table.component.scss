@@ -1,0 +1,62 @@
+:host { display: block; }
+
+// Si aun así no cabe (pantallas muy angostas), el desplazamiento horizontal queda dentro de la tabla.
+.wh-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--bd-e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-ffffff);
+}
+
+.wh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  color: var(--tx-0f172a);
+
+  th {
+    text-align: left;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tx-64748b);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--bd-e2e8f0);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--bd-f1f5f9);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .num { text-align: right; white-space: nowrap; }
+}
+
+.wh-main { display: block; font-weight: 600; }
+.wh-sub { display: block; margin-top: 2px; font-size: 0.68rem; color: var(--tx-64748b); }
+.wh-label { color: var(--tx-64748b); font-size: 0.66rem; }
+
+.wh-dates {
+  white-space: nowrap;
+
+  > span { display: block; }
+  > span + span { margin-top: 2px; }
+}
+
+.wh-pill {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &--ok { background: var(--bg-f0fdf4); color: var(--tx-166534); border: 1px solid var(--bd-bbf7d0); }
+  &--no { background: var(--bg-fffbeb); color: var(--tx-92400e); border: 1px solid var(--bd-fde68a); }
+}

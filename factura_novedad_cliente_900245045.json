@@ -1,0 +1,21 @@
+[
+  {
+    "nit": "900245045",
+    "businessName": "CLIENTE CORP SAS",
+    "billingType": "F1",
+    "invoiceNumber": "99001",
+    "issueDate": "2026-08-16",
+    "dueDate": "2026-08-31",
+    "cufe": null,
+    "total": 1000000.00,
+    "items": [
+      {
+        "code": "NOV-UPGRADE-15D",
+        "description": "Novedad incremento de plan a $15.161.400 (Diferencial 15 dias mitad de mes)",
+        "quantity": 1,
+        "subtotal": 840336.13,
+        "iva": 159663.87
+      }
+    ]
+  }
+]

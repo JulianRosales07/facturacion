@@ -1,0 +1,942 @@
+<header class="page-head">
+  <div class="head-title">
+    <h1>Facturas recibidas</h1>
+    <p>Documentos emitidos por Siigo. Consulta sus datos, estado de pago y descarga el PDF oficial.</p>
+  </div>
+  <div class="head-actions">
+    <input #fileInput hidden type="file" accept=".xlsx,.xls,.xlsm,.json" (change)="importFile($event)" />
+    <button type="button" class="btn btn-secondary" (click)="fileInput.click()" [disabled]="importing()">
+      <mat-icon class="btn-icon">upload_file</mat-icon>
+      <span>{{ importing() ? 'Importando…' : 'Importar archivo' }}</span>
+    </button>
+    <a class="btn btn-primary" routerLink="/sincronizacion">
+      <mat-icon class="btn-icon">sync</mat-icon>
+      <span>Sincronizar carpeta</span>
+    </a>
+  </div>
+</header>
+
+@if(summaryStats(); as stats){
+  <section class="kpi-strip" aria-label="Resumen de facturas">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ stats.totalClientes !== null ? 'Clientes con facturas' : 'Total facturas' }}</span>
+      <div class="kpi-value">
+        {{ stats.totalClientes !== null ? stats.totalClientes : stats.totalFacturas }}
+        @if(stats.totalClientes !== null){
+          <span class="kpi-sub">({{ stats.totalFacturas }} docs)</span>
+        }
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total facturado</span>
+      <div class="kpi-value">{{ stats.totalFacturado | copCurrency }}</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total recaudado</span>
+      <div class="kpi-value text-success">{{ stats.totalPagado | copCurrency }}</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Saldo pendiente</span>
+      <div class="kpi-value text-amber">{{ stats.totalPendiente | copCurrency }}</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Estado de PDFs</span>
+      <div class="kpi-value">
+        @if(stats.pendingPdfs > 0){
+          <span class="status-pill status-pill--pending"><span class="dot"></span>{{ stats.pendingPdfs }} pendientes</span>
+        } @else {
+          <span class="status-pill status-pill--paid"><span class="dot"></span>Disponibles</span>
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<form class="panel filters-panel" (ngSubmit)="search()">
+  <div class="filters">
+    <label>
+      <span>Cliente / NIT</span>
+      <input name="search" [(ngModel)]="filters.search" placeholder="Nombre o NIT…" />
+    </label>
+    <label>
+      <span>Número de factura</span>
+      <input name="number" [(ngModel)]="filters.number" placeholder="Consecutivo…" />
+    </label>
+    <label>
+      <span>Tipo</span>
+      <select name="type" [(ngModel)]="filters.type">
+        <option value="">Todos</option>
+        <option value="F1">F1</option>
+        <option value="F20">F20</option>
+      </select>
+    </label>
+    <label>
+      <span>Estado de pago</span>
+      <select name="estadoPago" [(ngModel)]="filters.estadoPago">
+        <option value="">Todos</option>
+        <option value="PENDIENTE">Pendientes</option>
+        <option value="PAGADA">Pagadas</option>
+        <option value="ANULADA">Anuladas</option>
+      </select>
+    </label>
+    <label>
+      <span>Periodo</span>
+      <input name="period" type="month" [(ngModel)]="filters.period" />
+    </label>
+    <label>
+      <span>Desde</span>
+      <app-date-picker [(ngModel)]="filters.from" name="from" placeholder="Fecha inicio…"></app-date-picker>
+    </label>
+    <label>
+      <span>Hasta</span>
+      <app-date-picker [(ngModel)]="filters.to" name="to" placeholder="Fecha fin…"></app-date-picker>
+    </label>
+    <label>
+      <span>PDF oficial</span>
+      <select name="pdf" [(ngModel)]="filters.pdfAvailable">
+        <option value="">Todos</option>
+        <option value="true">Disponible</option>
+        <option value="false">Pendiente</option>
+      </select>
+    </label>
+  </div>
+  <div class="filters-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="reset()">Limpiar filtros</button>
+    <button type="submit" class="btn btn-primary btn-sm">Buscar facturas</button>
+  </div>
+</form>
+
+@if(error()){
+  <div class="error" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="load()">Reintentar</button>
+  </div>
+}
+
+<section class="panel list-panel" aria-live="polite" [attr.aria-busy]="loading()">
+  <div class="list-panel__top">
+    <div class="view-switch" role="group" aria-label="Forma de agrupar el listado">
+      <button type="button" id="view-by-nit" [class.active]="view()==='nit'" [attr.aria-pressed]="view()==='nit'" (click)="setView('nit')">
+        <mat-icon class="view-icon">business</mat-icon>
+        <span>Por cliente (NIT)</span>
+      </button>
+      <button type="button" id="view-by-invoice" [class.active]="view()==='factura'" [attr.aria-pressed]="view()==='factura'" (click)="setView('factura')">
+        <mat-icon class="view-icon">receipt_long</mat-icon>
+        <span>Por factura</span>
+      </button>
+    </div>
+  </div>
+
+  @if(loading()){
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Consultando facturas…</p>
+    </div>
+  }
+  @else if(view()==='nit' && grouped(); as page){
+    @if(page.items.length){
+      <div class="table-card">
+        <div class="table-scroll">
+          <table class="grouped">
+            <thead>
+              <tr>
+                <th class="toggle-col"><span class="sr-only">Desplegar</span></th>
+                <th>Cliente</th>
+                <th class="number">Facturas</th>
+                <th>PDF</th>
+                <th class="number">Total pagado</th>
+                <th class="number">Saldo pendiente</th>
+                <th class="number">Total facturado</th>
+                <th class="actions-col">Acciones</th>
+              </tr>
+            </thead>
+            @for(group of page.items; track group.nit){
+              <tbody class="group" [class.open]="isExpanded(group.nit)">
+                <tr class="group-row" (click)="toggle(group.nit)">
+                  <td class="toggle-col">
+                    <button type="button" class="chevron" [class.rotated]="isExpanded(group.nit)" [id]="'toggle-'+group.nit"
+                      [attr.aria-expanded]="isExpanded(group.nit)" [attr.aria-controls]="'facturas-'+group.nit"
+                      [attr.aria-label]="(isExpanded(group.nit) ? 'Ocultar' : 'Ver') + ' facturas del NIT ' + group.nit"
+                      (click)="$event.stopPropagation(); toggle(group.nit)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </td>
+                  <td class="client-cell">
+                    <div class="client-line">
+                      @if(hasBusinessName(group)){
+                        <strong class="client-name" [title]="group.razon_social">{{ group.razon_social }}</strong>
+                        <span class="client-nit">NIT {{ group.nit }}</span>
+                      } @else {
+                        <strong class="client-name">NIT {{ group.nit }}</strong>
+                        <span class="client-tag">Sin razón social</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="number">
+                    <span class="count-pill">{{ group.cantidad_facturas }}</span>
+                  </td>
+                  <td>
+                    @if(pendingPdfs(group)){
+                      <span class="status-pill status-pill--pending"><span class="dot"></span>{{ pendingPdfs(group) }} pendiente{{ pendingPdfs(group) > 1 ? 's' : '' }}</span>
+                    } @else {
+                      <span class="pdf-ok" title="Todos los PDF disponibles">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Completos
+                      </span>
+                    }
+                  </td>
+                  <td class="number">
+                    <span class="amount-val" [class.text-success]="group.valor_pagado" [class.amount-val--zero]="!group.valor_pagado">{{ (group.valor_pagado || 0) | copCurrency }}</span>
+                  </td>
+                  <td class="number">
+                    <span class="amount-val" [class.text-amber]="pendingAmount(group)" [class.amount-val--zero]="!pendingAmount(group)">{{ pendingAmount(group) | copCurrency }}</span>
+                  </td>
+                  <td class="number">
+                    <strong class="amount-val amount-val--strong">{{ group.valor_total_servicio | copCurrency }}</strong>
+                  </td>
+                  <td class="actions-cell" (click)="$event.stopPropagation()">
+                    <div class="row-actions">
+                      <button type="button" class="btn-row btn-row--secondary" (click)="openClientModal(group, 'servicios')" [attr.aria-label]="'Ver facturas de ' + group.nit">
+                        Ver detalle
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                @if(isExpanded(group.nit)){
+                  <tr class="detail-row" [id]="'facturas-'+group.nit">
+                    <td></td>
+                    <td colspan="7">
+                      <div class="nested-wrapper">
+                        <table class="nested">
+                          <thead>
+                            <tr>
+                              <th>Factura</th>
+                              <th>Emisión</th>
+                              <th>Vencimiento</th>
+                              <th class="number">Valor servicio</th>
+                              <th>Estado de pago</th>
+                              <th>PDF</th>
+                              <th class="actions-col">Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for(inv of group.facturas; track inv.clave_documento){
+                              <tr>
+                                <td>
+                                  <span class="invoice-code">{{ inv.tipo }} · {{ inv.consecutivo }}</span>
+                                </td>
+                                <td>{{ inv.fecha_emision | appDate }}</td>
+                                <td>{{ inv.fecha_vencimiento ? (inv.fecha_vencimiento | appDate) : '—' }}</td>
+                                <td class="number">{{ inv.valor_servicio | copCurrency }}</td>
+                                <td>
+                                  @if(inv.estado_pago === 'PAGADA'){
+                                    <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
+                                  } @else if(inv.estado_pago === 'ANULADA'){
+                                    <span class="status-pill status-pill--voided"><span class="dot"></span>Anulada</span>
+                                  } @else if(inv.estado_pago === 'EN_PROCESO'){
+                                    <span class="status-pill status-pill--processing"><span class="dot"></span>En proceso</span>
+                                  } @else {
+                                    <span class="status-pill status-pill--pending"><span class="dot"></span>Pendiente</span>
+                                  }
+                                </td>
+                                <td>
+                                  @if(inv.pdf_disponible){
+                                    <span class="status-pill status-pill--neutral">Disponible</span>
+                                  } @else {
+                                    <span class="status-pill status-pill--pending">Pendiente</span>
+                                  }
+                                </td>
+                                <td>
+                                  <div class="nested-actions">
+                                    <button type="button" class="btn-row btn-row--secondary" (click)="openGroupInvoiceDetail(group, inv.id)">Trazabilidad</button>
+                                    @if(inv.pdf_disponible){
+                                      <button type="button" class="btn-row btn-row--secondary" (click)="openPdfModal(inv)">Ver PDF</button>
+                                      <button type="button" class="btn-row btn-row--ghost" (click)="downloadGrouped(inv)" [attr.aria-label]="'Descargar factura ' + inv.consecutivo">Descargar</button>
+                                    }
+                                  </div>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <td colspan="3">
+                                <span class="tfoot-title">Total del cliente ({{ group.cantidad_facturas }} factura{{ group.cantidad_facturas > 1 ? 's' : '' }})</span>
+                              </td>
+                              <td class="number">
+                                <div class="total-breakdown">
+                                  <strong>{{ group.valor_total_servicio | copCurrency }}</strong>
+                                  <span class="sub-paid">Pagado: {{ (group.valor_pagado || 0) | copCurrency }}</span>
+                                  <span class="sub-pending">Pendiente: {{ ((group.valor_pendiente !== undefined && group.valor_pendiente !== null) ? group.valor_pendiente : group.valor_total_servicio) | copCurrency }}</span>
+                                </div>
+                              </td>
+                              <td colspan="3">
+                                <div class="actions-end">
+                                  <button type="button" class="btn-row btn-row--secondary" (click)="openClientModal(group, 'pagos')">Control y trazabilidad</button>
+                                  <button type="button" class="btn-row btn-row--secondary" (click)="openClientModal(group, 'servicios')">Facturas por servicio</button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            }
+          </table>
+        </div>
+        <ng-container *ngTemplateOutlet="pager; context: { $implicit: page, unit: 'cliente', units: 'clientes' }"></ng-container>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <h2>No hay facturas para estos filtros</h2>
+        <p>Prueba ajustando los criterios de búsqueda o revisa la última sincronización.</p>
+        <a class="btn btn-secondary btn-sm" routerLink="/sincronizacion">Ver sincronización</a>
+      </div>
+    }
+  }
+  @else if(view()==='factura' && result(); as page){
+    @if(page.items.length){
+      <div class="table-card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Factura</th>
+                <th>Cliente</th>
+                <th>Emisión</th>
+                <th>Vencimiento</th>
+                <th class="number">Total oficial</th>
+                <th>Estado de pago</th>
+                <th>PDF</th>
+                <th class="actions-col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for(inv of page.items; track inv.id){
+                <tr>
+                  <td>
+                    <span class="invoice-code">{{ inv.billingType }} · {{ inv.invoiceNumber }}</span>
+                  </td>
+                  <td class="client-cell">
+                    <strong class="client-name">{{ inv.businessName }}</strong>
+                    <span class="client-nit">NIT {{ inv.clientNit }}</span>
+                  </td>
+                  <td>{{ inv.issueDate | appDate }}</td>
+                  <td>{{ inv.dueDate ? (inv.dueDate | appDate) : '—' }}</td>
+                  <td class="number">
+                    <strong class="amount-val amount-val--strong">{{ inv.total | copCurrency }}</strong>
+                  </td>
+                  <td>
+                    @if(inv.estado_pago === 'PAGADA'){
+                      <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
+                    } @else if(inv.estado_pago === 'ANULADA'){
+                      <span class="status-pill status-pill--voided"><span class="dot"></span>Anulada</span>
+                    } @else if(inv.estado_pago === 'EN_PROCESO'){
+                      <span class="status-pill status-pill--processing"><span class="dot"></span>En proceso</span>
+                    } @else {
+                      <span class="status-pill status-pill--pending"><span class="dot"></span>Pendiente</span>
+                    }
+                  </td>
+                  <td>
+                    @if(inv.pdfAvailable){
+                      <span class="status-pill status-pill--neutral">Disponible</span>
+                    } @else {
+                      <span class="status-pill status-pill--pending">Pendiente</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="nested-actions">
+                      <button type="button" class="btn-row btn-row--secondary" (click)="openInvoiceDetailModal(inv)">Control y trazabilidad</button>
+                      @if(inv.pdfAvailable){
+                        <button type="button" class="btn-row btn-row--secondary" (click)="openPdfModal(inv)">Ver PDF</button>
+                        <button type="button" class="btn-row btn-row--ghost" (click)="download(inv)" [attr.aria-label]="'Descargar factura ' + inv.invoiceNumber">Descargar</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <ng-container *ngTemplateOutlet="pager; context: { $implicit: page, unit: 'factura', units: 'facturas' }"></ng-container>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <h2>No hay facturas para estos filtros</h2>
+        <p>Prueba ajustando los criterios de búsqueda o revisa la última sincronización.</p>
+        <a class="btn btn-secondary btn-sm" routerLink="/sincronizacion">Ver sincronización</a>
+      </div>
+    }
+  }
+</section>
+
+<ng-template #pager let-page let-unit="unit" let-units="units">
+  <nav class="pager" aria-label="Paginación">
+    <span class="pager-info">
+      @if(page.totalElements){
+        Mostrando <strong>{{ page.page * page.size + 1 }}–{{ page.page * page.size + page.items.length }}</strong>
+        de <strong>{{ page.totalElements }}</strong> {{ page.totalElements === 1 ? unit : units }}
+      } @else {
+        0 {{ units }}
+      }
+    </span>
+    <div class="pager-controls">
+      <label class="page-size">
+        <span>Filas</span>
+        <select [ngModel]="filters.size" (ngModelChange)="changePageSize($event)" aria-label="Filas por página">
+          @for(size of pageSizes; track size){
+            <option [ngValue]="size">{{ size }}</option>
+          }
+        </select>
+      </label>
+      <div class="pager-buttons">
+        <button type="button" class="page-btn" (click)="search(page.page - 1)" [disabled]="page.page === 0" aria-label="Página anterior">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        @for(item of pageNumbers(page.page, page.totalPages); track $index){
+          @if(item === null){
+            <span class="page-gap" aria-hidden="true">…</span>
+          } @else {
+            <button type="button" class="page-btn" [class.active]="item === page.page" [attr.aria-current]="item === page.page ? 'page' : null"
+              (click)="search(item)" [attr.aria-label]="'Página ' + (item + 1)">{{ item + 1 }}</button>
+          }
+        }
+        <button type="button" class="page-btn" (click)="search(page.page + 1)" [disabled]="page.page + 1 >= page.totalPages" aria-label="Página siguiente">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+</ng-template>
+
+@if(selectedGroup(); as group){
+<div class="modal-backdrop" (click)="closeClientModal()">
+  <div class="modal-dialog modal-dialog-lg" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <h3>{{ group.razon_social || ('NIT ' + group.nit) }}</h3>
+        <p class="subtle">Consolidado oficial de {{ group.cantidad_facturas }} factura{{ group.cantidad_facturas > 1 ? 's' : '' }} emitidas · NIT {{ group.nit }}</p>
+      </div>
+      <button type="button" class="close-btn" (click)="closeClientModal()" aria-label="Cerrar modal">✕</button>
+    </header>
+
+    <div class="modal-tabs" role="tablist">
+      <button type="button" role="tab" [class.active]="activeModalTab() === 'servicios'" [attr.aria-selected]="activeModalTab() === 'servicios'" (click)="setModalTab('servicios')">
+        Facturas por servicio ({{ group.cantidad_facturas }})
+      </button>
+      <button type="button" role="tab" [class.active]="activeModalTab() === 'factura'" [attr.aria-selected]="activeModalTab() === 'factura'" (click)="setModalTab('factura')">
+        Resumen consolidado
+      </button>
+      <button type="button" role="tab" [class.active]="activeModalTab() === 'pagos'" [attr.aria-selected]="activeModalTab() === 'pagos'" (click)="setModalTab('pagos')">
+        Control y trazabilidad
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if(activeModalTab() === 'servicios'){
+        <p class="modal-hint">Cada servicio cuenta con su respectiva factura electrónica y PDF oficial emitido por Siigo.</p>
+        <div class="table-card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Factura</th>
+                  <th>Emisión</th>
+                  <th>Vencimiento</th>
+                  <th class="number">Valor</th>
+                  <th>Estado</th>
+                  <th>PDF oficial</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for(inv of group.facturas; track inv.id){
+                  <tr>
+                    <td>
+                      <span class="invoice-code">{{ inv.tipo }} · {{ inv.consecutivo }}</span>
+                    </td>
+                    <td>{{ inv.fecha_emision | appDate }}</td>
+                    <td>{{ inv.fecha_vencimiento ? (inv.fecha_vencimiento | appDate) : '—' }}</td>
+                    <td class="number">{{ inv.valor_servicio | copCurrency }}</td>
+                    <td>
+                      @if(inv.estado_pago === 'PAGADA'){
+                        <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
+                      } @else if(inv.estado_pago === 'ANULADA'){
+                        <span class="status-pill status-pill--voided"><span class="dot"></span>Anulada</span>
+                      } @else if(inv.estado_pago === 'EN_PROCESO'){
+                        <span class="status-pill status-pill--processing"><span class="dot"></span>En proceso</span>
+                      } @else {
+                        <span class="status-pill status-pill--pending"><span class="dot"></span>Pendiente</span>
+                      }
+                    </td>
+                    <td>
+                      @if(inv.pdf_disponible){
+                        <div class="nested-actions">
+                          <button type="button" class="btn-row btn-row--secondary" (click)="selectInvoiceForDetail(inv.id); setModalTab('pagos')">Trazabilidad</button>
+                          <button type="button" class="btn-row btn-row--secondary" (click)="openPdfModal(inv)">Ver PDF</button>
+                          <button type="button" class="btn-row btn-row--ghost" (click)="downloadGrouped(inv)" [attr.aria-label]="'Descargar factura ' + inv.tipo + '-' + inv.consecutivo">Descargar</button>
+                        </div>
+                      } @else {
+                        <span class="status-pill status-pill--pending">Pendiente de recibir</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else if(activeModalTab() === 'factura'){
+        <p class="modal-hint">Resumen corporativo del total acumulado del NIT. No reemplaza las facturas individuales emitidas por Siigo.</p>
+        <div class="siigo-invoice-wrapper">
+          <div class="siigo-invoice-sheet" id="printable-invoice">
+            <div class="siigo-vertical-sidebar">Software:SIIGO, Desarrollado por: SIIGO SAS Nit 830.048.145-8, PT: SIIGO SAS Nit: 830.048.145-8</div>
+
+            <!-- Cabecera Oficial Siigo: 3 columnas -->
+            <div class="siigo-head-grid">
+              <div class="siigo-head-logo">
+                <img src="/assets/layout/images/Sp.png" alt="Sistemas Palacios" class="siigo-logo-img" />
+              </div>
+              <div class="siigo-head-company">
+                <div class="comp-name">SP SISTEMAS PALACIOS LTDA</div>
+                <div>NIT : 900,163,149 - 2</div>
+                <div>CL 2 22 75 BRR BACHUE</div>
+                <div>PASTO-NARIÑO - COLOMBIA</div>
+                <div>3104005873</div>
+                <div>contabilidad@sistemaspalacios.com</div>
+                <div>E</div>
+                <div>Actividad Económica 313 Tarifa Ica 6 por mil</div>
+              </div>
+              <div class="siigo-head-qr-box">
+                @if (group.facturas && group.facturas.length > 0 && group.facturas[0].qr?.imagen) {
+                  <img [src]="group.facturas[0].qr?.imagen" alt="QR DIAN Oficial" class="siigo-qr" style="width:48px; height:48px; object-fit:contain; background:#fff; border:1px solid #000; padding:1px; margin-bottom:2px;" />
+                } @else {
+                  <svg width="48" height="48" viewBox="0 0 33 33" fill="#000" class="siigo-qr">
+                    <rect width="33" height="33" fill="#fff"/>
+                    <rect x="2" y="2" width="7" height="7"/><rect x="3" y="3" width="5" height="5" fill="#fff"/><rect x="4" y="4" width="3" height="3"/>
+                    <rect x="24" y="2" width="7" height="7"/><rect x="25" y="3" width="5" height="5" fill="#fff"/><rect x="26" y="4" width="3" height="3"/>
+                    <rect x="2" y="24" width="7" height="7"/><rect x="3" y="25" width="5" height="5" fill="#fff"/><rect x="4" y="26" width="3" height="3"/>
+                    <rect x="10" y="4" width="2" height="1"/><rect x="14" y="4" width="3" height="1"/><rect x="19" y="4" width="2" height="1"/>
+                    <rect x="11" y="6" width="1" height="2"/><rect x="15" y="6" width="2" height="1"/><rect x="18" y="7" width="2" height="1"/>
+                    <rect x="10" y="14" width="3" height="1"/><rect x="15" y="13" width="2" height="2"/><rect x="20" y="14" width="3" height="2"/>
+                  </svg>
+                }
+                <div class="siigo-box-title">
+                  <div class="fe-label">FACTURA ELECTRÓNICA DE VENTA</div>
+                  <div class="fe-num">{{ getConsolidatedConsecutive(group) }}</div>
+                  <div class="fe-sublabel">Fecha y Hora de Factura</div>
+                  <div class="fe-dates">Generación {{ getConsolidatedIssueDate(group) }} 10:06:35</div>
+                  <div class="fe-dates">Expedición {{ getConsolidatedIssueDate(group) }} 10:09:34</div>
+                  <div class="fe-dates">Vencimiento {{ getConsolidatedDueDate(group) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla de Datos del Cliente -->
+            <table class="siigo-table siigo-client-table">
+              <tbody>
+                <tr>
+                  <td class="siigo-label-cell" style="width:14%;">Cliente</td>
+                  <td colspan="5" class="bold">{{ group.razon_social || ('NIT ' + group.nit) }}</td>
+                </tr>
+                <tr>
+                  <td class="siigo-label-cell">Nit / Ced.</td>
+                  <td style="width:25%;" class="bold">{{ group.nit }}</td>
+                  <td class="siigo-label-cell" style="width:18%;">/Id. Extranjero :</td>
+                  <td style="width:14%;"></td>
+                  <td class="siigo-label-cell" style="width:14%;">Teléfono</td>
+                  <td style="width:15%;">3135963672</td>
+                </tr>
+                <tr>
+                  <td class="siigo-label-cell">Dirección</td>
+                  <td colspan="3">LA CRUZ - NUEVO PUNTO CORPORATIVO</td>
+                  <td class="siigo-label-cell">Vendedor</td>
+                  <td>VEN.PASTO-NARIÑO</td>
+                </tr>
+                <tr>
+                  <td class="siigo-label-cell">Ciudad</td>
+                  <td colspan="3">LA CRUZ-NARIÑO - COLOMBIA</td>
+                  <td class="siigo-label-cell">Centro Costo</td>
+                  <td>10</td>
+                </tr>
+                <tr>
+                  <td class="siigo-label-cell">Correo</td>
+                  <td colspan="3">contabilidad@sistemaspalacios.com</td>
+                  <td class="siigo-label-cell">Estrato</td>
+                  <td>PYMES</td>
+                </tr>
+                <tr>
+                  <td class="siigo-label-cell">Order Reference Prefijo</td>
+                  <td colspan="3" class="siigo-label-cell"></td>
+                  <td class="siigo-label-cell">Número</td>
+                  <td>{{ group.facturas[0]?.consecutivo }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Tabla de Items / Facturas Reunidas -->
+            <table class="siigo-table siigo-items-table">
+              <thead>
+                <tr class="siigo-label-cell center">
+                  <th style="width:4%;">Item</th>
+                  <th style="width:14%;">Codigo</th>
+                  <th style="width:37%; text-align:left;">Descripcion</th>
+                  <th style="width:5%;">Cant</th>
+                  <th style="width:5%;">Und</th>
+                  <th style="width:11%; text-align:right;">V. Unit.</th>
+                  <th style="width:5%;">%Iva</th>
+                  <th style="width:9%; text-align:right;">Vr.Iva</th>
+                  <th style="width:15%; text-align:right;">Vr.Total incluido Iva</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for(inv of group.facturas; track inv.clave_documento; let idx = $index){
+                  <tr>
+                    <td class="center">{{ idx + 1 }}</td>
+                    <td class="center mono">{{ idx % 2 === 0 ? '0100040000021' : '0100040000008' }}</td>
+                    <td>
+                      Factura {{ inv.tipo }} {{ inv.consecutivo }} - Servicios corporativos y conectividad
+                      @if (inv.qr?.contenido) {
+                        <span style="display:inline-block; margin-left:6px; font-size:9px; background:#e2e8f0; color:#334155; padding:1px 5px; border-radius:3px; font-weight:bold;" title="QR Oficial DIAN extraído">
+                          ✓ QR DIAN
+                        </span>
+                      }
+                    </td>
+                    <td class="center">1</td>
+                    <td class="center">UN</td>
+                    <td class="right">{{ getInvoiceGross(inv.valor_servicio) | copCurrency }}</td>
+                    <td class="center">19</td>
+                    <td class="right">{{ getInvoiceIva(inv.valor_servicio) | copCurrency }}</td>
+                    <td class="right bold">{{ inv.valor_servicio | copCurrency }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <div class="siigo-items-count bold">Total Items : {{ group.cantidad_facturas }}</div>
+
+            <!-- Totales a la derecha -->
+            <div class="siigo-totals-container">
+              <table class="siigo-table siigo-totals-table">
+                <tbody>
+                  <tr>
+                    <td class="bold" style="width:52%;">Total Bruto</td>
+                    <td class="right bold">{{ getTotalGross(group) | copCurrency }}</td>
+                  </tr>
+                  <tr>
+                    <td class="bold">IVA Tarifa 19%</td>
+                    <td class="right bold">{{ getTotalIva(group) | copCurrency }}</td>
+                  </tr>
+                  <tr class="siigo-label-cell">
+                    <td class="bold" style="font-size:9.5px;">Total A Pagar $</td>
+                    <td class="right bold" style="font-size:10.5px;">{{ group.valor_total_servicio | copCurrency }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Forma de pago y letras -->
+            <div class="siigo-footer-line">
+              <span class="bold">FORMA DE PAGO</span> &nbsp; Credito Cr-Cartera Zona Pasto Medio de Pago : Otro* {{ group.valor_total_servicio | copCurrency }} Cuota 1 Vence el {{ getConsolidatedDueDate(group) }}
+            </div>
+            <div class="siigo-footer-line">
+              <span class="bold">VALOR EN LETRAS</span> &nbsp; <span class="bold">{{ getWords(group.valor_total_servicio) }} Pesos M/Cte</span>
+            </div>
+
+            <div class="siigo-observations">
+              OBSERVACIONES: Realice su pago oportuno por medio de los siguientes canales de pago: convenio Bancolombia #31689 o transferencia bancaria a la cuenta de ahorros Bancolombia #99784883228 a nombre de SP SISTEMAS PALACIOS LTDA y envie su soporte al correo cartera@sistemaspalacios.com
+            </div>
+
+            <!-- Firmas -->
+            <div class="siigo-signatures">
+              <div class="sig-box"><div>Digitado por : LUZ MARY CORDOB</div></div>
+              <div class="sig-box"><div>Firma Recibido</div></div>
+            </div>
+
+            <div class="siigo-notice">
+              En caso de requerir retiro de sus servicios, tenga en cuenta que su solicitud la debe realizar como mínimo con tres días hábiles a su ultimo periodo facturado, esta misma debe ser enviada al correo contabilidad@sistemaspalacios.com
+            </div>
+            <div class="siigo-legal-box">
+              A esta factura de venta aplican las normas relativas a la letra de cambio (artículo 5 Ley 1231 de 2008). Con esta el Comprador declara haber recibido real y materialmente las mercancías o prestación de servicios descritos en este título - Valor. Autorización de facturación No. 18764093952604 aprobado en 2025-06-03 vigente 2 Años, prefijo FESP desde el número 35001 al 70000
+            </div>
+            <div class="siigo-cufe mono">
+              CUFE: {{ group.facturas[0]?.cufe || '720377e072ca996f78d1f873a16899a51af08fc5ca705c4ebdfa9841c2320214396cd348fac2e601082dce87023b26e3' }}
+            </div>
+            <div class="siigo-bottom-bar">
+              <span>Representación Gráfica de la Factura Electrónica de Venta</span>
+              <span>Pagina : 1 de 1</span>
+            </div>
+          </div>
+        </div>
+      } @else if(activeModalTab() === 'pagos'){
+        @if(loadingInvoiceDetail()){
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando información y trazabilidad de la factura…</p>
+          </div>
+        } @else if(detailError()){
+          <div class="empty-state">
+            <h2>Error al consultar factura</h2>
+            <p>{{ detailError() }}</p>
+          </div>
+        } @else if(selectedInvoiceDetail(); as inv){
+          @if(group.facturas.length > 1){
+            <div class="invoice-selector-bar">
+              <span class="selector-label">Factura a consultar:</span>
+              <div class="selector-pills">
+                @for(f of group.facturas; track f.id){
+                  <button type="button" 
+                    class="selector-pill" 
+                    [class.active]="selectedInvoiceId() === f.id" 
+                    (click)="selectInvoiceForDetail(f.id)">
+                    <span>{{ f.tipo }} · {{ f.consecutivo }}</span>
+                    <span class="pill-amount">{{ f.valor_servicio | copCurrency }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Cabecera de la factura y datos del cliente -->
+          <section class="detail-card">
+            <header class="card-header">
+              <h4 class="card-title">{{ inv.tipoFacturacion }} - {{ inv.numeroFactura }}</h4>
+              <div class="head-actions">
+                @if(inv.rutaPdf){
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="openPdfModal(inv)">Ver PDF oficial</button>
+                  <button type="button" class="btn btn-primary btn-sm" (click)="downloadInvoiceDetail(inv)">Descargar PDF</button>
+                } @else {
+                  <span class="status-pill status-pill--pending"><span class="dot"></span>PDF pendiente de recibir</span>
+                }
+              </div>
+            </header>
+            <dl class="details-grid">
+              <div><dt>Cliente</dt><dd><strong>{{ inv.cliente.razonSocial }}</strong></dd></div>
+              <div><dt>NIT</dt><dd class="mono">{{ inv.cliente.nit }}</dd></div>
+              <div><dt>Fecha de emisión</dt><dd>{{ inv.fechaEmision | appDate }}</dd></div>
+              <div><dt>Vencimiento</dt><dd>{{ inv.fechaVencimiento ? (inv.fechaVencimiento | appDate) : 'No informado' }}</dd></div>
+              <div><dt>Dirección</dt><dd>{{ inv.cliente.direccionFiscal || 'No informada' }}</dd></div>
+              <div><dt>Correo de facturación</dt><dd>{{ inv.cliente.emailFacturacion || 'No informado' }}</dd></div>
+            </dl>
+            <div class="cufe-row">
+              <span class="cufe-label">CUFE:</span>
+              <span class="cufe-code mono">{{ inv.cufe || 'No informado en el archivo de datos' }}</span>
+            </div>
+          </section>
+
+          <!-- Control y trazabilidad del pago -->
+          <section class="detail-card">
+            <h4 class="card-title" style="margin-bottom: 12px;">Control y trazabilidad del pago</h4>
+            <dl class="details-grid">
+              <div>
+                <dt>Estado de pago</dt>
+                <dd>
+                  @if(inv.estado_pago === 'PAGADA' || inv.estado === 'PAGADA'){
+                    <span class="status-pill status-pill--paid"><span class="dot"></span>Pagada</span>
+                  } @else if(inv.estado_pago === 'ANULADA' || inv.estado === 'ANULADA'){
+                    <span class="status-pill status-pill--voided"><span class="dot"></span>Anulada</span>
+                  } @else if(inv.estado_pago === 'EN_PROCESO'){
+                    <span class="status-pill status-pill--processing"><span class="dot"></span>En proceso</span>
+                  } @else {
+                    <span class="status-pill status-pill--pending"><span class="dot"></span>Pendiente</span>
+                  }
+                </dd>
+              </div>
+              <div><dt>Fecha de pago</dt><dd>{{ inv.fecha_pago ? (inv.fecha_pago | appDate) : '—' }}</dd></div>
+              <div><dt>Referencia de pago</dt><dd><code class="mono">{{ inv.referencia_pago || '—' }}</code></dd></div>
+              <div><dt>Transaction ID</dt><dd><code class="mono">{{ inv.transaction_id || '—' }}</code></dd></div>
+              <div><dt>Valor pagado</dt><dd><strong class="amount-val text-success">{{ inv.valor_pagado ? (inv.valor_pagado | copCurrency) : ((inv.estado_pago === 'PAGADA' || inv.estado === 'PAGADA') ? (inv.totales.total | copCurrency) : '—') }}</strong></dd></div>
+              <div><dt>Proveedor de pago</dt><dd>{{ inv.proveedor_pago || '—' }}</dd></div>
+            </dl>
+          </section>
+
+          <!-- Pagos y retenciones -->
+          <section class="detail-card">
+            <div class="card-head-block">
+              <h4 class="card-title">Pagos y retenciones</h4>
+              <p class="subtle">Liquidación con la que se registró cada pago. Los porcentajes y tasas son los aplicados en su momento; cambios posteriores del catálogo no los modifican.</p>
+            </div>
+            @if(paymentsError()){
+              <div class="empty-state" role="alert"><p>{{ paymentsError() }}</p></div>
+            } @else if(selectedInvoicePayments().length === 0){
+              <p class="subtle" style="margin-top: 10px;">Esta factura no tiene pagos registrados.</p>
+            }
+            @for(p of selectedInvoicePayments(); track p.pagoId){
+              <article class="payment-snapshot">
+                <header class="snapshot-header">
+                  <h5>Pago <code class="mono">{{ p.pagoId.slice(0, 8) }}</code></h5>
+                  <span class="status-pill" [class.status-pill--paid]="p.estado==='APLICADO'" [class.status-pill--pending]="p.estado==='PENDIENTE'" [class.status-pill--voided]="p.estado==='RECHAZADO'||p.estado==='ANULADO'">{{ p.estado }}</span>
+                </header>
+                <dl class="details-grid">
+                  <div><dt>Total facturado</dt><dd>{{ p.totalFacturas | copCurrency }}</dd></div>
+                  <div><dt>Total retenido</dt><dd>{{ p.totalRetenciones | copCurrency }}</dd></div>
+                  <div><dt>Ajuste redondeo</dt><dd>{{ p.ajusteRedondeo | copCurrency }}</dd></div>
+                  <div><dt>Neto recaudado</dt><dd><strong class="amount-val text-success">{{ p.netoRecaudado | copCurrency }}</strong></dd></div>
+                  <div><dt>Fecha de pago</dt><dd>{{ p.fechaPago | appDate }}</dd></div>
+                  <div><dt>Medio / cuenta</dt><dd>{{ p.medioPago }} · {{ p.cuentaBanco }}</dd></div>
+                  <div><dt>Transacción</dt><dd><code class="mono">{{ p.numeroTransaccion || '—' }}</code></dd></div>
+                  <div><dt>Retenciones aplicadas</dt><dd>{{ p.modoAplicacion==='PER_INVOICE' ? 'Por factura' : 'Sobre el total del pago' }}</dd></div>
+                  <div><dt>Facturas del pago</dt><dd>@for(f of p.facturas; track f.facturaId){<span>{{ f.numero }} ({{ f.valorAplicado | copCurrency }}) </span>}</dd></div>
+                </dl>
+                @if(p.retenciones.length){
+                  <div class="table-card" style="margin-top: 14px;">
+                    <div class="table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Retención</th>
+                            <th>Calculada sobre</th>
+                            <th>Versión</th>
+                            <th class="number">% pagado</th>
+                            <th class="number">% máximo</th>
+                            <th class="number">Base</th>
+                            <th class="number">Base mínima</th>
+                            <th class="number">Retenido</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for(r of p.retenciones; track $index){
+                            <tr>
+                              <td>{{ r.aplica ? '✓' : '○' }} {{ r.nombre }}</td>
+                              <td>{{ r.facturaId ? ('FACTURA ' + (r.facturaNumero || '')) : 'Total del pago' }}</td>
+                              <td>V{{ r.version }}</td>
+                              <td class="number"><strong>{{ r.porcentaje }}%</strong></td>
+                              <td class="number">{{ r.porcentajeMaximo != null ? (r.porcentajeMaximo + '%') : '—' }}</td>
+                              <td class="number">{{ r.baseCalculada | copCurrency }}</td>
+                              <td class="number">{{ r.baseMinima | copCurrency }}</td>
+                              <td class="number">{{ r.valorRetenido | copCurrency }}</td>
+                              <td>
+                                @if(r.aplica){
+                                  <span class="status-pill status-pill--paid">Aplicada</span>
+                                } @else {
+                                  <span class="status-pill status-pill--voided">No aplicó: {{ r.motivoNoAplica }}</span>
+                                }
+                                @if(r.motivoAjuste){
+                                  <br><small class="subtle">Ajuste: {{ r.motivoAjuste }}</small>
+                                }
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="subtle" style="margin-top: 8px;">Sin retenciones seleccionadas en este pago.</p>
+                }
+              </article>
+            }
+          </section>
+
+          <!-- Detalle recibido -->
+          <section class="detail-card">
+            <h4 class="card-title" style="margin-bottom: 12px;">Detalle recibido</h4>
+            <div class="table-card">
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Descripción</th>
+                      <th class="number">Cantidad</th>
+                      <th class="number">Base</th>
+                      <th class="number">IVA</th>
+                      <th class="number">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for(item of inv.items; track $index){
+                      <tr>
+                        <td><code class="mono">{{ item.codigo || '—' }}</code></td>
+                        <td>{{ item.descripcion }}</td>
+                        <td class="number">{{ item.cant }}</td>
+                        <td class="number">{{ item.baseGravable | copCurrency }}</td>
+                        <td class="number">{{ item.valorIva | copCurrency }}</td>
+                        <td class="number"><strong class="amount-val amount-val--strong">{{ item.valorTotal | copCurrency }}</strong></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <dl class="details-grid" style="margin-top: 14px;">
+              <div><dt>Subtotal</dt><dd>{{ inv.totales.subtotal | copCurrency }}</dd></div>
+              <div><dt>IVA</dt><dd>{{ inv.totales.iva | copCurrency }}</dd></div>
+              <div><dt>Total oficial</dt><dd><strong class="amount-val amount-val--strong" style="font-size: 15px;">{{ inv.totales.total | copCurrency }}</strong></dd></div>
+            </dl>
+          </section>
+        }
+      }
+    </div>
+
+    <footer class="modal-footer">
+      @if(activeModalTab() === 'servicios'){
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('pagos')">Control y trazabilidad</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('factura')">Resumen consolidado</button>
+      } @else if(activeModalTab() === 'factura'){
+        <button type="button" class="btn btn-primary btn-sm" (click)="downloadConsolidatedPdf(group)">Descargar PDF consolidado</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="printConsolidated()">Imprimir factura</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('pagos')">Control y trazabilidad</button>
+      } @else if(activeModalTab() === 'pagos'){
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('servicios')">Facturas por servicio</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setModalTab('factura')">Resumen consolidado</button>
+        @if(selectedInvoiceDetail(); as inv){
+          @if(inv.rutaPdf){
+            <button type="button" class="btn btn-secondary btn-sm" (click)="openPdfModal(inv)">Ver PDF oficial</button>
+          }
+        }
+      }
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closeClientModal()">Cerrar</button>
+    </footer>
+  </div>
+</div>
+}
+
+@if(selectedPdfInvoice(); as inv){
+<div class="modal-backdrop pdf-backdrop" (click)="closePdfModal()">
+  <div class="modal-dialog modal-dialog-xl" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <h3>PDF oficial · {{ inv.tipo || inv.billingType }} {{ inv.consecutivo || inv.invoiceNumber }}</h3>
+        <p class="subtle">{{ inv.businessName || 'Documento oficial recibido desde Siigo' }}</p>
+      </div>
+      <div class="pdf-header-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="downloadCurrentPdf()">
+          <mat-icon class="btn-icon">download</mat-icon>
+          <span>Descargar PDF</span>
+        </button>
+        <button type="button" class="close-btn" (click)="closePdfModal()" aria-label="Cerrar visor">✕</button>
+      </div>
+    </header>
+
+    <div class="modal-body modal-body--pdf">
+      @if(pdfLoading()){
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando documento PDF…</p>
+        </div>
+      } @else if(pdfError()){
+        <div class="empty-state">
+          <h2>No se pudo previsualizar el documento</h2>
+          <p>{{ pdfError() }}</p>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="downloadCurrentPdf()">
+            Descargar archivo PDF
+          </button>
+        </div>
+      } @else if(safePdfUrl(); as url){
+        <iframe class="pdf-viewer-frame" [src]="url" title="Factura oficial en PDF"></iframe>
+      }
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closePdfModal()">Cerrar visor</button>
+    </footer>
+  </div>
+</div>
+}

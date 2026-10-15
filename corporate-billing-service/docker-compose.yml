@@ -1,0 +1,83 @@
+services:
+  # ==============================================================================
+  # Servicio de Base de Datos: PostgreSQL 16
+  # ==============================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: corporate-billing-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-facturacion}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - billing-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ==============================================================================
+  # Servicio de Aplicación: corporate-billing-service (Spring Boot 4)
+  # ==============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: corporate-billing-service
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-facturacion}?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      ORDENES_BASE_URL: ${ORDENES_BASE_URL:-http://host.docker.internal:8081}
+      ORDENES_API_KEY: ${ORDENES_API_KEY:-dev-token}
+      ORDENES_TIMEOUT_MS: ${ORDENES_TIMEOUT_MS:-5000}
+      ORDENES_REINTENTOS: ${ORDENES_REINTENTOS:-3}
+      SIIGO_CARPETA_COMPARTIDA_PATH: /app/storage/siigo_compartida
+      SIIGO_PDF_LOCAL_PATH: /app/storage/siigo-pdfs
+      SIIGO_SYNC_CRON: ${SIIGO_SYNC_CRON:-0 0 * * * *}
+      SIIGO_ARCHIVO_EDAD_MINIMA: ${SIIGO_ARCHIVO_EDAD_MINIMA:-60}
+      SIIGO_CONFIRMAR_LOTES_SALIENTES: ${SIIGO_CONFIRMAR_LOTES_SALIENTES:-false}
+      SIIGO_CONSUMIR_CARTERA: ${SIIGO_CONSUMIR_CARTERA:-false}
+      STORAGE_SHARED_FILES_PATH: /app/storage/files
+      AUTH_ISSUER_URI: ${AUTH_ISSUER_URI:-https://qa.sistemaspalacios.com}
+      AUTH_JWKS_URI: ${AUTH_JWKS_URI:-https://qa.sistemaspalacios.com/oauth2/jwks}
+      AUTH_AUDIENCE: ${AUTH_AUDIENCE:-corporate-billing-service}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:4300,http://localhost:3000,http://localhost:5173,https://panel.sistemaspalacios.com,https://pasarela.sistemaspalacios.com}
+      INITIAL_ADMIN_USERNAME: ${INITIAL_ADMIN_USERNAME:-}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Carpeta compartida de origen de Siigo montada en solo lectura (ro)
+      - ${LOCAL_SIIGO_CARPETA_PATH:-./storage/siigo_compartida}:/app/storage/siigo_compartida:ro
+      # Carpeta de copias locales de PDF conservadas por el servicio (rw)
+      - ${LOCAL_SIIGO_PDF_PATH:-./storage/siigo-pdfs}:/app/storage/siigo-pdfs:rw
+      # Carpeta de importación de órdenes y exportación de archivos planos (rw)
+      - ${LOCAL_FILES_PATH:-./storage/files}:/app/storage/files:rw
+    networks:
+      - billing-network
+
+# ==============================================================================
+# Redes y Volúmenes Persistentes
+# ==============================================================================
+networks:
+  billing-network:
+    name: billing-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: corporate_billing_postgres_data

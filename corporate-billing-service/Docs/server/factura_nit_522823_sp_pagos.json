@@ -1,0 +1,73 @@
+{
+  "id" : "507a72b2-ab55-4c12-8836-68b76001bfdf",
+  "numeroFactura" : "50724",
+  "prefijo" : "FESP",
+  "numeroCompleto" : "FESP 50724",
+  "tipoFacturacion" : "F1",
+  "periodo" : "2026-08",
+  "cufe" : null,
+  "estado" : "CONSOLIDADA",
+  "pagable" : true,
+  "cliente" : {
+    "nit" : "522823",
+    "razonSocial" : "NIT 522823 (razón social pendiente)",
+    "direccionFiscal" : "CENTRO COMERCIAL Y DE NEGOCIOS CALLE 18 # 25-10",
+    "emailFacturacion" : "contabilidad.522823@empresa.com",
+    "telefono" : null
+  },
+  "fechas" : {
+    "fechaEmision" : "2026-08-10",
+    "fechaVencimiento" : "2026-08-15",
+    "vencida" : true,
+    "fechaImportacion" : "2026-10-06",
+    "fechaDisponiblePago" : "2026-10-06",
+    "fechaPago" : null
+  },
+  "importes" : {
+    "subtotal" : 430180.00,
+    "descuento" : 0.00,
+    "iva" : 0.00,
+    "totalOficial" : 430180.00,
+    "totalNotasCredito" : 0.00,
+    "totalPagado" : 0.00,
+    "saldoPendiente" : 430180.00,
+    "fuenteSaldo" : "CALCULADO_SISTEMA",
+    "carteraAnteriorPendiente" : 0.00,
+    "saldoTotalPorCobrar" : 430180.00
+  },
+  "retenciones" : {
+    "retefuente" : 0.00,
+    "reteica" : 0.00,
+    "reteiva" : 0.00,
+    "estampillas" : 0.00,
+    "totalRetenciones" : 0.00,
+    "netoConRetenciones" : 430180.00
+  },
+  "items" : [ {
+    "item" : 1,
+    "codigo" : "SERV-CORP",
+    "descripcion" : "Facturación de servicios corporativos",
+    "cantidad" : 1.00,
+    "unidad" : "UN",
+    "valorUnitario" : 430180.00,
+    "baseGravable" : 430180.00,
+    "porcentajeIva" : 0.00,
+    "valorIva" : 0.00,
+    "valorTotal" : 430180.00
+  } ],
+  "enlaces" : {
+    "tienePdf" : false,
+    "pdfUrl" : "/api/v1/facturas/507a72b2-ab55-4c12-8836-68b76001bfdf/pdf",
+    "representacionGraficaUrl" : "/api/v1/facturas/507a72b2-ab55-4c12-8836-68b76001bfdf/representacion-grafica"
+  },
+  "formaPago" : "CREDITO",
+  "observaciones" : "Factura emitida en Siigo e importada para pago corporativo.",
+  "cartera" : {
+    "valorFacturaActual" : 430180.00,
+    "saldoFacturaActual" : 430180.00,
+    "carteraAnteriorPendiente" : 0.00,
+    "saldoTotalPorCobrar" : 430180.00,
+    "totalObligacionesPendientes" : 1,
+    "obligacionesAnteriores" : [ ]
+  }
+}

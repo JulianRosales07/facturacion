@@ -1,0 +1,1404 @@
+// ==========================================================================
+// Estilos Minimalistas y Profesionales: Facturas Recibidas
+// Colores estándar: Slate, Blanco, Acentos sutiles (Verde, Ámbar, Azul estándar)
+// ==========================================================================
+
+:host {
+  display: block;
+}
+
+// --------------------------------------------------------------------------
+// 1. Cabecera de Página
+// --------------------------------------------------------------------------
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+
+  .head-title {
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.015em;
+    }
+    p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .head-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 2. Botones Estándar y Minimalistas
+// --------------------------------------------------------------------------
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &.btn-primary {
+    background-color: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+
+    &:hover:not(:disabled) {
+      background-color: #1e293b;
+      border-color: #1e293b;
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #ffffff;
+    color: #334155;
+    border-color: #cbd5e1;
+
+    &:hover:not(:disabled) {
+      background-color: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+  }
+
+  &.btn-sm {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 3. Franja Minimalista de Métricas (KPI Strip)
+// --------------------------------------------------------------------------
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .kpi-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+    }
+
+    .kpi-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+
+      .kpi-sub {
+        font-size: 11px;
+        font-weight: 400;
+        color: #64748b;
+      }
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// 4. Panel de Filtros
+// --------------------------------------------------------------------------
+.filters-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+
+      span {
+        user-select: none;
+      }
+    }
+
+    input, select {
+      height: 35px;
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+      &:focus {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 1px #0f172a;
+      }
+
+      &::placeholder {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .filters-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 5. Panel de Listado & Switch de Vistas
+// --------------------------------------------------------------------------
+.list-panel {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 24px;
+  box-shadow: none;
+
+  .list-panel__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+}
+
+.view-switch {
+  display: inline-flex;
+  padding: 3px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  gap: 3px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    .view-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover:not(.active) {
+      color: #0f172a;
+    }
+
+    &.active {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// 6. Tarjeta Contenedora de Tabla
+// --------------------------------------------------------------------------
+// La página conserva su scroll normal (rueda del mouse incluida). La cabecera de columnas y el
+// paginador quedan fijos contra el scroll de .layout__main con position: sticky, por eso ningún
+// contenedor intermedio puede tener overflow (clip recorta sin crear un contenedor de scroll).
+.table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: clip;
+
+  .table-scroll {
+    overflow: visible;
+
+    // En pantallas angostas la tabla necesita scroll horizontal; ahí la cabecera deja de ser fija.
+    @media (max-width: 1023px) {
+      overflow-x: auto;
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    text-align: left;
+
+    > thead > tr > th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f8fafc;
+      padding: 9px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 7px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+  }
+}
+
+// Columnas especiales
+.toggle-col {
+  width: 38px;
+  padding-right: 0 !important;
+}
+
+.actions-col {
+  text-align: right;
+  width: 130px;
+}
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// --------------------------------------------------------------------------
+// 7. Fila Agrupada por Cliente (NIT)
+// --------------------------------------------------------------------------
+table.grouped {
+  .group-row {
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+
+  .group.open .group-row {
+    background: #f8fafc;
+
+    td {
+      border-bottom-color: transparent;
+    }
+  }
+
+  .chevron {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 4px;
+    color: #64748b;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.18s ease, color 0.18s ease;
+
+    &:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    &.rotated {
+      transform: rotate(90deg);
+      color: #0f172a;
+    }
+  }
+
+  // Nombre y NIT en una sola línea para que cada cliente ocupe una fila compacta.
+  .client-cell {
+    width: 100%;
+    max-width: 0; // permite truncar el nombre en lugar de ensanchar la tabla
+    min-width: 260px;
+
+    .client-line {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .client-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 13px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .client-nit {
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #94a3b8;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+
+    .client-tag {
+      flex-shrink: 0;
+      font-size: 10.5px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+  }
+
+  .pdf-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    color: #16a34a;
+    white-space: nowrap;
+  }
+
+  .count-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #334155;
+  }
+
+  // Sub-tabla anidada
+  .detail-row > td {
+    background: #f8fafc;
+    padding: 6px 14px 14px 14px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .nested-wrapper {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+
+    table.nested {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+
+      th {
+        position: static; // solo la cabecera principal es fija
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      tfoot td {
+        background: #f8fafc;
+        padding: 10px 12px;
+        border-bottom: none;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .tfoot-title {
+        font-weight: 600;
+        color: #334155;
+        font-size: 12px;
+      }
+
+      .total-breakdown {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        font-size: 12px;
+
+        strong {
+          font-size: 13px;
+          color: #0f172a;
+        }
+
+        .sub-paid {
+          color: #166534;
+          font-size: 11px;
+          font-weight: 500;
+        }
+
+        .sub-pending {
+          color: #92400e;
+          font-size: 11px;
+          font-weight: 500;
+        }
+      }
+
+      .actions-end {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// 8. Elementos de Datos (Pills, Enlaces, Montos)
+// --------------------------------------------------------------------------
+.invoice-link,
+.invoice-code {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.invoice-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.amount-val {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+
+  &--strong {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  // Los ceros no compiten visualmente con los montos reales.
+  &--zero {
+    color: #cbd5e1;
+  }
+}
+
+.text-success {
+  color: #166534;
+}
+
+.text-amber {
+  color: #92400e;
+}
+
+// Badges / Pastillas de Estado (Minimalistas, Colores Normales)
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  &--paid {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #bbf7d0;
+
+    .dot {
+      background: #16a34a;
+    }
+  }
+
+  &--pending {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+
+    .dot {
+      background: #d97706;
+    }
+  }
+
+  &--processing {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+
+    .dot {
+      background: #2563eb;
+    }
+  }
+
+  &--voided {
+    background: #f8fafc;
+    color: #64748b;
+    border-color: #e2e8f0;
+
+    .dot {
+      background: #94a3b8;
+    }
+  }
+
+  &--neutral {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #e2e8f0;
+  }
+}
+
+// Botones de acción en filas
+.row-actions,
+.nested-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.btn-row {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.3;
+  transition: all 0.15s ease;
+
+  &--secondary {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #334155;
+
+    &:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: #64748b;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// 9. Paginador
+// --------------------------------------------------------------------------
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+
+  .pager-info {
+    font-size: 12px;
+    color: #64748b;
+
+    strong {
+      color: #0f172a;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .pager-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  // "Filas" y el selector en la misma línea (los estilos globales de label los apilan).
+  .page-size {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 400;
+    color: #64748b;
+
+    span {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 400;
+      color: #64748b;
+    }
+
+    select {
+      height: 28px;
+      padding: 0 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 12px;
+      color: #0f172a;
+      background: #ffffff;
+      cursor: pointer;
+    }
+  }
+
+  .pager-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .page-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    color: #334155;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled):not(.active) {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    &.active {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  .page-gap {
+    min-width: 20px;
+    text-align: center;
+    color: #94a3b8;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 10. Estados Vacío y Carga
+// --------------------------------------------------------------------------
+.empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 16px;
+  }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: #64748b;
+  font-size: 13px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 12px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #0f172a;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// --------------------------------------------------------------------------
+// 11. Modal (Consolidado, Factura Oficial Siigo y JSON)
+// --------------------------------------------------------------------------
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-dialog {
+  background: #ffffff;
+  border-radius: 10px;
+  max-width: 860px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+
+  &.modal-dialog-xl {
+    max-width: 1040px;
+    width: 95vw;
+    height: 88vh;
+  }
+}
+
+.pdf-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-body--pdf {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f1f5f9;
+  flex: 1;
+  overflow: hidden;
+
+  .loading-state,
+  .empty-state {
+    margin: 20px;
+  }
+}
+
+.pdf-viewer-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+  border: none;
+  background: #ffffff;
+  display: block;
+  flex: 1;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0 0 3px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .subtle {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .close-btn {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+  }
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 20px 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+
+  button {
+    border: none;
+    background: transparent;
+    padding: 8px 14px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #64748b;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(.active) {
+      color: #0f172a;
+    }
+
+    &.active {
+      color: #0f172a;
+      font-weight: 600;
+      border-bottom-color: #0f172a;
+      background: #ffffff;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+  }
+}
+
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+
+  .modal-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0 0 12px;
+  }
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: #f8fafc;
+}
+
+// --------------------------------------------------------------------------
+// 12. Representación Gráfica Oficial Siigo
+// --------------------------------------------------------------------------
+.siigo-invoice-wrapper {
+  background: #475569;
+  padding: 16px 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.siigo-invoice-sheet {
+  position: relative;
+  width: 816px;
+  min-height: 1020px;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #000000;
+  font-size: 8.5px;
+  line-height: 1.25;
+  padding: 20px 24px 20px 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0 auto;
+
+  table.siigo-table {
+    border-collapse: collapse;
+    width: 100%;
+    color: #000000;
+    margin-bottom: 5px;
+    font-size: 8.5px;
+
+    th, td {
+      border: 1px solid #000000;
+      padding: 2px 4px;
+      vertical-align: middle;
+    }
+  }
+
+  .siigo-label-cell {
+    background-color: #e5e5e5 !important;
+    font-weight: bold;
+  }
+
+  .bold { font-weight: bold; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  .mono { font-family: ui-monospace, Courier, monospace; }
+
+  .siigo-vertical-sidebar {
+    position: absolute;
+    right: 4px;
+    top: 220px;
+    writing-mode: vertical-rl;
+    font-size: 7.2px;
+    color: #666666;
+    letter-spacing: 0.2px;
+    font-family: Arial, sans-serif;
+  }
+
+  .siigo-head-grid {
+    display: grid;
+    grid-template-columns: 26% 46% 28%;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .siigo-head-logo {
+    text-align: center;
+    .siigo-logo-img {
+      max-width: 150px;
+      max-height: 56px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+
+  .siigo-head-company {
+    text-align: center;
+    font-size: 8.5px;
+    line-height: 1.2;
+    .comp-name {
+      font-weight: bold;
+      font-size: 10.5px;
+    }
+  }
+
+  .siigo-head-qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .siigo-qr {
+      background: #ffffff;
+      border: 1px solid #000000;
+      padding: 1px;
+      margin-bottom: 2px;
+    }
+
+    .siigo-box-title {
+      border: 1px solid #000000;
+      width: 100%;
+      padding: 2px 4px;
+      text-align: center;
+      font-size: 8px;
+      box-sizing: border-box;
+
+      .fe-label { font-weight: bold; font-size: 8.5px; }
+      .fe-num { font-size: 11px; font-weight: 900; margin: 1px 0; color: #000000; }
+      .fe-sublabel { font-weight: bold; font-size: 7.5px; }
+      .fe-dates { font-size: 7.5px; }
+    }
+  }
+
+  .siigo-items-count {
+    font-size: 8.5px;
+    margin-bottom: 4px;
+  }
+
+  .siigo-totals-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 6px;
+
+    .siigo-totals-table {
+      width: 280px;
+    }
+  }
+
+  .siigo-footer-line {
+    font-size: 8px;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
+  }
+
+  .siigo-observations {
+    font-size: 7.5px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+
+  .siigo-signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-size: 8px;
+    text-align: center;
+
+    .sig-box {
+      width: 38%;
+      div {
+        border-top: 1px solid #000000;
+        padding-top: 2px;
+      }
+    }
+  }
+
+  .siigo-notice {
+    text-align: center;
+    font-weight: bold;
+    font-size: 7px;
+    margin-bottom: 4px;
+  }
+
+  .siigo-legal-box {
+    border: 1px solid #000000;
+    padding: 3px 5px;
+    font-size: 7px;
+    text-align: justify;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  .siigo-cufe {
+    text-align: center;
+    font-weight: bold;
+    font-size: 7.5px;
+    word-break: break-all;
+    margin-bottom: 4px;
+  }
+
+  .siigo-bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5px;
+    border-top: 1px solid #cccccc;
+    padding-top: 2px;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 14. Pestaña de Control y Trazabilidad / Liquidación de Pagos
+// --------------------------------------------------------------------------
+.invoice-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .selector-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .selector-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .selector-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    &.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+
+      .pill-amount {
+        color: #94a3b8;
+      }
+    }
+
+    .pill-amount {
+      font-size: 11px;
+      color: #64748b;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.detail-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .card-head-block {
+    margin-bottom: 14px;
+
+    .subtle {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+  }
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    dt {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 13px;
+      color: #0f172a;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.cufe-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+
+  .cufe-label {
+    font-weight: 600;
+    color: #475569;
+    flex-shrink: 0;
+  }
+
+  .cufe-code {
+    color: #64748b;
+    font-size: 11.5px;
+    word-break: break-all;
+  }
+}
+
+.payment-snapshot {
+  margin-top: 14px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  .snapshot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+
+    h5 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  }
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+// --------------------------------------------------------------------------
+// 15. Accesibilidad & Print
+// --------------------------------------------------------------------------
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media print {
+  body, html {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-invoice, #printable-invoice * {
+    visibility: visible;
+  }
+  #printable-invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 20px !important;
+    margin: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  table.grouped .chevron,
+  .view-switch button,
+  .btn {
+    transition: none;
+  }
+}

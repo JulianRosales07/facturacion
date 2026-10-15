@@ -1,0 +1,755 @@
+<div class="profile-page">
+  <!-- Top Breadcrumb / Page Header -->
+  <header class="profile-header">
+    <div class="profile-header__titles">
+      <nav class="profile-breadcrumb" aria-label="Ruta de navegación">
+        <a routerLink="/dashboard" class="profile-breadcrumb__link">
+          <mat-icon class="profile-breadcrumb__icon">home</mat-icon>
+          Inicio
+        </a>
+        <span class="profile-breadcrumb__separator">/</span>
+        <span class="profile-breadcrumb__current">Mi Perfil</span>
+      </nav>
+      <h1 class="profile-header__title">Perfil del Usuario</h1>
+      <p class="profile-header__subtitle">
+        Gestión de identidad corporativa, permisos asignados y seguridad en la plataforma de Facturación Corporativa.
+      </p>
+    </div>
+
+    <div class="profile-header__actions">
+      <button type="button" class="btn btn--outline" (click)="downloadSecuritySummary()" title="Descargar Ficha de Seguridad">
+        <mat-icon class="btn-icon">file_download</mat-icon>
+        <span>Ficha de Seguridad</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Profile Banner Card -->
+  <section class="hero-card">
+    <div class="hero-card__banner">
+      <div class="hero-card__badge-wrapper">
+        <span class="badge-pill badge-pill--green">
+          <span class="status-dot"></span>
+          Sesión Activa
+        </span>
+        <span class="badge-pill badge-pill--corp">
+          {{ currentUser()?.role?.name || 'Administrador' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="hero-card__body">
+      <!-- Avatar Section -->
+      <div class="hero-card__avatar-container">
+        <div class="hero-card__avatar-ring">
+          @if (selectedAvatarUrl() && !avatarFailed()) {
+            <img [src]="selectedAvatarUrl()" [alt]="currentUser()?.fullName" class="hero-card__avatar-img" (error)="avatarFailed.set(true)" />
+          } @else {
+            <div class="hero-card__avatar-fallback">
+              {{ (currentUser()?.fullName?.charAt(0) || 'U') | uppercase }}
+            </div>
+          }
+        </div>
+
+        <div class="hero-card__avatar-picker">
+          <span class="hero-card__picker-label">Foto de perfil:</span>
+          <div class="hero-card__avatar-options">
+            @for (opt of availableAvatars; track opt.label) {
+              <button
+                type="button"
+                class="avatar-option-btn"
+                [class.avatar-option-btn--active]="selectedAvatarUrl() === opt.url"
+                (click)="selectAvatar(opt.url)"
+                [title]="opt.label"
+              >
+                @if (opt.url) {
+                  <img [src]="opt.url" [alt]="opt.label" class="avatar-option-thumb" />
+                } @else {
+                  <span class="avatar-option-initial">JP</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Identity Details -->
+      <div class="hero-card__details">
+        <div class="hero-card__name-row">
+          <h2 class="hero-card__name">{{ currentUser()?.fullName || 'Julián Palacios' }}</h2>
+          <span class="hero-card__username">@{{ currentUser()?.username || 'jpalacios' }}</span>
+        </div>
+
+        <p class="hero-card__role-desc">
+          <mat-icon class="hero-card__icon">badge</mat-icon>
+          <strong>{{ currentUser()?.position || 'Administrador Corporativo de Facturación' }}</strong>
+          &bull; {{ currentUser()?.department || 'Tecnología y Operaciones' }}
+        </p>
+
+        <div class="hero-card__meta-tags">
+          <span class="meta-tag">
+            <mat-icon class="meta-tag__icon">business</mat-icon>
+            {{ currentUser()?.company || 'Sistemas Palacios S.A.S.' }} (NIT 900.123.456-7)
+          </span>
+          <span class="meta-tag">
+            <mat-icon class="meta-tag__icon">email</mat-icon>
+            {{ currentUser()?.email || 'j.palacios@sistemaspalacios.com' }}
+          </span>
+          <span class="meta-tag">
+            <mat-icon class="meta-tag__icon">location_on</mat-icon>
+            {{ currentUser()?.location || 'Sede Principal - Bogotá, D.C.' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Navigation Tabs -->
+  <nav class="profile-tabs" role="tablist" aria-label="Secciones del perfil">
+    <button
+      type="button"
+      role="tab"
+      class="profile-tab"
+      [class.profile-tab--active]="activeTab() === 'info'"
+      [attr.aria-selected]="activeTab() === 'info'"
+      (click)="setTab('info')"
+    >
+      <mat-icon class="profile-tab__icon">person</mat-icon>
+      <span>Información Personal</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="profile-tab"
+      [class.profile-tab--active]="activeTab() === 'permissions'"
+      [attr.aria-selected]="activeTab() === 'permissions'"
+      (click)="setTab('permissions')"
+    >
+      <mat-icon class="profile-tab__icon">verified_user</mat-icon>
+      <span>Roles y Permisos</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="profile-tab"
+      [class.profile-tab--active]="activeTab() === 'security'"
+      [attr.aria-selected]="activeTab() === 'security'"
+      (click)="setTab('security')"
+    >
+      <mat-icon class="profile-tab__icon">lock</mat-icon>
+      <span>Seguridad y Sesión</span>
+    </button>
+
+    <button
+      type="button"
+      role="tab"
+      class="profile-tab"
+      [class.profile-tab--active]="activeTab() === 'preferences'"
+      [attr.aria-selected]="activeTab() === 'preferences'"
+      (click)="setTab('preferences')"
+    >
+      <mat-icon class="profile-tab__icon">tune</mat-icon>
+      <span>Preferencias</span>
+    </button>
+  </nav>
+
+  <!-- TAB 1: INFORMACIÓN PERSONAL -->
+  @if (activeTab() === 'info') {
+    <section class="tab-content" aria-label="Información Personal">
+      <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" class="card-section">
+        <div class="card-section__header">
+          <div>
+            <h3 class="card-section__title">Datos Generales del Usuario</h3>
+            <p class="card-section__subtitle">
+              Información de contacto corporativo utilizada en las firmas de emisión y registros de auditoría.
+            </p>
+          </div>
+          <div class="card-section__actions">
+            <button type="button" class="btn btn--outline" (click)="onResetProfile()" [disabled]="isSaving()">
+              Descartar
+            </button>
+            <button type="submit" class="btn btn--primary-red" [disabled]="isSaving()">
+              <mat-icon class="btn-icon">save</mat-icon>
+              <span>{{ isSaving() ? 'Guardando…' : 'Guardar Cambios' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <!-- Nombres y Apellidos -->
+          <div class="form-field">
+            <label for="fullName" class="form-label">
+              Nombre Completo <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">person</mat-icon>
+              <input
+                id="fullName"
+                type="text"
+                class="form-input"
+                formControlName="fullName"
+                placeholder="Ej. Julián Palacios"
+              />
+            </div>
+            @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+              <span class="field-error">Ingresa un nombre válido (mínimo 3 caracteres).</span>
+            }
+          </div>
+
+          <!-- Nombre de Usuario (Readonly SSO) -->
+          <div class="form-field">
+            <label for="username" class="form-label">
+              Usuario Corporativo (SSO)
+            </label>
+            <div class="input-wrapper input-wrapper--disabled">
+              <mat-icon class="input-icon">account_circle</mat-icon>
+              <input
+                id="username"
+                type="text"
+                class="form-input"
+                formControlName="username"
+              />
+              <span class="sso-badge">OIDC</span>
+            </div>
+            <span class="field-hint">Asignado por el directorio corporativo. No editable.</span>
+          </div>
+
+          <!-- Correo Electrónico -->
+          <div class="form-field">
+            <label for="email" class="form-label">
+              Correo Electrónico <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">email</mat-icon>
+              <input
+                id="email"
+                type="email"
+                class="form-input"
+                formControlName="email"
+                placeholder="ejemplo@sistemaspalacios.com"
+              />
+            </div>
+            @if (profileForm.get('email')?.invalid && profileForm.get('email')?.touched) {
+              <span class="field-error">Ingresa un correo corporativo válido.</span>
+            }
+          </div>
+
+          <!-- Teléfono -->
+          <div class="form-field">
+            <label for="phone" class="form-label">
+              Teléfono / Celular Corporativo <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">phone</mat-icon>
+              <input
+                id="phone"
+                type="text"
+                class="form-input"
+                formControlName="phone"
+                placeholder="+57 (601) 745-8900"
+              />
+            </div>
+          </div>
+
+          <!-- Cargo -->
+          <div class="form-field">
+            <label for="position" class="form-label">
+              Cargo / Posición <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">work</mat-icon>
+              <input
+                id="position"
+                type="text"
+                class="form-input"
+                formControlName="position"
+                placeholder="Administrador Corporativo de Facturación"
+              />
+            </div>
+          </div>
+
+          <!-- Departamento -->
+          <div class="form-field">
+            <label for="department" class="form-label">
+              Departamento / Área <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">corporate_fare</mat-icon>
+              <input
+                id="department"
+                type="text"
+                class="form-input"
+                formControlName="department"
+                placeholder="Tecnología y Operaciones"
+              />
+            </div>
+          </div>
+
+          <!-- Ubicación / Sede -->
+          <div class="form-field">
+            <label for="location" class="form-label">
+              Sede Corporativa <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">place</mat-icon>
+              <input
+                id="location"
+                type="text"
+                class="form-input"
+                formControlName="location"
+                placeholder="Sede Principal - Bogotá, D.C."
+              />
+            </div>
+          </div>
+
+          <!-- Empresa Asignada -->
+          <div class="form-field">
+            <label for="company" class="form-label">
+              Empresa / Razón Social
+            </label>
+            <div class="input-wrapper input-wrapper--disabled">
+              <mat-icon class="input-icon">domain</mat-icon>
+              <input
+                id="company"
+                type="text"
+                class="form-input"
+                formControlName="company"
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+  }
+
+  <!-- TAB 2: ROLES Y PERMISOS -->
+  @if (activeTab() === 'permissions') {
+    <section class="tab-content" aria-label="Roles y Permisos">
+      <!-- Role Summary Banner -->
+      <div class="role-overview-card">
+        <div class="role-overview-card__icon-box">
+          <mat-icon>admin_panel_settings</mat-icon>
+        </div>
+        <div class="role-overview-card__info">
+          <div class="role-overview-card__badge-row">
+            <h3 class="role-overview-card__title">{{ currentUser()?.role?.name || 'Administrador del Sistema' }}</h3>
+            <span class="badge-pill badge-pill--red">Nivel de Acceso Total</span>
+          </div>
+          <p class="role-overview-card__desc">
+            {{ currentUser()?.role?.description || 'Control y administración global sobre los módulos de facturación, recepción Siigo, integración de órdenes y catálogo impositivo.' }}
+          </p>
+          <div class="role-overview-card__footer">
+            <span><strong>ID Rol:</strong> {{ currentUser()?.role?.id || 'ROL_ADMINISTRADOR' }}</span>
+            &bull;
+            <span><strong>Código:</strong> {{ currentUser()?.role?.code || 'ADMIN' }}</span>
+            &bull;
+            <span><strong>Estado:</strong> Activo y Vigente</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module Permissions Grid -->
+      <div class="permissions-modules-grid">
+        <!-- Module 1: Recepción de Facturas -->
+        <div class="module-card">
+          <div class="module-card__header">
+            <mat-icon class="module-card__header-icon">inbox</mat-icon>
+            <div>
+              <h4 class="module-card__title">Recepción de Facturas</h4>
+              <span class="module-card__subtitle">Sincronización y lectura de documentos Siigo</span>
+            </div>
+          </div>
+          <ul class="permission-list">
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Consulta de facturas recibidas</strong>
+                <p>Visualizar el tablero y detalles de facturación electrónica.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Descarga de PDF y XML</strong>
+                <p>Acceder a las representaciones gráficas de las facturas.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Sincronización manual de carpetas</strong>
+                <p>Disparar ciclos de lectura de archivos locales en el servidor.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Auditoría de historial de archivos</strong>
+                <p>Consultar registros de lecturas, errores e incidencias.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Module 2: Gestión de Facturación -->
+        <div class="module-card">
+          <div class="module-card__header">
+            <mat-icon class="module-card__header-icon">receipt_long</mat-icon>
+            <div>
+              <h4 class="module-card__title">Gestión de Facturación</h4>
+              <span class="module-card__subtitle">Importación, lotes Siigo y notas crédito</span>
+            </div>
+          </div>
+          <ul class="permission-list">
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Importación de órdenes de compra</strong>
+                <p>Cargar archivos CSV/Excel y validar coherencia de datos.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Generación de facturas electrónicas</strong>
+                <p>Construir e intermediar facturas autorizadas.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Lotes de facturación Siigo</strong>
+                <p>Crear lotes masivos, verificar consistencia contable.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Notas crédito y devoluciones</strong>
+                <p>Emisión y anulación de transacciones facturadas.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Module 3: Cartera y Tributos -->
+        <div class="module-card">
+          <div class="module-card__header">
+            <mat-icon class="module-card__header-icon">account_balance_wallet</mat-icon>
+            <div>
+              <h4 class="module-card__title">Cartera y Tributación</h4>
+              <span class="module-card__subtitle">Seguimiento de cobros, pagos y tarifas</span>
+            </div>
+          </div>
+          <ul class="permission-list">
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Consulta y conciliación de cartera</strong>
+                <p>Seguimiento de facturas vencidas y por recaudar.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Liquidación de pagos y retenciones</strong>
+                <p>Aplicación de ReteFuente, ReteIVA y ReteICA sobre facturas.</p>
+              </div>
+            </li>
+            <li class="permission-item">
+              <mat-icon class="perm-icon perm-icon--allowed">check_circle</mat-icon>
+              <div>
+                <strong>Catálogo tributario corporativo</strong>
+                <p>Mantenimiento de reglas impositivas y porcentajes fiscales.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="security-policy-notice">
+        <mat-icon class="policy-icon">info</mat-icon>
+        <p>
+          Los permisos asignados a tu cuenta son gestionados por el área de Sistemas Palacios TI mediante políticas corporativas de seguridad y SSO. Si requieres acceso a funciones restringidas, solicita un cambio de perfil a tu supervisor.
+        </p>
+      </div>
+    </section>
+  }
+
+  <!-- TAB 3: SEGURIDAD Y SESIÓN -->
+  @if (activeTab() === 'security') {
+    <section class="tab-content" aria-label="Seguridad y Sesión">
+      <div class="security-grid">
+        <!-- SSO & Token Status Card -->
+        <div class="card-section">
+          <div class="card-section__header">
+            <div>
+              <h3 class="card-section__title">Identidad y Estado de Autenticación</h3>
+              <p class="card-section__subtitle">Verificación de credenciales en el proveedor corporativo.</p>
+            </div>
+            <span class="badge-pill badge-pill--green">SSO Conectado</span>
+          </div>
+
+          <div class="security-attributes">
+            <div class="sec-attr">
+              <span class="sec-attr__label">Protocolo de Seguridad</span>
+              <span class="sec-attr__val">OAuth 2.0 / OpenID Connect (PKCE S256)</span>
+            </div>
+            <div class="sec-attr">
+              <span class="sec-attr__label">Validación de Firma</span>
+              <span class="sec-attr__val">Verificado en Backend (/api/v1/sesion)</span>
+            </div>
+            <div class="sec-attr">
+              <span class="sec-attr__label">Cifrado de Canal</span>
+              <span class="sec-attr__val">TLS 1.3 / HTTPS Cifrado End-to-End</span>
+            </div>
+            <div class="sec-attr">
+              <span class="sec-attr__label">Modo de Ejecución</span>
+              <span class="sec-attr__val">
+                {{ isLocalPreview ? 'Desarrollo Local / Local Preview Activo' : 'Sesión Corporativa de Producción' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Change Card -->
+        <div class="card-section">
+          <div class="card-section__header">
+            <div>
+              <h3 class="card-section__title">Actualizar Contraseña de Acceso</h3>
+              <p class="card-section__subtitle">Asegura tu cuenta con una contraseña robusta y única.</p>
+            </div>
+          </div>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="password-form">
+            <div class="form-field">
+              <label for="currentPassword" class="form-label">Contraseña Actual <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <mat-icon class="input-icon">lock_outline</mat-icon>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  class="form-input"
+                  formControlName="currentPassword"
+                  placeholder="••••••••••••"
+                />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="newPassword" class="form-label">Nueva Contraseña <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <mat-icon class="input-icon">vpn_key</mat-icon>
+                <input
+                  id="newPassword"
+                  type="password"
+                  class="form-input"
+                  formControlName="newPassword"
+                  (input)="onPasswordInput($event)"
+                  placeholder="Mínimo 8 caracteres"
+                />
+              </div>
+
+              <!-- Password Strength Bar -->
+              @if (newPasswordValue()) {
+                <div class="password-strength">
+                  <div class="password-strength__bar">
+                    <div
+                      class="password-strength__fill"
+                      [style.width.%]="passwordStrength().score"
+                      [style.background-color]="passwordStrength().color"
+                    ></div>
+                  </div>
+                  <span class="password-strength__label" [style.color]="passwordStrength().color">
+                    Fortaleza: {{ passwordStrength().label }}
+                  </span>
+                </div>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <mat-icon class="input-icon">lock</mat-icon>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  class="form-input"
+                  formControlName="confirmPassword"
+                  placeholder="Repite la nueva contraseña"
+                />
+              </div>
+            </div>
+
+            <div class="password-actions">
+              <button type="submit" class="btn btn--primary-red" [disabled]="isChangingPassword()">
+                <mat-icon class="btn-icon">key</mat-icon>
+                <span>{{ isChangingPassword() ? 'Actualizando…' : 'Cambiar Contraseña' }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Active Sessions Section -->
+      <div class="card-section sessions-card">
+        <div class="card-section__header">
+          <div>
+            <h3 class="card-section__title">Sesiones y Dispositivos Activos</h3>
+            <p class="card-section__subtitle">Dispositivos donde has iniciado sesión recientemente.</p>
+          </div>
+          <button type="button" class="btn btn--outline" (click)="terminateOtherSessions()">
+            <mat-icon class="btn-icon">power_settings_new</mat-icon>
+            <span>Cerrar Otras Sesiones</span>
+          </button>
+        </div>
+
+        <div class="sessions-list">
+          @for (s of sessions; track s.ip) {
+            <div class="session-item" [class.session-item--current]="s.current">
+              <div class="session-item__icon-box">
+                <mat-icon>{{ s.browserIcon }}</mat-icon>
+              </div>
+              <div class="session-item__info">
+                <div class="session-item__title-row">
+                  <strong class="session-item__device">{{ s.device }}</strong>
+                  @if (s.current) {
+                    <span class="badge-pill badge-pill--green">Sesión Actual</span>
+                  }
+                </div>
+                <p class="session-item__meta">
+                  {{ s.location }} &bull; {{ s.ip }} &bull; {{ s.lastActive }}
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- TAB 4: PREFERENCIAS -->
+  @if (activeTab() === 'preferences') {
+    <section class="tab-content" aria-label="Preferencias del Sistema">
+      <div class="preferences-grid">
+        <!-- Theme Preference Card -->
+        <div class="card-section">
+          <div class="card-section__header">
+            <div>
+              <h3 class="card-section__title">Apariencia y Tema Visual</h3>
+              <p class="card-section__subtitle">Personaliza la interfaz según tu entorno de trabajo.</p>
+            </div>
+          </div>
+
+          <div class="theme-options">
+            <div
+              class="theme-card"
+              [class.theme-card--selected]="!isDarkMode()"
+              (click)="toggleTheme(false)"
+              role="button"
+              tabindex="0"
+            >
+              <div class="theme-card__preview theme-card__preview--light">
+                <div class="theme-preview-topbar"></div>
+                <div class="theme-preview-body">
+                  <div class="theme-preview-sidebar"></div>
+                  <div class="theme-preview-content"></div>
+                </div>
+              </div>
+              <div class="theme-card__label">
+                <mat-icon>wb_sunny</mat-icon>
+                <span>Modo Claro (Predeterminado)</span>
+              </div>
+            </div>
+
+            <div
+              class="theme-card"
+              [class.theme-card--selected]="isDarkMode()"
+              (click)="toggleTheme(true)"
+              role="button"
+              tabindex="0"
+            >
+              <div class="theme-card__preview theme-card__preview--dark">
+                <div class="theme-preview-topbar"></div>
+                <div class="theme-preview-body">
+                  <div class="theme-preview-sidebar"></div>
+                  <div class="theme-preview-content"></div>
+                </div>
+              </div>
+              <div class="theme-card__label">
+                <mat-icon>nightlight_round</mat-icon>
+                <span>Modo Oscuro</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="card-section">
+          <div class="card-section__header">
+            <div>
+              <h3 class="card-section__title">Notificaciones del Sistema</h3>
+              <p class="card-section__subtitle">Avisos en tiempo real sobre sincronizaciones y cartera.</p>
+            </div>
+          </div>
+
+          <div class="toggle-list">
+            <label class="toggle-row">
+              <div class="toggle-row__info">
+                <strong>Sincronización Siigo Completada</strong>
+                <p>Notificar cuando una lectura de facturas y PDF termine con éxito.</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle-switch"
+                [checked]="prefSyncSuccess()"
+                (change)="prefSyncSuccess.set(!prefSyncSuccess())"
+              />
+            </label>
+
+            <label class="toggle-row">
+              <div class="toggle-row__info">
+                <strong>Advertencias en Sincronización</strong>
+                <p>Alertar de facturas sin PDF asociado o archivos no clasificados.</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle-switch"
+                [checked]="prefSyncWarning()"
+                (change)="prefSyncWarning.set(!prefSyncWarning())"
+              />
+            </label>
+
+            <label class="toggle-row">
+              <div class="toggle-row__info">
+                <strong>Alertas de Lotes Siigo</strong>
+                <p>Avisar cuando un lote contable sea generado o rechazado.</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle-switch"
+                [checked]="prefBatchAlerts()"
+                (change)="prefBatchAlerts.set(!prefBatchAlerts())"
+              />
+            </label>
+
+            <label class="toggle-row">
+              <div class="toggle-row__info">
+                <strong>Alertas de Cartera Vencida</strong>
+                <p>Avisos de facturas con mora superior a 30 días calendario.</p>
+              </div>
+              <input
+                type="checkbox"
+                class="toggle-switch"
+                [checked]="prefOverdueCartera()"
+                (change)="prefOverdueCartera.set(!prefOverdueCartera())"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+</div>

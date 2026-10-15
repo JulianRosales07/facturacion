@@ -1,0 +1,488 @@
+<div class="import-page">
+  <!-- Processing Loading Modal / Overlay -->
+  @if (isUploading()) {
+    <div class="processing-overlay">
+      <div class="processing-card">
+        <div class="spinner-ring"></div>
+        <h3 class="processing-title">Procesando y Guardando en Base de Datos</h3>
+        <p class="processing-desc">{{ uploadProgressText() }}</p>
+        <div class="progress-bar">
+          <div class="progress-bar__fill"></div>
+        </div>
+        <span class="processing-hint">Sincronizando clientes, sedes, contratos y trazabilidad...</span>
+      </div>
+    </div>
+  }
+
+  <!-- Page Header -->
+  <header class="import-header">
+    <div class="import-header__main">
+      <h1 class="import-header__title">Importar Órdenes y Novedades</h1>
+      <p class="import-header__subtitle">
+        Carga masiva de suscripciones, altas de sedes y novedades contractuales almacenadas en base de datos
+      </p>
+    </div>
+    <div class="import-header__meta">
+      <label class="period-badge period-badge--input">
+        Periodo de importación:
+        <input type="month" [ngModel]="currentPeriod()" (ngModelChange)="setPeriod($event)" aria-label="Periodo al que se asignan las novedades importadas" />
+      </label>
+      <button type="button" class="btn btn--refresh" (click)="checkFolderConfig(); loadHistory(); loadRecentRecords()" title="Recargar datos de la BD">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"></path>
+          <path d="M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        Sincronizar BD
+      </button>
+    </div>
+  </header>
+
+  <!-- 1. Dos métodos de entrada Card -->
+  <section class="card methods-card">
+    <h2 class="card-title">Dos métodos de entrada</h2>
+    <div class="methods-card__grid">
+      <!-- Method 1: Excel / Archivo Manual -->
+      <div class="method-col">
+        <div class="method-col__header">
+          <div class="method-icon-box method-icon-box--excel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="8" y1="13" x2="16" y2="13"></line>
+              <line x1="8" y1="17" x2="16" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="method-col__title">1. Importación por Excel o Archivo Plano</h3>
+            <span class="method-col__badge method-col__badge--excel">Excel (.xlsx, .xls) / CSV / TXT</span>
+          </div>
+        </div>
+        <p class="method-col__desc">
+          Sube un archivo de cálculo Excel o archivo plano desde tu equipo. El backend lo procesa y persiste los registros directamente en la base de datos PostgreSQL.
+        </p>
+        <span class="method-col__hint">Formatos soportados: XLSX, XLS, CSV, TXT, TSV · hasta 20 MB.</span>
+        <div class="method-col__action">
+          <button type="button" class="btn btn--outline" (click)="scrollToUpload()">
+            Subir archivo Excel / plano
+          </button>
+        </div>
+      </div>
+
+      <!-- Method 2: Consumo de Carpeta por Path -->
+      <div class="method-col">
+        <div class="method-col__header">
+          <div class="method-icon-box method-icon-box--folder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="method-col__title">2. Consumo por Path de Carpeta en Servidor</h3>
+            <span class="method-col__badge method-col__badge--folder">Servidor backend / Red UNC</span>
+          </div>
+        </div>
+        <p class="method-col__desc">
+          Consume directamente una carpeta compartida en el servidor donde se depositan los cortes de Siigo o novedades. Sin necesidad de subir archivos manualmente desde el navegador.
+        </p>
+        <span class="method-col__hint">Ruta local del servidor o recurso compartido UNC/SMB configurado.</span>
+        <div class="method-col__action">
+          <button type="button" class="btn btn--outline" (click)="scrollToMethods()">
+            Ver ruta y consumir carpeta
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Consumo de carpeta por Path en Servidor Card -->
+  <section class="card folder-card" id="folder-section">
+    <div class="folder-card__header">
+      <div>
+        <h2 class="card-title">Consumo de Carpeta en el Servidor (por Path)</h2>
+        <p class="folder-card__status">
+          El microservicio lee los archivos directamente desde la ruta del servidor (filesystem local o recurso compartido de red).
+        </p>
+      </div>
+
+      <!-- Server Connection Badge -->
+      @if (isPathAccessible() === true) {
+        <span class="connected-badge">
+          <span class="dot"></span> Servidor conectado a la ruta
+        </span>
+      } @else if (isPathAccessible() === false) {
+        <span class="disconnected-badge">
+          <span class="dot-red"></span> Ruta no encontrada en el servidor
+        </span>
+      }
+    </div>
+
+    <!-- Path configuration block -->
+    <div class="server-path-box">
+      <label class="form-label" for="serverPathInput">
+        <strong>Ruta absoluta o relativa en el Servidor (Path):</strong>
+      </label>
+      
+      <div class="server-path-row">
+        <div class="path-input-wrap">
+          <svg class="path-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <input
+            id="serverPathInput"
+            type="text"
+            class="form-input"
+            [value]="serverFolderPath()"
+            (input)="serverFolderPath.set($any($event.target).value)"
+            placeholder="Ej: ./storage/siigo_compartida o \\servidor-siigo\facturacion\novedades"
+          />
+        </div>
+
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="checkFolderConfig()"
+          [disabled]="isCheckingPath()"
+          title="Verificar si la ruta existe en el servidor y ver archivos pendientes"
+        >
+          @if (isCheckingPath()) {
+            <span class="btn-spinner"></span> Verificando...
+          } @else {
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Verificar ruta en servidor
+          }
+        </button>
+
+        <button
+          type="button"
+          class="btn btn--primary-red"
+          (click)="onReadFolderNow()"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          Consumir carpeta en servidor y guardar en BD
+        </button>
+      </div>
+
+      <!-- Quick path presets -->
+      <div class="path-presets">
+        <span class="presets-label">Rutas sugeridas del servidor:</span>
+        <button
+          type="button"
+          class="preset-chip"
+          [class.preset-chip--active]="serverFolderPath() === './storage/siigo_compartida'"
+          (click)="setServerPath('./storage/siigo_compartida')"
+        >
+          📁 ./storage/siigo_compartida (Servidor Local)
+        </button>
+        <button
+          type="button"
+          class="preset-chip"
+          [class.preset-chip--active]="serverFolderPath() === '\\\\servidor-siigo\\facturacion\\novedades'"
+          (click)="setServerPath('\\\\servidor-siigo\\facturacion\\novedades')"
+        >
+          🌐 \\servidor-siigo\facturacion\novedades (Red UNC)
+        </button>
+      </div>
+
+      <!-- Path inspection details card -->
+      <div class="path-details">
+        <div class="path-detail-row">
+          <span class="path-detail-label">Ruta resuelta en servidor:</span>
+          <code class="path-detail-value">{{ resolvedAbsolutePath() || serverFolderPath() }}</code>
+        </div>
+        <div class="path-detail-row">
+          <span class="path-detail-label">Estado de acceso:</span>
+          @if (isPathAccessible() === true) {
+            <span class="status-badge status-badge--success">Accesible por el backend</span>
+          } @else if (isPathAccessible() === false) {
+            <span class="status-badge status-badge--error">Ruta no accesible</span>
+          } @else {
+            <span class="status-badge status-badge--neutral">Sin verificar</span>
+          }
+        </div>
+        <div class="path-detail-row">
+          <span class="path-detail-label">Archivos pendientes detectados:</span>
+          <strong>{{ pendingFilesCount() }} archivo(s) (.xlsx, .xls, .csv, .txt)</strong>
+        </div>
+
+        @if (pendingFilesList().length > 0) {
+          <div class="pending-files-list">
+            <span class="pending-files-title">Archivos listos para consumo:</span>
+            <div class="pending-files-chips">
+              @for (file of pendingFilesList(); track $index) {
+                <span class="file-chip">📄 {{ file }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Checkbox Box Container -->
+    <div class="folder-card__checkbox-box">
+      <label class="checkbox-label">
+        <input type="checkbox" [checked]="autoReadHourly()" (change)="autoReadHourly.set(!autoReadHourly())" />
+        <span>Sincronizar y auditar automáticamente cada hora desde esta ruta del servidor</span>
+      </label>
+    </div>
+
+    <p class="folder-card__footnote">
+      Al ejecutar el consumo, el servidor lee los archivos del directorio especificado, parsea las suscripciones/novedades y las persiste directamente en las tablas <code>archivo_importado</code>, <code>archivo_importado_linea</code> y <code>sede_suscripcion</code> de la base de datos PostgreSQL.
+    </p>
+  </section>
+
+  <!-- 3. Historial de entradas Card -->
+  <section class="card history-card">
+    <div class="history-card__header">
+      <div>
+        <h2 class="card-title">Historial de Importaciones</h2>
+        <p class="history-card__subtitle">
+          Registro persistente en base de datos (<code>archivo_importado</code>) indicando origen, método y resultado
+        </p>
+      </div>
+      <div class="history-card__actions">
+        <!-- Filter chips -->
+        <div class="filter-pills">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="historyFilter() === 'ALL'"
+            (click)="historyFilter.set('ALL')"
+          >
+            Todas ({{ history().length }})
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="historyFilter() === 'EXCEL'"
+            (click)="historyFilter.set('EXCEL')"
+          >
+            Excel / Plano
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--active]="historyFilter() === 'CARPETA'"
+            (click)="historyFilter.set('CARPETA')"
+          >
+            Consumo de Carpeta
+          </button>
+        </div>
+
+        <button type="button" class="btn btn--sm btn--outline" (click)="loadHistory()" title="Actualizar historial">
+          Actualizar historial
+        </button>
+      </div>
+    </div>
+
+    <div class="history-table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>FECHA Y HORA</th>
+            <th>VÍA / MÉTODO DE IMPORTACIÓN</th>
+            <th>ARCHIVO / RUTA CONSUMIDA</th>
+            <th>RESULTADO EN BD</th>
+            <th>ESTADO BD</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredHistory().length === 0) {
+            <tr>
+              <td colspan="5" class="empty-cell">No hay registros de importación en el historial.</td>
+            </tr>
+          } @else {
+            @for (item of filteredHistory(); track item.id) {
+              <tr>
+                <td class="date-cell">{{ item.date }}</td>
+                <td>
+                  @if (item.method.includes('Carpeta') || item.method.includes('carpeta') || item.method.includes('red')) {
+                    <span class="method-tag method-tag--folder">
+                      📁 {{ item.method }}
+                    </span>
+                  } @else {
+                    <span class="method-tag method-tag--excel">
+                      📊 {{ item.method }}
+                    </span>
+                  }
+                </td>
+                <td class="file-cell">
+                  <strong>{{ item.fileName }}</strong>
+                </td>
+                <td>
+                  <span class="status-pill status-pill--{{ item.status }}">
+                    {{ item.result }}
+                  </span>
+                </td>
+                <td>
+                  <span class="db-pill">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2C6.48 2 2 4.24 2 7v10c0 2.76 4.48 5 10 5s10-2.24 10-5V7c0-2.76-4.48-5-10-5z"></path>
+                      <path d="M2 12c0 2.76 4.48 5 10 5s10-2.24 10-5"></path>
+                    </svg>
+                    Almacenado
+                  </span>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. Importar Archivo de Suscripciones y Novedades Card -->
+  <section class="card upload-card" id="upload-section">
+    <div class="upload-card__header">
+      <div class="upload-card__header-info">
+        <div class="upload-card__title-row">
+          <svg class="upload-card__title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <h2 class="card-title">Importar Archivo de Excel, Suscripciones y Novedades</h2>
+        </div>
+        <p class="upload-card__subtitle">
+          Cargue el archivo Excel (.xlsx, .xls) o plano. El sistema procesará las sedes activas, altas y cancelaciones guardándolas en base de datos.
+        </p>
+        <label class="period-badge period-badge--input">
+          Las novedades se asignan al periodo:
+          <input type="month" [ngModel]="currentPeriod()" (ngModelChange)="setPeriod($event)" aria-label="Periodo de las novedades del archivo" />
+        </label>
+      </div>
+    </div>
+
+    <!-- Drag & Drop Dropzone (Animated Cluster & Border Beam) -->
+    <app-file-upload
+      accept=".xlsx,.xls,.csv,.txt,.tsv,.jsonl"
+      [multiple]="false"
+      title="Haga clic o arrastre el archivo Excel o de novedades aquí"
+      description="Formatos admitidos: Excel (.xlsx, .xls), CSV delimitado, archivo plano TXT (hasta 25 MB)"
+      browseLabel="Examinar archivo"
+      draggingLabel="Suelte el archivo para importar"
+      (filesAccepted)="onFilesAccepted($event)"
+    ></app-file-upload>
+
+    <!-- Bottom Container: Todos los registros por NIT -->
+    <div class="records-container">
+      <div class="records-container__header">
+        <div>
+          <h3 class="records-container__title">Todos los registros por NIT (Almacenados en BD)</h3>
+          <p class="records-container__desc">
+            El NIT identifica al cliente. Cada documento, sede y servicio conserva su propia fila en la base de datos.
+          </p>
+        </div>
+        <span class="records-count">Total clientes: {{ importedRecords().length }}</span>
+      </div>
+
+      @if (importedRecords().length === 0) {
+        <p class="records-container__empty">No hay registros importados actualmente en la base de datos.</p>
+      } @else {
+        <div class="records-table-wrap">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>NIT</th>
+                <th>CLIENTE / RAZÓN SOCIAL</th>
+                <th>SEDES</th>
+                <th>VALOR TOTAL MENSUAL</th>
+                <th>ESTADO</th>
+                <th>SERVICIOS / SEDES ASOCIADAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (rec of paginatedRecords(); track rec.nit) {
+                <tr>
+                  <td><strong>{{ rec.nit }}</strong></td>
+                  <td>{{ rec.clientName }}</td>
+                  <td>
+                    <span class="branch-pill">{{ rec.branchesCount }} sede(s)</span>
+                  </td>
+                  <td class="amount-cell">{{ rec.totalAmount }}</td>
+                  <td>
+                    <span
+                      class="status-pill"
+                      [class.status-pill--success]="rec.status === 'Válido'"
+                      [class.status-pill--warning]="rec.status.includes('Advertencia')"
+                      [class.status-pill--error]="rec.status.includes('Error')"
+                    >
+                      {{ rec.status }}
+                    </span>
+                  </td>
+                  <td class="services-cell">
+                    @for (svc of rec.services; track $index) {
+                      <span class="service-chip">{{ svc }}</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <nav class="pager" aria-label="Paginación de clientes">
+          <span class="pager-info">
+            @if (importedRecords().length) {
+              Mostrando <strong>{{ recordsPage() * recordsPageSize() + 1 }}–{{ recordsPage() * recordsPageSize() + paginatedRecords().length }}</strong>
+              de <strong>{{ importedRecords().length }}</strong> {{ importedRecords().length === 1 ? 'cliente' : 'clientes' }}
+            } @else {
+              0 clientes
+            }
+          </span>
+          <div class="pager-controls">
+            <label class="page-size">
+              <span>Filas</span>
+              <select [ngModel]="recordsPageSize()" (ngModelChange)="changeRecordsPageSize($event)" aria-label="Filas por página">
+                @for (size of pageSizes; track size) {
+                  <option [ngValue]="size">{{ size }}</option>
+                }
+              </select>
+            </label>
+            <div class="pager-buttons">
+              <button type="button" class="page-btn" (click)="goToRecordsPage(recordsPage() - 1)" [disabled]="recordsPage() === 0" aria-label="Página anterior">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              @for (item of pageNumbers(recordsPage(), recordsTotalPages()); track $index) {
+                @if (item === null) {
+                  <span class="page-gap" aria-hidden="true">…</span>
+                } @else {
+                  <button type="button" class="page-btn" [class.active]="item === recordsPage()" [attr.aria-current]="item === recordsPage() ? 'page' : null"
+                    (click)="goToRecordsPage(item)" [attr.aria-label]="'Página ' + (item + 1)">{{ item + 1 }}</button>
+                }
+              }
+              <button type="button" class="page-btn" (click)="goToRecordsPage(recordsPage() + 1)" [disabled]="recordsPage() + 1 >= recordsTotalPages()" aria-label="Página siguiente">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        </nav>
+      }
+    </div>
+  </section>
+
+  <!-- Novedades de un cliente en el periodo de importación: estado, impacto y factura donde se cobraron -->
+  <section class="card" id="novelties-section">
+    <h2 class="card-title">Novedades por cliente</h2>
+    <form class="novelty-query" (ngSubmit)="queryNovelties()">
+      <label>
+        NIT del cliente
+        <input name="noveltyNit" [(ngModel)]="noveltyNitInput" placeholder="Sin dígito de verificación" />
+      </label>
+      <label>
+        Periodo
+        <input name="noveltyPeriod" type="month" [ngModel]="currentPeriod()" (ngModelChange)="setPeriod($event)" />
+      </label>
+      <button type="submit" class="btn btn--outline">Consultar novedades</button>
+    </form>
+    @if (noveltyNit()) {
+      <app-novelties-panel [nit]="noveltyNit()" [periodo]="currentPeriod()"></app-novelties-panel>
+    }
+  </section>
+</div>

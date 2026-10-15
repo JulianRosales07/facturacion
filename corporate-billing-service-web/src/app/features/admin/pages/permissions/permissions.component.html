@@ -1,0 +1,352 @@
+<div class="admin-page">
+  <header class="page-head">
+    <div>
+      <span class="page-head__eyebrow">Administración</span>
+      <h1 class="page-head__title">Permisos y Accesos a Páginas</h1>
+      <p class="page-head__subtitle">
+        Gestión de permisos como accesos a las pantallas del sistema. Selecciona al usuario para concederle o revocarle
+        directamente los permisos a cada módulo y página del aplicativo.
+      </p>
+    </div>
+    <div class="page-head__actions">
+      <button type="button" class="btn btn--outline" (click)="load(); loadUsers(); loadRoles()">Actualizar</button>
+      <button type="button" class="btn btn--outline" (click)="showTechnicalCatalog.set(!showTechnicalCatalog())">
+        {{ showTechnicalCatalog() ? 'Ocultar permisos técnicos' : 'Ver permisos técnicos de BD' }}
+      </button>
+      @if (showTechnicalCatalog()) {
+        <button type="button" class="btn btn--primary-red" *hasPermission="'PERMISSIONS_MANAGE'" (click)="openCreate()">Nuevo permiso</button>
+      }
+    </div>
+  </header>
+
+  <!-- SECCIÓN PRINCIPAL: Asignar accesos por usuario -->
+  <section class="panel" aria-label="Asignar accesos por usuario">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
+      <div>
+        <h2 style="margin: 0 0 0.2rem; font-size: 1.15rem; font-weight: 800; color: var(--tx-0f172a);">
+          Asignar permisos a un usuario
+        </h2>
+        <p style="margin: 0; font-size: 0.78rem; color: var(--tx-64748b);">
+          Selecciona a la persona para marcar o desmarcar a qué páginas y pantallas tiene autorización de entrar.
+        </p>
+      </div>
+    </div>
+
+    <!-- Selector de usuario -->
+    <div style="margin-bottom: 0.75rem;">
+      <label class="field">
+        <span class="field__label" style="font-size: 0.78rem; font-weight: 700;">Seleccionar usuario:</span>
+        <select class="field__input field__input--user-select" [value]="selectedUserId()" (change)="onSelectUser($any($event.target).value)">
+          <option value="">-- Elige un usuario para gestionar sus permisos de páginas --</option>
+          @for (u of users(); track u.id) {
+            <option [value]="u.id">
+              {{ u.fullName }} ({{ u.username }}) · {{ u.active ? 'Activo' : 'Inactivo' }}
+            </option>
+          }
+        </select>
+      </label>
+
+      @if (!selectedUser()) {
+        <div class="user-quick-chips">
+          <span class="user-quick-label">O selecciona directamente:</span>
+          @for (u of users(); track u.id) {
+            <button type="button" class="user-chip-btn" (click)="onSelectUser(u.id)">
+              <span class="user-chip-avatar">{{ u.firstName?.charAt(0) || u.username.charAt(0) | uppercase }}</span>
+              <span class="user-chip-text">{{ u.fullName }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (selectedUser(); as user) {
+      <div class="access-modal-content" style="margin-top: 1rem;">
+        <!-- Cabecera de usuario seleccionado -->
+        <div class="access-user-header">
+          <div class="access-user-header__left">
+            <div class="access-user-avatar">
+              {{ user.firstName?.charAt(0) || user.username.charAt(0) | uppercase }}
+            </div>
+            <div class="access-user-meta">
+              <span class="access-user-name">{{ user.fullName }}</span>
+              <span class="access-user-tag">&#64;{{ user.username }} · {{ user.email }}</span>
+            </div>
+          </div>
+          <div class="access-counter-badge">
+            <span class="access-counter-number">{{ selectedUserPageKeys().size }} / 11</span>
+            <span class="access-counter-label">páginas permitidas</span>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="access-quick-actions">
+          <span class="access-quick-title">Selección rápida:</span>
+          <button type="button" class="btn btn--outline btn--sm" (click)="selectAllPages()">Todas las páginas</button>
+          <button type="button" class="btn btn--outline btn--sm" (click)="selectOperationsPages()">Solo operaciones (sin administración)</button>
+          <button type="button" class="btn btn--outline btn--sm" (click)="clearAllPages()">Desmarcar todas</button>
+        </div>
+
+        <!-- Módulos y páginas en tarjeta -->
+        <div class="access-modules-grid" style="max-height: none;">
+          @for (module of pageModules; track module) {
+            <div class="access-module-card">
+              <div class="access-module-header">
+                <h4 class="access-module-title">{{ module }}</h4>
+              </div>
+              <div class="access-pages-list">
+                @for (page of getPageItemsForModule(module); track page.key) {
+                  <label class="access-page-item" [class.access-page-item--checked]="selectedUserPageKeys().has(page.key)">
+                    <input type="checkbox"
+                           [checked]="selectedUserPageKeys().has(page.key)"
+                           (change)="togglePageKey(page.key, $any($event.target).checked)">
+                    <div class="access-page-info">
+                      <div class="access-page-title-row">
+                        <span class="access-page-name">{{ page.name }}</span>
+                        <span class="access-page-route">{{ page.route }}</span>
+                      </div>
+                      <p class="access-page-desc">{{ page.description }}</p>
+                    </div>
+                  </label>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Barra de guardar -->
+        <div class="access-save-bar">
+          <button type="button" class="btn btn--outline" (click)="onSelectUser('')">
+            Cancelar / Cambiar usuario
+          </button>
+          <button type="button" class="btn btn--primary-red" (click)="saveUserAccess()" [disabled]="savingAccess()">
+            {{ savingAccess() ? 'Guardando accesos…' : 'Guardar permisos de ' + user.fullName }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="empty-user-prompt">
+        <span class="material-icons-outlined empty-user-prompt__icon">admin_panel_settings</span>
+        <h3 class="empty-user-prompt__title">Ningún usuario seleccionado</h3>
+        <p class="empty-user-prompt__desc">
+          Para ver y asignar permisos de páginas, selecciona a un usuario en el desplegable superior o haz clic en cualquiera de los accesos rápidos.
+        </p>
+      </div>
+    }
+  </section>
+
+  <!-- CATÁLOGO DE PÁGINAS DEL SISTEMA -->
+  <section class="panel" aria-label="Catálogo de pantallas">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
+      <div>
+        <h2 style="margin: 0 0 0.2rem; font-size: 1.15rem; font-weight: 800; color: var(--tx-0f172a);">
+          Catálogo de páginas y pantallas del sistema
+        </h2>
+        <p style="margin: 0; font-size: 0.78rem; color: var(--tx-64748b);">
+          Las 11 pantallas que componen la plataforma de facturación corporativa y su cobertura de acceso.
+        </p>
+      </div>
+    </div>
+
+    <div class="filters" style="margin-bottom: 0.85rem;">
+      <label class="field">
+        <span class="field__label">Buscar página</span>
+        <input class="field__input" placeholder="Nombre, ruta o descripción" (input)="pageSearch.set($any($event.target).value)">
+      </label>
+      <label class="field">
+        <span class="field__label">Módulo</span>
+        <select class="field__input" (change)="pageModuleFilter.set($any($event.target).value)">
+          <option value="">Todos los módulos</option>
+          @for (m of pageModules; track m) {
+            <option [value]="m">{{ m }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Página</th>
+            <th>Ruta</th>
+            <th>Módulo</th>
+            <th>Descripción</th>
+            <th class="num">Usuarios con acceso</th>
+            <th class="num">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (page of filteredPages(); track page.key) {
+            <tr>
+              <td class="strong">{{ page.name }}</td>
+              <td><span class="mono">{{ page.route }}</span></td>
+              <td class="muted">{{ page.module }}</td>
+              <td class="muted">{{ page.description }}</td>
+              <td class="num">
+                <span class="badge-pill badge-pill--blue">
+                  {{ getUserCountForPage(page.key) }} usuario(s)
+                </span>
+              </td>
+              <td class="num">
+                <button type="button" class="link-btn" (click)="users().length > 0 && onSelectUser(users()[0].id)">
+                  Configurar usuario
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty">No se encontraron páginas con ese filtro.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CATÁLOGO TÉCNICO DE PERMISOS DE BD (AVANZADO/COLAPSABLE) -->
+  @if (showTechnicalCatalog()) {
+    <section class="panel filters" aria-label="Filtros técnicos">
+      <label class="field">
+        <span class="field__label">Buscar permiso técnico</span>
+        <input class="field__input" placeholder="Código, nombre o descripción" (input)="search.set($any($event.target).value)">
+      </label>
+      <label class="field">
+        <span class="field__label">Módulo</span>
+        <select class="field__input" (change)="moduleFilter.set($any($event.target).value)">
+          <option value="">Todos</option>
+          @for (module of modules(); track module) { <option [value]="module">{{ module }}</option> }
+        </select>
+      </label>
+    </section>
+
+    <section class="panel">
+      <div style="margin-bottom: 0.5rem;">
+        <span class="page-head__eyebrow">Avanzado</span>
+        <h3 style="margin: 0.3rem 0; font-size: 1rem; font-weight: 700;">Permisos técnicos de base de datos</h3>
+        <p style="margin: 0 0 0.5rem; font-size: 0.75rem; color: var(--tx-64748b);">
+          Catálogo granular exigido por los endpoints Spring Security del backend.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Módulo</th>
+              <th>Descripción</th>
+              <th class="num">Roles</th>
+              <th>Estado</th>
+              <th class="num">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (row of [1, 2, 3, 4, 5]; track row) {
+                <tr class="skeleton-row">@for (cell of [1, 2, 3, 4, 5, 6, 7]; track cell) { <td><span class="skeleton"></span></td> }</tr>
+              }
+            } @else {
+              @for (permission of visible(); track permission.id) {
+                <tr [class.row-inactive]="!permission.active">
+                  <td>
+                    <span class="mono strong">{{ permission.code }}</span>
+                    @if (permission.systemPermission) { <span class="chip chip--system">Sistema</span> }
+                  </td>
+                  <td>{{ permission.name }}</td>
+                  <td class="muted">{{ permission.module }}</td>
+                  <td class="muted">{{ permission.description || '—' }}</td>
+                  <td class="num">{{ permission.roleCount }}</td>
+                  <td>
+                    <span class="badge-pill" [class.badge-pill--green]="permission.active" [class.badge-pill--gray]="!permission.active">
+                      {{ permission.active ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button type="button" class="link-btn" (click)="openView(permission)">Ver roles</button>
+                      @if (canManage()) {
+                        <button type="button" class="link-btn" (click)="openEdit(permission)">Editar</button>
+                        <button type="button" class="link-btn" [class.link-btn--danger]="permission.active" (click)="askStatus(permission)">
+                          {{ permission.active ? 'Desactivar' : 'Activar' }}
+                        </button>
+                        @if (!permission.systemPermission) {
+                          <button type="button" class="link-btn link-btn--danger" (click)="askDelete(permission)">Eliminar</button>
+                        }
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="empty">No hay permisos técnicos con los filtros actuales.</td></tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>
+
+<app-ui-modal [isOpen]="formOpen()" [title]="editing() ? 'Editar permiso' : 'Nuevo permiso'" size="md" (closed)="formOpen.set(false)">
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="form-grid">
+      <label class="field">
+        <span class="field__label">Código</span>
+        <input class="field__input mono" formControlName="code" placeholder="REPORTS_EXPORT" [class.field__input--error]="invalid('code')">
+        @if (invalid('code')) { <small class="field__error">Mayúsculas, números y guion bajo (ej. REPORTS_EXPORT).</small> }
+        @if (editing()?.systemPermission) { <small class="field__hint">Permiso del sistema: el código no se modifica.</small> }
+      </label>
+      <label class="field">
+        <span class="field__label">Módulo</span>
+        <input class="field__input" formControlName="module" list="permission-modules" [class.field__input--error]="invalid('module')">
+        <datalist id="permission-modules">@for (module of modules(); track module) { <option [value]="module"></option> }</datalist>
+        @if (invalid('module')) { <small class="field__error">El módulo es obligatorio.</small> }
+      </label>
+      <label class="field span-2">
+        <span class="field__label">Nombre</span>
+        <input class="field__input" formControlName="name" [class.field__input--error]="invalid('name')">
+        @if (invalid('name')) { <small class="field__error">El nombre es obligatorio.</small> }
+      </label>
+      <label class="field span-2">
+        <span class="field__label">Descripción</span>
+        <input class="field__input" formControlName="description">
+      </label>
+      <label class="switch-row span-2">
+        <input type="checkbox" formControlName="active"> Permiso activo
+      </label>
+      @if (!editing()) {
+        <p class="notice span-2">Un permiso nuevo no protege nada por sí solo: el backend debe exigir su código para que tenga efecto.</p>
+      }
+    </div>
+  </form>
+  <div modal-footer class="modal-actions">
+    <button type="button" class="btn btn--outline" (click)="formOpen.set(false)" [disabled]="saving()">Cancelar</button>
+    <button type="button" class="btn btn--primary-red" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Guardando…' : (editing() ? 'Guardar cambios' : 'Crear permiso') }}
+    </button>
+  </div>
+</app-ui-modal>
+
+<app-ui-modal [isOpen]="!!viewing()" [title]="'Permiso ' + (viewing()?.code ?? '')" size="md" (closed)="viewing.set(null)">
+  @if (viewing(); as permission) {
+    <dl class="detail-list">
+      <dt>Nombre</dt><dd>{{ permission.name }}</dd>
+      <dt>Módulo</dt><dd>{{ permission.module }}</dd>
+      <dt>Descripción</dt><dd>{{ permission.description || '—' }}</dd>
+    </dl>
+    <p class="section-label">Roles que lo otorgan</p>
+    <div class="chips">
+      @for (role of permission.roles ?? []; track role.id) { <span class="chip">{{ roleLabel(role.name) }}</span> }
+      @empty { <span class="field__hint">{{ permission.roles ? 'Ningún rol' : 'Cargando…' }}</span> }
+    </div>
+  }
+</app-ui-modal>
+
+<app-confirm-dialog
+  [open]="!!confirmation()"
+  [title]="confirmation()?.kind === 'delete' ? 'Eliminar permiso' : 'Desactivar permiso'"
+  [message]="confirmationMessage()"
+  [confirmLabel]="confirmation()?.kind === 'delete' ? 'Eliminar' : 'Desactivar'"
+  [busy]="confirming()"
+  (confirmed)="confirm()"
+  (cancelled)="confirmation.set(null)">
+</app-confirm-dialog>

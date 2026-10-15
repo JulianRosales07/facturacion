@@ -1,0 +1,20 @@
+Transcripción de la reunión / audio WhatsApp (28/09/2026 8:19 AM)
+Archivo fuente: WhatsApp Audio 2026-09-28 at 8.19.38 AM00.mp4
+Participantes:
+- Hablante 1 (Líder técnico / Arquitectura)
+- Julián (Desarrollador / Practicante Frontend)
+- Mención a David (al final)
+
+--------------------------------------------------------------------------------
+
+[00:00] Siigo Pyme no tiene conexión vía API, es prácticamente un software de escritorio...
+[00:06] Escritorio, sí.
+[00:07] Entonces, como no tiene conexión a API, nosotros vamos a tener que leer los archivos planos que ellos nos dejen en una X ubicación, y también necesitamos mostrar la factura y la factura también la genera ese sistema, y ellos la tienen en una carpeta de temporales. Entonces nosotros vamos a tener que consumir tanto los archivos planos como los archivos PDF para poderlos montar acá.
+[00:31] ¿Listo? Cuando ya todo eso está listo, lo que se hace es cargar la información y desde aquí tendríamos como la base de datos para nosotros mostrarla hacia el corporativo y que él pueda hacer el pago en línea.
+[00:42] ¿Listo? Pero el día de hoy se tuvo una reunión con el área financiera y nos hicieron pues un feedback bastante generoso en el cual pues nosotros vamos a tener que modificar todo esto. Entonces prácticamente todavía estamos como en la revisión. Este va a ser un proceso largo porque es un proceso que tiene muchas aristas y la verdad ese proceso del pago de los corporativos está bien desorganizado.
+[01:07] Está bien desorganizado...
+[01:09] Depende de muchas cosas.
+[01:10] Sí. Por eso, al final del día, o sea la práctica de Julián va es a trabajar con el archivo final y de ahí para adelante. Porque de ahí para atrás prácticamente tocaría contratar... y si está larguísimo. Está muy desorganizado, no hay ni siquiera un módulo de contratos.
+[01:28] ¿Listo? Entonces esa es la parte en lo que está Julián, hay que mirar cómo modifica los mockups y vamos a ir revisando en esta semana.
+[01:37] ¿Listo? Eso, y vamos a hacer de una vez ya el enlace con el proveedor para que nos diga dónde la va a ubicar esa información y que comencemos a hacer el... el consumo como tal. Yo ya me coloco a la tarea también de eso.
+[01:51] David, ¿en esta semana qué pasó?

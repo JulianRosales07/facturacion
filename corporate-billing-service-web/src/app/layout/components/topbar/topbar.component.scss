@@ -1,0 +1,164 @@
+// Barra superior flotante: tarjeta redondeada separada de los bordes, alineada con el menú lateral.
+:host {
+  display: block;
+  padding: 0.75rem 0.75rem 0;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--cb-topbar-height, 64px);
+  padding: 0 0.75rem 0 1.25rem;
+  background: var(--cb-bg-surface);
+  border: 1px solid var(--cb-border-subtle);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px -12px rgba(15, 23, 42, 0.18);
+  user-select: none;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    text-decoration: none;
+    min-width: 0;
+  }
+
+  &__logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  &__workspace {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cb-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  // Selector de idioma con borde de píldora
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 40px;
+    padding: 0 0.6rem 0 0.75rem;
+    border: 1px solid var(--cb-border-subtle);
+    border-radius: 12px;
+    background: var(--cb-bg-surface);
+    color: var(--cb-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--cb-bg-muted);
+      border-color: var(--cb-border-strong);
+      color: var(--cb-text-primary);
+    }
+  }
+
+  &__pill-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &__pill-chevron {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  // Avatar en recuadro redondeado con insignia de estado
+  &__avatar-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    padding: 4px;
+    border: 1px solid var(--cb-border-subtle);
+    border-radius: 14px;
+    background: var(--cb-bg-surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      border-color: var(--cb-border-strong);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+  }
+
+  &__avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__avatar-placeholder {
+    color: var(--cb-text-muted);
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+  }
+
+  &__avatar-status {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #0f4c81;
+    border: 2px solid var(--cb-bg-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      color: #ffffff;
+      font-size: 10px;
+      width: 10px;
+      height: 10px;
+      line-height: 10px;
+    }
+  }
+
+}
+
+// El idioma activo se muestra marcado pero no atenuado
+.topbar__lang-option[disabled] {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  :host {
+    padding: 0.5rem 0.5rem 0;
+  }
+
+  .topbar {
+    padding: 0 0.5rem 0 0.85rem;
+    border-radius: 14px;
+
+    &__workspace {
+      display: none;
+    }
+  }
+}

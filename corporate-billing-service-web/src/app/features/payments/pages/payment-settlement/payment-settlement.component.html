@@ -1,0 +1,319 @@
+<div class="payments-page">
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-title">Liquidación de Pagos y Recaudo</h1>
+      <p class="page-subtitle">Cruce de facturas pendientes, selección opcional de retenciones tributarias y generación de interfaz contable.</p>
+    </div>
+  </div>
+
+  @if (paymentSuccessResult()) {
+    <!-- Pantalla de Éxito de Pago -->
+    <app-ui-card [elevated]="true" class="success-card">
+      <div class="success-header">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <h2>¡Pago Registrado Exitosamente!</h2>
+        <p class="text-muted">Comprobante #{{ paymentSuccessResult()?.transactionNumber }} aplicado a la cartera del cliente.</p>
+      </div>
+
+      <div class="success-details">
+        <div class="detail-row">
+          <span>Neto Pagado Recibido:</span>
+          <span class="font-mono font-bold text-lg text-accent">{{ paymentSuccessResult()?.netPaidAmount | copCurrency }}</span>
+        </div>
+        <div class="detail-row">
+          <span>Total Retenciones Aplicadas:</span>
+          <span class="font-mono font-medium text-danger">{{ paymentSuccessResult()?.totalWithholdings | copCurrency }}</span>
+        </div>
+        <div class="detail-row">
+          <span>Ajuste por Redondeo al Peso:</span>
+          <span class="font-mono">{{ paymentSuccessResult()?.roundingAmount | copCurrency }}</span>
+        </div>
+        <div class="detail-row">
+          <span>Facturas Canceladas:</span>
+          <span class="font-mono font-bold">{{ paymentSuccessResult()?.paidInvoiceIds?.length }}</span>
+        </div>
+
+        @if (paymentSuccessResult()?.partialPayment) {
+          <div class="partial-notice">
+            <mat-icon>info</mat-icon>
+            <div>
+              <strong>Aviso de Pago Parcial:</strong>
+              <p>{{ paymentSuccessResult()?.partialPaymentNotice }}</p>
+              <small>Facturas aún pendientes: {{ paymentSuccessResult()?.remainingPendingInvoicesCount }} (Saldo: {{ paymentSuccessResult()?.remainingPendingDebt | copCurrency }})</small>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="success-actions">
+        <button class="btn btn-outline" (click)="downloadReceipt()">
+          <mat-icon>receipt</mat-icon> Descargar Recibo de Caja
+        </button>
+        <button class="btn btn-outline" (click)="downloadSiigoFlatFile()">
+          <mat-icon>download</mat-icon> Descargar Interfaz Siigo (Plano)
+        </button>
+        <button class="btn btn-primary" (click)="newPayment()">
+          <mat-icon>refresh</mat-icon> Registrar Otro Pago
+        </button>
+      </div>
+    </app-ui-card>
+  } @else {
+    <!-- Búsqueda de Cliente -->
+    <app-ui-card [elevated]="true" class="search-card">
+      <div class="search-bar">
+        <div class="form-group flex-1">
+          <label class="form-label required">NIT del Cliente Corporativo</label>
+          <div class="input-with-button">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ingrese el NIT (ej. 900100100)..."
+              [(ngModel)]="clientNit"
+              (ngModelChange)="portfolio.set(null); simulationResult.set(null)"
+              (keyup.enter)="searchPortfolio()"
+            />
+            <button class="btn btn-primary" (click)="searchPortfolio()" [disabled]="loadingPortfolio() || !clientNit.trim()">
+              @if (loadingPortfolio()) {
+                <mat-icon class="spin-icon">autorenew</mat-icon>
+              } @else {
+                <mat-icon>search</mat-icon>
+              }
+              Consultar Cartera
+            </button>
+          </div>
+        </div>
+      </div>
+    </app-ui-card>
+
+    @if (loadingPortfolio()) {
+      <div class="loading-state">
+        <app-ui-spinner message="Consultando estado de cartera e historial de facturación..."></app-ui-spinner>
+      </div>
+    } @else if (portfolio()) {
+      <!-- Panel de Cartera de Cliente -->
+      <div class="client-header-card">
+        <div class="client-info">
+          <h2 class="client-name">{{ portfolio()?.clientBusinessName }}</h2>
+          <span class="client-nit font-mono text-muted">NIT: {{ portfolio()?.clientNit }}</span>
+        </div>
+        <div class="client-stats">
+          <div class="stat-box">
+            <span class="stat-label">Facturas Pendientes</span>
+            <span class="stat-val font-mono font-bold">{{ portfolio()?.totalPendingInvoices }}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Deuda Total Pendiente</span>
+            <span class="stat-val font-mono font-bold text-accent">{{ portfolio()?.totalOutstandingDebt | copCurrency }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settlement-layout">
+        <!-- Columna Izquierda: Selección de Facturas y Retenciones -->
+        <div class="settlement-left">
+          <!-- Tabla de Facturas Pendientes -->
+          <app-ui-card title="1. Facturas a Pagar (Selección Múltiple / Pago Parcial)" [elevated]="true">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th class="w-10">Pagar</th>
+                    <th>Factura</th>
+                    <th>Emisión / Venc.</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-right">Notas Crédito</th>
+                    <th class="text-right">Saldo Pendiente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (inv of portfolio()?.pendingInvoices; track inv.invoiceId) {
+                    <tr [class.row-selected]="selectedInvoiceIds().has(inv.invoiceId)">
+                      <td class="text-center">
+                        <input
+                          type="checkbox"
+                          [checked]="selectedInvoiceIds().has(inv.invoiceId)"
+                          (change)="toggleInvoice(inv.invoiceId)"
+                        />
+                      </td>
+                      <td class="font-mono font-semibold">{{ inv.invoiceNumber }}</td>
+                      <td class="text-xs text-muted">
+                        <div>{{ inv.issueDate | appDate }}</div>
+                        <div class="text-danger font-medium">{{ inv.dueDate | appDate }}</div>
+                      </td>
+                      <td class="text-right font-mono">{{ inv.totalAmount | copCurrency }}</td>
+                      <td class="text-right font-mono text-danger">
+                        {{ inv.creditNoteAmount > 0 ? ('-' + (inv.creditNoteAmount | copCurrency)) : '-' }}
+                      </td>
+                      <td class="text-right font-mono font-bold text-accent">{{ inv.pendingBalance | copCurrency }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </app-ui-card>
+
+          <!-- Catálogo de Retenciones Tributarias -->
+          <app-ui-card title="2. Retenciones Aplicables (Catálogo General Vigente)" [elevated]="true">
+            <p class="text-xs text-muted mb-3">
+              Seleccione las retenciones que el corporativo practica al pagar. ReteFuente, ReteICA y Estampillas aplican sobre la base gravable; ReteIVA aplica sobre el valor del IVA.
+            </p>
+
+            <div class="validities-grid">
+              @for (v of availableValidities(); track v.id) {
+                <div
+                  class="validity-chip"
+                  [class.validity-active]="selectedValidityIds().has(v.id)"
+                  (click)="toggleValidity(v.id)"
+                >
+                  <div class="chip-top">
+                    <span class="chip-code">{{ v.conceptCode }}</span>
+                    <span class="chip-percent">máx {{ v.porcentajeMaximo }}%</span>
+                  </div>
+                  <div class="chip-name">{{ v.nombre || v.conceptCode }}</div>
+                  <div class="chip-base text-xs text-muted">
+                    Base mín: {{ v.minimumBase | copCurrency }} · V{{ v.numeroVersion }}
+                  </div>
+                </div>
+              }
+            </div>
+            <button class="btn btn-outline" (click)="selectedValidityIds.set(emptySelection()); runSimulation()">No practicar retenciones</button>
+            @for (v of availableValidities(); track v.id) {
+              @if (selectedValidityIds().has(v.id)) {
+                <div class="form-group">
+                  <label class="form-label required">{{ v.nombre || v.conceptCode }}: porcentaje que practica el cliente (máx {{ v.porcentajeMaximo }}%)</label>
+                  <input type="number" min="0" step="0.0001" [max]="v.porcentajeMaximo" class="form-control" [(ngModel)]="percentages[v.id]" (ngModelChange)="runSimulation()" placeholder="Ej. 4" />
+                  @if (percentageError(v); as error) { <small class="text-danger">{{ error }}</small> }
+                  <label class="form-label">Valor acordado (opcional)</label>
+                  <input type="number" min="0" step="0.01" class="form-control" [(ngModel)]="overrideAmounts[v.id]" (ngModelChange)="runSimulation()" placeholder="Usar el cálculo con el porcentaje ingresado" />
+                  <input type="text" maxlength="255" class="form-control" [(ngModel)]="overrideReasons[v.id]" (ngModelChange)="runSimulation()" placeholder="Motivo obligatorio cuando ajusta el valor" />
+                </div>
+              }
+            }
+          </app-ui-card>
+        </div>
+
+        <!-- Columna Derecha: Simulación en Tiempo Real y Formulario de Pago -->
+        <div class="settlement-right">
+          <!-- Tarjeta de Liquidación / Simulación -->
+          <app-ui-card title="3. Liquidación Contable" [elevated]="true">
+            @if (isSimulating()) {
+              <div class="p-3 text-center">
+                <app-ui-spinner message="Calculando bases y retenciones..."></app-ui-spinner>
+              </div>
+            } @else if (simulationResult()) {
+              <div class="simulation-details">
+                <div class="sim-row">
+                  <span>Total Facturado (valor oficial):</span>
+                  <span class="font-mono font-medium">{{ simulationResult()?.totalFacturas | copCurrency }}</span>
+                </div>
+                <div class="sim-row">
+                  <span>Base Gravable Total:</span>
+                  <span class="font-mono">{{ simulationResult()?.baseGravable | copCurrency }}</span>
+                </div>
+                <div class="sim-row">
+                  <span>IVA:</span>
+                  <span class="font-mono">{{ simulationResult()?.totalIva | copCurrency }}</span>
+                </div>
+
+                <!-- Detalle de Retenciones Evaluadas -->
+                <div class="withholdings-breakdown">
+                  <div class="breakdown-title">Retenciones Practicadas:</div>
+                  @for (w of simulationResult()?.retenciones; track w.conceptoId) {
+                    <div class="w-item" [class.w-item-na]="!w.aplica">
+                      <div class="w-name">
+                        <span>{{ w.nombre }} ({{ w.porcentaje }}% · V{{ w.version }})</span>
+                        @if (!w.aplica) {
+                          <span class="na-badge">No aplica: {{ w.motivo }}</span>
+                        }
+                      </div>
+                      <div class="w-amount font-mono" [class.text-danger]="w.aplica">
+                        {{ w.aplica ? ('-' + (w.valorRetenido | copCurrency)) : '$ 0' }}
+                      </div>
+                    </div>
+                  }
+                  <div class="sim-row total-w">
+                    <span>Total Retenciones:</span>
+                    <span class="font-mono text-danger font-bold">-{{ simulationResult()?.totalRetenciones | copCurrency }}</span>
+                  </div>
+                </div>
+
+                @if (simulationResult()?.ajusteRedondeo !== 0) {
+                  <div class="sim-row text-xs text-muted">
+                    <span>Ajuste Redondeo al Peso:</span>
+                    <span class="font-mono">{{ simulationResult()?.ajusteRedondeo | copCurrency }}</span>
+                  </div>
+                }
+
+                <div class="net-payable-box">
+                  <span class="net-label">Neto a Pagar:</span>
+                  <span class="net-value font-mono">{{ simulationResult()?.netoAPagar | copCurrency }}</span>
+                </div>
+              </div>
+            } @else {
+              <div class="p-3 text-center text-muted text-sm">
+                Seleccione al menos una factura para calcular la liquidación.
+              </div>
+            }
+          </app-ui-card>
+
+          <!-- Formulario de Registro -->
+          <app-ui-card title="4. Registro de Pago" [elevated]="true" class="mt-3">
+            <div class="payment-form">
+              <div class="form-group">
+                <label class="form-label required">Fecha de Pago</label>
+                <app-date-picker [(ngModel)]="paymentDate" (dateChange)="paymentDateChanged()" placeholder="Seleccione fecha de pago…"></app-date-picker>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Medio de Pago</label>
+                <select class="form-control" [(ngModel)]="paymentMethod">
+                  <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                  <option value="CONSIGNACION">Consignación</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="EFECTIVO">Efectivo</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Cuenta Bancaria de Destino</label>
+                <input type="text" class="form-control" [(ngModel)]="bankAccount" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required">Número de Comprobante / Transacción</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Ej. TRANS-982342..."
+                  [(ngModel)]="transactionNumber"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Observaciones</label>
+                <textarea
+                  class="form-control"
+                  rows="2"
+                  placeholder="Detalles adicionales del recaudo..."
+                  [(ngModel)]="observation"
+                ></textarea>
+              </div>
+
+              <button
+                class="btn btn-primary btn-block mt-3"
+                (click)="submitPayment()"
+                [disabled]="isRegistering() || isSimulating() || !simulationResult() || !bankAccount.trim() || selectedInvoiceIds().size === 0 || !transactionNumber.trim()"
+              >
+                @if (isRegistering()) {
+                  <mat-icon class="spin-icon">autorenew</mat-icon> Aplicando Pago...
+                } @else {
+                  <mat-icon>payments</mat-icon> Confirmar y Aplicar Pago
+                }
+              </button>
+            </div>
+          </app-ui-card>
+        </div>
+      </div>
+    }
+  }
+</div>

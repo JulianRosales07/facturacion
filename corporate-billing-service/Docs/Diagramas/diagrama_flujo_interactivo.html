@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flujo de Base de Datos y Microservicio | Facturación Corporativa y SVA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-secondary: #111622;
+      --bg-surface: rgba(19, 25, 39, 0.92);
+      --bg-surface-hover: rgba(28, 38, 59, 0.98);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.4);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --accent-blue: #3b82f6;
+      --glow-color: rgba(99, 102, 241, 0.35);
+      --node-header-bg: #1e2538;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    body.light-theme {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-surface: rgba(255, 255, 255, 0.95);
+      --bg-surface-hover: #ffffff;
+      --border-subtle: rgba(0, 0, 0, 0.09);
+      --border-accent: rgba(99, 102, 241, 0.45);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --glow-color: rgba(99, 102, 241, 0.2);
+      --node-header-bg: #e2e8f0;
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .grid-background {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.07) 0%, transparent 80%),
+        linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top App Bar */
+    header.app-bar {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      height: 64px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 100;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: 0 0 16px var(--glow-color);
+      flex-shrink: 0;
+    }
+
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-info h1 span.version-tag {
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--accent-indigo);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .brand-info p {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Mode Selector Segmented Control */
+    .mode-switch {
+      display: flex;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .mode-btn.active {
+      background: var(--accent-indigo);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .mode-btn[data-mode="db"].active {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+    }
+
+    .mode-btn[data-mode="service"].active {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    }
+
+    .mode-btn[data-mode="combined"].active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 7px 12px 7px 32px;
+      font-size: 12.5px;
+      color: var(--text-primary);
+      outline: none;
+      width: 190px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      width: 250px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      width: 15px;
+      height: 15px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .btn-pill {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn-pill:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-pill.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent-indigo);
+      color: var(--accent-indigo);
+    }
+
+    .btn-icon {
+      width: 35px;
+      height: 35px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+    }
+
+    /* Sub-Header Phase / Layer Filter Bar */
+    .filter-bar {
+      position: fixed;
+      top: 88px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 90;
+      box-shadow: var(--shadow-lg);
+      max-width: 95vw;
+      overflow-x: auto;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-chip:hover {
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+    }
+
+    .filter-chip.active {
+      background: var(--bg-secondary);
+      border-color: var(--border-accent);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Floating Simulator Bar */
+    .simulator-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 95;
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.7), 0 0 25px rgba(99, 102, 241, 0.25);
+      min-width: 680px;
+      max-width: 92vw;
+    }
+
+    .sim-scenario-select {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      outline: none;
+      cursor: pointer;
+      max-width: 250px;
+    }
+
+    .sim-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sim-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sim-btn:hover {
+      background: var(--accent-indigo);
+      color: #fff;
+      border-color: var(--accent-indigo);
+    }
+
+    .sim-btn.play-btn {
+      background: linear-gradient(135deg, var(--accent-emerald), #059669);
+      border: none;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .sim-progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sim-step-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .sim-step-title {
+      font-weight: 600;
+      color: var(--accent-cyan);
+    }
+
+    .sim-step-count {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .sim-progress-bar {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sim-progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--accent-indigo), var(--accent-cyan));
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .sim-speed-select {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Canvas Viewport */
+    #viewport-container {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    #viewport-container.panning {
+      cursor: grabbing;
+    }
+
+    #flow-stage {
+      position: absolute;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* SVG Layer & Connections */
+    #svg-connections {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 12;
+    }
+
+    .flow-line {
+      fill: none !important;
+      stroke: var(--accent-indigo);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.55;
+      transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s;
+    }
+
+    .flow-line.active {
+      stroke: var(--accent-cyan) !important;
+      stroke-width: 4 !important;
+      opacity: 1 !important;
+      filter: drop-shadow(0 0 8px var(--accent-cyan));
+    }
+
+    .flow-line.dimmed {
+      opacity: 0.08 !important;
+    }
+
+    .flow-label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      fill: var(--text-secondary);
+      background: var(--bg-secondary);
+      pointer-events: none;
+    }
+
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 13;
+    }
+
+    /* Flow Nodes Layer */
+    .nodes-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 20;
+    }
+
+    .flow-card {
+      position: absolute;
+      width: 320px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, opacity 0.3s;
+    }
+
+    .flow-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.7), 0 0 25px var(--glow-color);
+      border-color: var(--accent-indigo);
+      z-index: 50;
+    }
+
+    .flow-card.selected {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px var(--accent-cyan), 0 20px 40px -5px rgba(0, 0, 0, 0.8);
+      z-index: 60;
+    }
+
+    .flow-card.dimmed {
+      opacity: 0.15;
+      filter: grayscale(80%);
+    }
+
+    .flow-card.highlighted {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 0 24px var(--glow-color);
+      opacity: 1;
+    }
+
+    .flow-card.sim-active {
+      border-color: var(--accent-emerald) !important;
+      box-shadow: 0 0 0 3px var(--accent-emerald), 0 0 30px rgba(16, 185, 129, 0.5) !important;
+      transform: translateY(-6px) scale(1.03) !important;
+      z-index: 80 !important;
+      opacity: 1 !important;
+    }
+
+    /* Card Header */
+    .card-header {
+      padding: 11px 14px;
+      background: var(--node-header-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .node-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .node-title-group h3 {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .node-title-group p {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    .phase-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-staging { background: rgba(244, 63, 94, 0.18); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-catalog { background: rgba(6, 182, 212, 0.18); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-billing { background: rgba(99, 102, 241, 0.18); color: var(--accent-indigo); border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-adjust { background: rgba(168, 85, 247, 0.18); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-payment { background: rgba(16, 185, 129, 0.18); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-export { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .badge-rest { background: rgba(59, 130, 246, 0.18); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-usecase { background: rgba(99, 102, 241, 0.18); color: var(--accent-indigo); border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-domain { background: rgba(16, 185, 129, 0.18); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-port { background: rgba(168, 85, 247, 0.18); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-adapter { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    /* Card Body Content */
+    .card-body {
+      padding: 10px 14px;
+      font-size: 11.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .card-desc {
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .card-tag {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .card-tag.highlight {
+      color: var(--accent-cyan);
+      border-color: rgba(6, 182, 212, 0.3);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    /* Phase Region Background Banners */
+    .stage-region-box {
+      position: absolute;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .region-label {
+      position: absolute;
+      top: -12px;
+      left: 24px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+    }
+
+    /* Right Inspector Drawer */
+    .inspector-drawer {
+      position: fixed;
+      top: 14px;
+      bottom: 14px;
+      right: 14px;
+      width: 480px;
+      max-width: 92vw;
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      box-shadow: -10px 0 35px rgba(0, 0, 0, 0.7);
+      z-index: 110;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(105%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .inspector-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--node-header-bg);
+      border-radius: 15px 15px 0 0;
+    }
+
+    .drawer-title-group h2 {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer-title-group p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-secondary);
+      padding: 0 12px;
+    }
+
+    .drawer-tab {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .drawer-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .drawer-tab.active {
+      color: var(--accent-indigo);
+      border-bottom-color: var(--accent-indigo);
+    }
+
+    .drawer-content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .drawer-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .drawer-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    .info-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+
+    .info-card h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-card p, .info-card li {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .info-card ul {
+      margin-left: 18px;
+      margin-top: 6px;
+    }
+
+    .sustentacion-tip {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid var(--accent-indigo);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .sustentacion-tip strong {
+      color: var(--accent-indigo);
+    }
+
+    .code-block {
+      background: #05070c;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-indigo);
+      color: #fff;
+    }
+
+    /* Modal Guía Sustentación */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      width: 780px;
+      max-width: 95vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 22px;
+      background: var(--node-header-bg);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .qa-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .qa-question {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .qa-answer {
+      padding: 0 16px 14px 16px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      display: none;
+    }
+
+    .qa-item.expanded .qa-answer {
+      display: block;
+    }
+
+    /* Minimap */
+    .minimap-wrap {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 170px;
+      height: 105px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 85;
+      box-shadow: var(--shadow-lg);
+    }
+
+    #minimap-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .minimap-viewport {
+      position: absolute;
+      border: 1.5px solid var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.12);
+      pointer-events: none;
+      border-radius: 3px;
+    }
+
+    /* Toast Notification */
+    #toast-msg {
+      position: fixed;
+      top: 90px;
+      right: 24px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-accent);
+      color: var(--text-primary);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 250;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    #toast-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-background"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="app-bar">
+    <div class="brand-section">
+      <div class="brand-badge">⚡</div>
+      <div class="brand-info">
+        <h1>
+          Flujo de Facturación Corporativa & SVA
+          <span class="version-tag">Archify Standard</span>
+        </h1>
+        <p>
+          <span class="status-dot"></span>
+          <span>Arquitectura Hexagonal + PostgreSQL 13+ Engine</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Selector Switches -->
+    <div class="mode-switch">
+      <button class="mode-btn active" data-mode="db" id="btn-mode-db">
+        <span>🗄️ Flujo Base de Datos</span>
+      </button>
+      <button class="mode-btn" data-mode="service" id="btn-mode-service">
+        <span>🟣 Flujo Microservicio</span>
+      </button>
+      <button class="mode-btn" data-mode="combined" id="btn-mode-combined">
+        <span>🔄 Vista End-to-End</span>
+      </button>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-group">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar flujo, tabla, clase... ( / )" autocomplete="off" />
+      </div>
+
+      <button class="btn-pill" id="btn-qa-modal">
+        <span>💡 Sustentación</span>
+      </button>
+
+      <button class="btn-pill btn-icon" id="btn-motion" title="Alternar animación de partículas">
+        <span id="motion-icon">✨</span>
+      </button>
+
+      <button class="btn-pill btn-icon" id="btn-theme" title="Alternar tema claro/oscuro">
+        <span>🌗</span>
+      </button>
+
+      <button class="btn-pill btn-primary" id="btn-export-png">
+        <span>📥 PNG HD</span>
+      </button>
+
+      <button class="btn-pill btn-icon" id="btn-zoom-fit" title="Ajustar a pantalla">
+        <span>⛶</span>
+      </button>
+      <button class="btn-pill btn-icon" id="btn-zoom-reset" title="Restablecer Zoom 100%">
+        <span>1:1</span>
+      </button>
+      <button class="btn-pill btn-icon" id="btn-zoom-in" title="Acercar">
+        <span>+</span>
+      </button>
+      <button class="btn-pill btn-icon" id="btn-zoom-out" title="Alejar">
+        <span>-</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter Sub-bar -->
+  <div class="filter-bar" id="filter-bar"></div>
+
+  <!-- Interactive Workflow Player Panel -->
+  <div class="simulator-panel" id="simulator-panel">
+    <select class="sim-scenario-select" id="sim-scenario-select">
+      <option value="scenario_billing">1. Facturación Periodo (1 NIT : 50 Sedes)</option>
+      <option value="scenario_nc">2. Emisión Nota Crédito DIAN (CUDE)</option>
+      <option value="scenario_payment">3. Recaudo Cartera & Certificado Retención</option>
+      <option value="scenario_staging">4. Ingesta Batch Staging (SPE / Mega Red)</option>
+      <option value="scenario_siigo">5. Exportación Archivo Plano ERP SIIGO</option>
+    </select>
+
+    <div class="sim-controls">
+      <button class="sim-btn" id="sim-prev" title="Paso anterior">⏮</button>
+      <button class="sim-btn play-btn" id="sim-play" title="Reproducir simulación">▶</button>
+      <button class="sim-btn" id="sim-next" title="Paso siguiente">⏭</button>
+    </div>
+
+    <div class="sim-progress-wrap">
+      <div class="sim-step-info">
+        <span class="sim-step-title" id="sim-step-title">Iniciando orquestación...</span>
+        <span class="sim-step-count" id="sim-step-count">Paso 1/6</span>
+      </div>
+      <div class="sim-progress-bar">
+        <div class="sim-progress-fill" id="sim-progress-fill"></div>
+      </div>
+    </div>
+
+    <select class="sim-speed-select" id="sim-speed-select">
+      <option value="1800">Vel: 1.0x</option>
+      <option value="1000">Vel: 2.0x</option>
+      <option value="3000">Vel: 0.5x</option>
+    </select>
+  </div>
+
+  <!-- Canvas Stage Viewport -->
+  <div id="viewport-container">
+    <div id="flow-stage">
+      <div id="stage-regions-layer"></div>
+      <svg id="svg-connections"></svg>
+      <canvas id="particle-canvas"></canvas>
+      <div class="nodes-layer" id="nodes-layer"></div>
+    </div>
+  </div>
+
+  <!-- Minimap -->
+  <div class="minimap-wrap">
+    <canvas id="minimap-canvas"></canvas>
+    <div class="minimap-viewport" id="minimap-viewport"></div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-msg">Notificación</div>
+
+  <!-- Inspector Right Drawer -->
+  <aside class="inspector-drawer" id="inspector-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <h2 id="drawer-title">Nombre Componente</h2>
+        <p id="drawer-subtitle">Capa de Arquitectura / Rol</p>
+      </div>
+      <button class="btn-pill btn-icon" id="btn-close-drawer">✕</button>
+    </div>
+
+    <div class="drawer-tabs">
+      <div class="drawer-tab active" data-tab="overview">Visión General</div>
+      <div class="drawer-tab" data-tab="code">Código / DDL</div>
+      <div class="drawer-tab" data-tab="payload">Payloads & DTO</div>
+      <div class="drawer-tab" data-tab="sustentacion">Sustentación</div>
+    </div>
+
+    <div class="drawer-content">
+      <div class="tab-pane active" id="pane-overview">
+        <div class="info-card">
+          <h4>📌 Propósito y Responsabilidad</h4>
+          <p id="drawer-desc">Descripción del nodo...</p>
+        </div>
+        <div class="info-card">
+          <h4>⚙️ Invariantes y Reglas de Negocio</h4>
+          <ul id="drawer-rules"><li>Regla de negocio 1</li></ul>
+        </div>
+        <div class="sustentacion-tip" id="drawer-quick-tip">
+          <strong>💡 Clave para la sustentación:</strong> Argumento de alto nivel.
+        </div>
+      </div>
+
+      <div class="tab-pane" id="pane-code">
+        <div class="code-block">
+          <button class="copy-btn" onclick="copyCodeContent()">Copiar</button>
+          <pre><code id="drawer-code">// Código fuente del componente...</code></pre>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="pane-payload">
+        <div class="code-block">
+          <pre><code id="drawer-payload">{\n  "status": "CONSOLIDADA"\n}</code></pre>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="pane-sustentacion">
+        <div class="info-card">
+          <h4>❓ Pregunta Típica de la Dirección / Arquitectura</h4>
+          <p id="drawer-qa-q" style="font-weight:600; color:var(--text-primary); margin-bottom:8px;">¿Por qué se estructuró de esta manera?</p>
+          <h4>💡 Argumento Técnico de Defensa</h4>
+          <p id="drawer-qa-a">Respuesta fundamentada en rendimiento, integridad contable y normatividad DIAN.</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal Guía de Sustentación -->
+  <div class="modal-overlay" id="qa-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 style="font-size:16px; font-weight:700;">Guía Rápida de Sustentación de Arquitectura</h2>
+        <button class="btn-pill btn-icon" id="btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="qa-item expanded">
+          <div class="qa-question">
+            <span>1. ¿Por qué la tabla `factura` duplica datos fiscales en lugar de hacer JOIN con `cliente_corporativo`?</span>
+            <span>▼</span>
+          </div>
+          <div class="qa-answer">
+            Es el patrón obligatorio de <strong>Snapshot Fiscal Inmutable</strong> exigido por la DIAN. Si un cliente corporativo cambia de razón social, dirección o régimen tributario en el futuro, una consulta tradicional alteraría retroactivamente las facturas emitidas en meses anteriores. Al guardar el snapshot en columnas y en <code>datos_fiscales_snapshot JSONB</code>, la factura preserva su validez probatoria legal inalterada.
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-question">
+            <span>2. ¿Por qué usamos UUID v4 en vez de IDs enteros autoincrementales (SERIAL/BIGINT)?</span>
+            <span>▼</span>
+          </div>
+          <div class="qa-answer">
+            Por tres razones críticas: <strong>1) Seguridad:</strong> Los enteros exponen patrones de negocio (`/facturas/100`), permitiendo a terceros deducir el volumen de facturación. <strong>2) Integración Batch y Staging:</strong> Con <code>gen_random_uuid()</code> los identificadores se generan en memoria sin generar bloqueos (locks) en secuencias de base de datos. <strong>3) Desacoplamiento de Microservicios:</strong> Facilita la replicación y eventos distribuidos sin colisión de llaves.
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-question">
+            <span>3. ¿Cómo soporta el microservicio la consolidación de 1 Empresa con 50 o 100 sedes/enlaces?</span>
+            <span>▼</span>
+          </div>
+          <div class="qa-answer">
+            La cabecera <code>factura</code> almacena los totales monetarios consolidados para el cobro general al NIT, mientras que cada sucursal o enlace se desglosa como una fila independiente en <code>item_facturable</code> enlazada a su respectiva <code>sede_suscripcion_id</code>. Cada ítem calcula su propia base gravable e IVA (19%), permitiendo discriminar el cobro por sede y exportarlo al ERP SIIGO en líneas <code>ITM</code>.
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-question">
+            <span>4. ¿Cómo maneja el sistema la refacturación si una factura previa tiene un error?</span>
+            <span>▼</span>
+          </div>
+          <div class="qa-answer">
+            Mediante un <strong>Índice Único Condicional Parcial</strong>: <code>CREATE UNIQUE INDEX uq_factura_cliente_periodo_activa ON factura(cliente_corporativo_id, periodo_facturacion_id) WHERE estado != 'ANULADA';</code>. Si la factura es anulada formalmente, el sistema permite volver a liquidar y expedir una nueva factura en el mismo periodo sin violar la restricción de negocio.
+          </div>
+        </div>
+
+        <div class="qa-item">
+          <div class="qa-question">
+            <span>5. ¿Por qué Arquitectura Hexagonal (Puertos y Adaptadores) en Spring Boot?</span>
+            <span>▼</span>
+          </div>
+          <div class="qa-answer">
+            Aísla completamente la lógica del negocio impositivo (cálculo de base gravable, retenciones y reglas DIAN en <code>CalculoImpuestosDomainService</code>) de la infraestructura externa. Si en el futuro cambiamos la base de datos de PostgreSQL a otra tecnología, o el ERP contable de SIIGO a SAP, las entidades de dominio y los casos de uso permanecen 100% intactos sin riesgo de regresión.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DB_FLOW_NODES = {
+      archivo_importado: {
+        id: "archivo_importado", name: "archivo_importado", title: "Lote de Archivo Staging",
+        phase: "staging", phaseLabel: "1. Ingesta Staging", icon: "📥", badgeClass: "badge-staging",
+        desc: "Encabezado del archivo plano recibido desde sistemas de aprovisionamiento (SPE, Mega Red o Enlaces). Registra checksum MD5, total de líneas y estado de procesamiento global.",
+        tags: ["UUID PK", "estado_archivo", "origen_orden"],
+        rules: ["Control de idempotencia por hash MD5", "Transición de estado: RECIBIDO ➔ PROCESANDO ➔ PROCESADO"],
+        tip: "El staging desacopla la recepción masiva de la ejecución transaccional, evitando colapsos si el sistema origen envía miles de registros.",
+        code: `CREATE TABLE archivo_importado (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  nombre_archivo VARCHAR(255) NOT NULL,\n  origen origen_orden NOT NULL,\n  checksum_md5 VARCHAR(32),\n  total_lineas INTEGER NOT NULL DEFAULT 0,\n  lineas_procesadas INTEGER NOT NULL DEFAULT 0,\n  lineas_con_error INTEGER NOT NULL DEFAULT 0,\n  estado estado_archivo NOT NULL DEFAULT 'RECIBIDO',\n  creado_en TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP\n);`,
+        payload: `{\n  "id": "7b682390-1e54-4a55-87d8-cb5f86749001",\n  "nombre_archivo": "ORDENES_SPE_20260907.txt",\n  "origen": "SPE",\n  "total_lineas": 1250,\n  "estado": "PROCESADO"\n}`,
+        qa: { q: "¿Qué pasa si un archivo plano viene corrupto?", a: "Gracias al staging, las filas válidas se procesan y las fallidas se marcan con estado ERROR en archivo_importado_linea con su mensaje exacto." }
+      },
+      archivo_importado_linea: {
+        id: "archivo_importado_linea", name: "archivo_importado_linea", title: "Líneas Crudas JSONB",
+        phase: "staging", phaseLabel: "1. Ingesta Staging", icon: "📄", badgeClass: "badge-staging",
+        desc: "Almacena cada registro crudo en formato JSONB. Si el layout del proveedor cambia, la base de datos lo tolera sin migraciones DDL.",
+        tags: ["UUID PK", "JSONB crudo", "estado_linea_importada"],
+        rules: ["Inmutabilidad de datos originales recibidos", "Almacenamiento del mensaje de excepción si falla el parsing"],
+        tip: "La columna JSONB cruda actúa como caja negra de auditoría ante disputas con sistemas legados.",
+        code: `CREATE TABLE archivo_importado_linea (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  archivo_importado_id UUID NOT NULL REFERENCES archivo_importado(id),\n  numero_linea INTEGER NOT NULL,\n  contenido_crudo JSONB NOT NULL,\n  estado_linea estado_linea_importada NOT NULL DEFAULT 'PENDIENTE',\n  mensaje_error TEXT\n);`,
+        payload: `{\n  "numero_linea": 42,\n  "contenido_crudo": { "nit": "900123456-1", "codigo_enlace": "ENL-BOG-0982", "velocidad_mbps": 500 },\n  "estado_linea": "PROCESADA"\n}`,
+        qa: { q: "¿Por qué guardar JSONB crudo?", a: "Porque los proveedores modifican formatos sin previo aviso. JSONB absorbe cambios sin romper la estructura relacional." }
+      },
+      cliente_corporativo: {
+        id: "cliente_corporativo", name: "cliente_corporativo", title: "Maestro de Clientes (NIT)",
+        phase: "catalog", phaseLabel: "2. Catálogos & Sedes", icon: "🏢", badgeClass: "badge-catalog",
+        desc: "Empresa contratante identificada unívocamente por su NIT. Contiene responsabilidades tributarias, porcentajes de retención y enrutamiento zonal.",
+        tags: ["UUID PK", "nit UNIQUE", "tipo_facturacion", "soft-delete"],
+        rules: ["Soft delete mediante estado_registro", "Tarifas de retención configurables: Retefuente, ReteICA, ReteIVA"],
+        tip: "Un cliente corporativo agrupa decenas de sedes físicas pero recibe una sola factura consolidada mensual.",
+        code: `CREATE TABLE cliente_corporativo (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  nit VARCHAR(20) NOT NULL UNIQUE,\n  razon_social VARCHAR(255) NOT NULL,\n  tipo_facturacion tipo_facturacion NOT NULL DEFAULT 'F1',\n  porcentaje_retefuente NUMERIC(5,2) NOT NULL DEFAULT 0,\n  porcentaje_reteica NUMERIC(5,2) NOT NULL DEFAULT 0,\n  estado estado_registro NOT NULL DEFAULT 'ACTIVO'\n);`,
+        payload: `{\n  "id": "c1f7a810-7210-449e-b921-2e65d2101001",\n  "nit": "900543210-9",\n  "razon_social": "BANCO FINANCIERO NACIONAL S.A.",\n  "porcentaje_retefuente": 4.00\n}`,
+        qa: { q: "¿Qué sucede si el cliente cambia de razón social?", a: "Se actualiza el maestro para futuras facturas, pero las anteriores preservan su Snapshot Fiscal congelado." }
+      },
+      sede_suscripcion: {
+        id: "sede_suscripcion", name: "sede_suscripcion", title: "Sedes y Suscripciones (1:N)",
+        phase: "catalog", phaseLabel: "2. Catálogos & Sedes", icon: "📍", badgeClass: "badge-catalog",
+        desc: "Cada sucursal operativa o enlace de conectividad provisto. Guarda el código externo de aprovisionamiento del proveedor.",
+        tags: ["UUID PK", "cliente_id FK", "codigo_orden UNIQUE"],
+        rules: ["Restricción UNIQUE (codigo_orden_externo, origen)", "Permite consolidar N sedes en 1 cabecera de factura"],
+        tip: "Es el puente de integración entre las órdenes externas y la facturación contable.",
+        code: `CREATE TABLE sede_suscripcion (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  cliente_corporativo_id UUID NOT NULL REFERENCES cliente_corporativo(id),\n  codigo_orden_externo VARCHAR(50) NOT NULL,\n  origen origen_orden NOT NULL,\n  nombre_sede VARCHAR(100),\n  estado estado_registro NOT NULL DEFAULT 'ACTIVO'\n);`,
+        payload: `{\n  "id": "s882910a-3101-447b-8912-98abef001001",\n  "codigo_orden_externo": "SPE-SUC-0042",\n  "nombre_sede": "Sucursal Principal Calle 72"\n}`,
+        qa: { q: "¿Cómo sabemos el valor por sede?", a: "En item_facturable cada ítem se asocia al ID de su sede correspondiente con su propio precio e IVA." }
+      },
+      periodo_facturacion: {
+        id: "periodo_facturacion", name: "periodo_facturacion", title: "Ciclo Contable Mensual",
+        phase: "catalog", phaseLabel: "2. Catálogos & Sedes", icon: "📅", badgeClass: "badge-catalog",
+        desc: "Delimita el ciclo mensual de facturación (ej. '2026-09'). Controla si el periodo se encuentra ABIERTO para liquidar o CERRADO.",
+        tags: ["UUID PK", "codigo YYYY-MM", "estado ABIERTO/CERRADO"],
+        rules: ["Regex CHECK (codigo ~ '^\d{4}-\d{2}$')", "Prohibido facturar en periodos CERRADOS"],
+        tip: "El motor de liquidación valida el estado del periodo antes de procesar cualquier factura.",
+        code: `CREATE TABLE periodo_facturacion (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  codigo VARCHAR(7) NOT NULL UNIQUE,\n  estado VARCHAR(20) NOT NULL DEFAULT 'ABIERTO'\n);`,
+        payload: `{\n  "id": "p202609-0000-0000-0000-000000000001",\n  "codigo": "2026-09",\n  "estado": "ABIERTO"\n}`,
+        qa: { q: "¿Qué pasa si el periodo está cerrado?", a: "El caso de uso lanza PeriodoCerradoException retornando HTTP 409 Conflict." }
+      },
+      factura: {
+        id: "factura", name: "factura", title: "Cabecera Factura & Snapshot Fiscal",
+        phase: "billing", phaseLabel: "3. Facturación & Snapshots", icon: "🧾", badgeClass: "badge-billing",
+        desc: "Entidad nuclear del sistema. Congela datos fiscales inmutables del cliente, desglosa bases gravables, IVA 19% y retenciones en cascada con precisión NUMERIC(14,2).",
+        tags: ["UUID PK", "Snapshot Fiscal JSONB", "CUFE DIAN", "Índice Parcial"],
+        rules: ["Índice condicional uq_factura_cliente_periodo_activa", "Inmutabilidad total de snapshots"],
+        tip: "Almacena los datos fiscales en columnas directas y en JSONB estructurado para garantizar respaldo legal DIAN.",
+        code: `CREATE TABLE factura (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  cliente_corporativo_id UUID NOT NULL REFERENCES cliente_corporativo(id),\n  periodo_facturacion_id UUID NOT NULL REFERENCES periodo_facturacion(id),\n  numero_factura VARCHAR(30) UNIQUE,\n  nit_cliente VARCHAR(20) NOT NULL,\n  razon_social_cliente VARCHAR(255) NOT NULL,\n  datos_fiscales_snapshot JSONB,\n  valor_subtotal NUMERIC(14,2) NOT NULL,\n  valor_iva NUMERIC(14,2) NOT NULL,\n  valor_neto NUMERIC(14,2) NOT NULL,\n  estado estado_factura NOT NULL DEFAULT 'BORRADOR'\n);\nCREATE UNIQUE INDEX uq_factura_cliente_periodo_activa ON factura(cliente_corporativo_id, periodo_facturacion_id) WHERE estado != 'ANULADA';`,
+        payload: `{\n  "id": "f8a91001-3200-449e-b912-100200300400",\n  "numero_factura": "FE-2026-000452",\n  "nit_cliente": "900543210-9",\n  "valor_neto": 14254250.00,\n  "estado": "CONSOLIDADA"\n}`,
+        qa: { q: "¿Por qué duplicar datos del cliente?", a: "Es el Snapshot Fiscal exigido por la DIAN para que una factura no mute si el cliente cambia de datos en el futuro." }
+      },
+      item_facturable: {
+        id: "item_facturable", name: "item_facturable", title: "Líneas de Ítems Polimórficos",
+        phase: "billing", phaseLabel: "3. Facturación & Snapshots", icon: "📑", badgeClass: "badge-billing",
+        desc: "Líneas individuales de cobro en la factura. Soporta modelo polimórfico (Servicios por sede, Streaming SVA o Productos) con atributos dinámicos JSONB.",
+        tags: ["UUID PK", "factura_id FK (CASCADE)", "sede_id FK", "atributos_extra JSONB"],
+        rules: ["Cálculo de base gravable y valor total línea por línea", "ON DELETE CASCADE con factura en borrador"],
+        tip: "La columna atributos_extra JSONB guarda parámetros técnicos (ancho de banda, IPs fijas, VLAN) sin alterar el esquema relacional.",
+        code: `CREATE TABLE item_facturable (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  factura_id UUID NOT NULL REFERENCES factura(id) ON DELETE CASCADE,\n  tipo_item tipo_item_facturable NOT NULL,\n  descripcion VARCHAR(255) NOT NULL,\n  base_gravable NUMERIC(14,2) NOT NULL,\n  valor_iva NUMERIC(14,2) NOT NULL,\n  valor_total NUMERIC(14,2) NOT NULL\n);`,
+        payload: `{\n  "id": "i0010020-1111-2222-3333-444455556666",\n  "descripcion": "Enlace Fibra 500 Mbps",\n  "valor_total": 2975000.00\n}`,
+        qa: { q: "¿Por qué el cálculo es por ítem?", a: "Porque pueden coexistir servicios con IVA 19%, exentos o con tarifas diferenciales en la misma factura." }
+      },
+      documento_ajuste: {
+        id: "documento_ajuste", name: "documento_ajuste", title: "Notas Crédito / Débito (CUDE)",
+        phase: "adjust", phaseLabel: "4. Ajustes DIAN", icon: "⚖️", badgeClass: "badge-adjust",
+        desc: "Cabecera de Notas Crédito y Débito enlazadas a la factura origen con código de concepto DIAN y código CUDE.",
+        tags: ["UUID PK", "factura_id FK", "concepto_dian", "CUDE"],
+        rules: ["Toda nota debe estar vinculada obligatoriamente a una factura previa emitida"],
+        tip: "Permite realizar correcciones fiscales sin modificar físicamente la factura original ya validada por la DIAN.",
+        code: `CREATE TABLE documento_ajuste (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  factura_id UUID NOT NULL REFERENCES factura(id),\n  tipo tipo_documento_ajuste NOT NULL,\n  cude VARCHAR(100),\n  estado estado_documento_ajuste NOT NULL DEFAULT 'BORRADOR'\n);`,
+        payload: `{\n  "id": "d7770001-9999-4444-8888-123456789abc",\n  "tipo": "NOTA_CREDITO",\n  "valor_neto": 595000.00\n}`,
+        qa: { q: "¿Cómo se asegura la trazabilidad contable?", a: "A través de la FK factura_id y en item_documento_ajuste con item_facturable_id." }
+      },
+      pago_factura: {
+        id: "pago_factura", name: "pago_factura", title: "Recaudos y Cartera",
+        phase: "payment", phaseLabel: "5. Cartera & Tesorería", icon: "💰", badgeClass: "badge-payment",
+        desc: "Registros de recaudos aplicados sobre la factura para control de saldos de cartera pendiente y conciliación bancaria.",
+        tags: ["UUID PK", "factura_id FK", "estado_pago APLICADO"],
+        rules: ["Permite múltiples abonos parciales sobre una misma factura"],
+        tip: "La sumatoria de pagos aplicados determina si la factura se encuentra totalmente cancelada o en mora.",
+        code: `CREATE TABLE pago_factura (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  factura_id UUID NOT NULL REFERENCES factura(id),\n  valor NUMERIC(14,2) NOT NULL,\n  estado estado_pago NOT NULL DEFAULT 'APLICADO'\n);`,
+        payload: `{\n  "id": "a1112223-3344-5566-7788-9900aabbccdd",\n  "valor": 14254250.00,\n  "medio_pago": "TRANSFERENCIA"\n}`,
+        qa: { q: "¿Cómo se relaciona con extractos bancarios?", a: "A través de la relación 0..1 a 1 con movimiento_tesoreria." }
+      },
+      certificado_retencion: {
+        id: "certificado_retencion", name: "certificado_retencion", title: "Certificado de Retenciones (1:1)",
+        phase: "payment", phaseLabel: "5. Cartera & Tesorería", icon: "🛡️", badgeClass: "badge-payment",
+        desc: "Soporte tributario emitido por grandes contribuyentes que certifica las deducciones de Retefuente, ReteICA y ReteIVA.",
+        tags: ["UUID PK", "factura_id UNIQUE FK (1:1)"],
+        rules: ["Relación estricta 1 a 1 por factura mediante UNIQUE(factura_id)"],
+        tip: "Es el respaldo ante la revisoría fiscal que valida por qué la empresa cobró un valor neto inferior al bruto.",
+        code: `CREATE TABLE certificado_retencion (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  factura_id UUID NOT NULL UNIQUE REFERENCES factura(id),\n  valor_retefuente_certificado NUMERIC(14,2) NOT NULL DEFAULT 0\n);`,
+        payload: `{\n  "id": "e4445556-6677-8899-0011-223344556677",\n  "numero_certificado": "CERT-2026-RET-9081"\n}`,
+        qa: { q: "¿Por qué es una tabla 1:1 separada?", a: "Porque los certificados llegan semanas después de emitida la factura y requieren su propio ciclo de auditoría." }
+      },
+      archivo_exportado: {
+        id: "archivo_exportado", name: "archivo_exportado", title: "Lote Archivo Plano ERP SIIGO",
+        phase: "export", phaseLabel: "6. Integración ERP", icon: "📤", badgeClass: "badge-export",
+        desc: "Lotes batch exportados hacia el software contable SIIGO en formato plano delimitado por pipes ('|') con líneas LOTE, FAC, ITM y AJU.",
+        tags: ["UUID PK", "periodo_id FK", "Trazabilidad N:M"],
+        rules: ["Registro determinista de qué facturas viajaron en qué lote mediante tabla pivote factura_archivo_exportado"],
+        tip: "Asegura que ninguna factura se exporte dos veces por error ni quede huérfana de sincronización contable.",
+        code: `CREATE TABLE archivo_exportado (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  nombre_archivo VARCHAR(255) NOT NULL,\n  total_facturas INTEGER NOT NULL DEFAULT 0\n);`,
+        payload: `LOTE|FACTURACION|SIIGO_20260907.txt\nFAC|FE-2026-000452|900543210-9|14254250.00`,
+        qa: { q: "¿Cómo sabemos si una factura ya viajó?", a: "Consultando la tabla intermedia factura_archivo_exportado y verificando estado = EXPORTADA." }
+      }
+    };
+
+    const DB_RELATIONSHIPS = [
+      { from: "archivo_importado", to: "archivo_importado_linea", label: "staging 1:N" },
+      { from: "archivo_importado_linea", to: "sede_suscripcion", label: "aprovisiona sede" },
+      { from: "cliente_corporativo", to: "sede_suscripcion", label: "posee sedes (1:N)" },
+      { from: "cliente_corporativo", to: "factura", label: "recibe factura (1:N)" },
+      { from: "periodo_facturacion", to: "factura", label: "delimita ciclo (1:N)" },
+      { from: "sede_suscripcion", to: "item_facturable", label: "sede origen (0..1:N)" },
+      { from: "factura", to: "item_facturable", label: "compone detalle (1:N)" },
+      { from: "factura", to: "documento_ajuste", label: "corrige nota (1:N)" },
+      { from: "factura", to: "pago_factura", label: "abona recaudo (1:N)" },
+      { from: "factura", to: "certificado_retencion", label: "soporte fiscal (1:1)" },
+      { from: "factura", to: "archivo_exportado", label: "exporta lote N:M" },
+      { from: "documento_ajuste", to: "archivo_exportado", label: "exporta notas N:M" }
+    ];
+
+    const SERVICE_FLOW_NODES = {
+      factura_controller: {
+        id: "factura_controller", name: "FacturaController", title: "REST Controller Facturación",
+        phase: "rest", phaseLabel: "Adaptadores REST", icon: "🌐", badgeClass: "badge-rest",
+        desc: "Punto de entrada HTTP REST. Expone endpoints para liquidación individual (POST /api/v1/facturas), consolidación batch (POST /lote), anulación, consultas y PDF.",
+        tags: ["@RestController", "OpenAPI Swagger", "@Valid"],
+        rules: ["Validación de DTOs con Jakarta Bean Validation", "Mapeo de excepciones HTTP mediante GlobalExceptionHandler"],
+        tip: "La capa REST no tiene lógica de negocio; solo valida el payload y delega la ejecución al caso de uso correspondiente.",
+        code: `@RestController\n@RequestMapping("/api/v1/facturas")\npublic class FacturaController {\n    @PostMapping\n    public ResponseEntity<FacturaResponseDTO> generarFactura(@Valid @RequestBody GenerarFacturaRequestDTO req) {\n        Factura f = generarFacturaUseCase.generarFactura(mapper.toCommand(req));\n        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponseDTO(f));\n    }\n}`,
+        payload: `{\n  "nitCliente": "900543210-9",\n  "periodoFacturacionId": "p202609-0000-0000-0000-000000000001"\n}`,
+        qa: { q: "¿Cómo se manejan errores de entrada?", a: "GlobalRestExceptionHandler intercepta MethodArgumentNotValidException retornando HTTP 400." }
+      },
+      ajuste_pago_controller: {
+        id: "ajuste_pago_controller", name: "Ajuste & Pago Controllers", title: "REST Controllers Notas & Recaudos",
+        phase: "rest", phaseLabel: "Adaptadores REST", icon: "🌐", badgeClass: "badge-rest",
+        desc: "Controladores para emisión de Notas Crédito/Débito (POST /api/v1/documentos-ajuste) y registro de recaudos de cartera (POST /api/v1/pagos).",
+        tags: ["@RestController", "DocumentoAjusteController", "PagoFacturaController"],
+        rules: ["Verificación de existencia de factura base antes de aceptar el comando"],
+        tip: "Endpoints diseñados para integración síncrona con el portal de cartera o backoffice administrativo.",
+        code: `@RestController\n@RequestMapping("/api/v1/documentos-ajuste")\npublic class DocumentoAjusteController {\n    @PostMapping\n    public ResponseEntity<DocumentoAjusteResponseDTO> emitirAjuste(@Valid @RequestBody CrearDocumentoAjusteRequestDTO req) {\n        return ResponseEntity.ok(mapper.toResponse(emitirAjusteUseCase.emitirDocumentoAjuste(mapper.toCommand(req))));\n    }\n}`,
+        payload: `{\n  "facturaId": "f8a91001-3200-449e-b912-100200300400",\n  "tipo": "NOTA_CREDITO",\n  "conceptoDian": "1"\n}`,
+        qa: { q: "¿Qué pasa si no existe la factura?", a: "Lanza FacturaNoEncontradaException mapeada a código HTTP 404 Not Found." }
+      },
+      generar_factura_service: {
+        id: "generar_factura_service", name: "GenerarFacturaPeriodoService", title: "Caso de Uso Liquidación Periodo",
+        phase: "usecase", phaseLabel: "Casos de Uso", icon: "⚙️", badgeClass: "badge-usecase",
+        desc: "Orquesta la liquidación de facturas. Valida cliente por NIT, verifica que el periodo esté ABIERTO, garantiza idempotencia e invoca el Domain Service.",
+        tags: ["GenerarFacturaPeriodoUseCase", "Orquestación", "Validación Idempotencia"],
+        rules: ["Verifica periodo.estaAbierto()", "Valida !facturaRepository.existeFacturaActiva(clienteId, periodoId)"],
+        tip: "Es el caso de uso más importante del microservicio: coordina la persistencia sin acoplarse a frameworks de base de datos.",
+        code: `public class GenerarFacturaPeriodoService implements GenerarFacturaPeriodoUseCase {\n    public Factura generarFactura(GenerarFacturaCommand cmd) {\n        if (!periodo.estaAbierto()) throw new PeriodoCerradoException();\n        if (facturaRepo.existeFacturaActiva(cliente.getId(), periodo.getId())) throw new IllegalStateException();\n        Factura f = calculoImpuestosService.consolidarFacturaCliente(...);\n        return facturaRepo.guardar(f);\n    }\n}`,
+        payload: `Factura (estado = CONSOLIDADA, items = 50, valorNeto = $14,254,250.00)`,
+        qa: { q: "¿Cómo garantiza que no haya duplicados?", a: "Con la validación existeFacturaActiva() y el índice único parcial en PostgreSQL." }
+      },
+      ajuste_pago_services: {
+        id: "ajuste_pago_services", name: "Ajuste & Pago UseCases", title: "Casos de Uso Ajustes & Recaudos",
+        phase: "usecase", phaseLabel: "Casos de Uso", icon: "⚙️", badgeClass: "badge-usecase",
+        desc: "Implementaciones EmitirDocumentoAjusteService, RegistrarPagoService y AnularFacturaService. Validan invariantes y coordinan transacciones.",
+        tags: ["EmitirDocumentoAjusteUseCase", "RegistrarPagoUseCase", "AnularFacturaUseCase"],
+        rules: ["Anulación invoca factura.anular(motivo) asegurando trazabilidad"],
+        tip: "Todos los casos de uso implementan interfaces puras de puertos de entrada (Inbound Ports).",
+        code: `public class RegistrarPagoService implements RegistrarPagoUseCase {\n    public PagoFactura registrarPago(RegistrarPagoCommand cmd) {\n        Factura f = facturaRepo.buscarPorId(cmd.facturaId()).orElseThrow();\n        PagoFactura p = new PagoFactura(..., EstadoPago.APLICADO);\n        return pagoRepo.guardar(p);\n    }\n}`,
+        payload: `PagoFactura (estado = APLICADO, valor = $14,254,250.00)`,
+        qa: { q: "¿Cómo se anula una factura?", a: "AnularFacturaService busca la factura, invoca factura.anular(motivo) y persiste el cambio." }
+      },
+      calculo_impuestos_domain_service: {
+        id: "calculo_impuestos_domain_service", name: "CalculoImpuestosDomainService", title: "Servicio de Dominio Financiero & DIAN",
+        phase: "domain", phaseLabel: "Servicios de Dominio", icon: "🧮", badgeClass: "badge-domain",
+        desc: "El corazón de las reglas fiscales y tributarias. Calcula bases gravables, IVA 19%, Retefuente, ReteICA, ReteIVA y construye el Snapshot Fiscal JSONB.",
+        tags: ["Domain Service", "BigDecimal HALF_EVEN", "Snapshot Fiscal Builder"],
+        rules: ["Redondeo bancario HALF_EVEN a 2 decimales", "Construcción de Snapshot Fiscal inmutable"],
+        tip: "Al ser un POJO puro sin Spring Boot, se prueba con tests unitarios ultrarrápidos.",
+        code: `public class CalculoImpuestosDomainService {\n    public static final BigDecimal TASA_IVA_ESTANDAR = new BigDecimal("19.00");\n    public Factura consolidarFacturaCliente(...) {\n        // Cálculo de subtotal, IVA y retenciones en cascada\n        return new Factura(...);\n    }\n}`,
+        payload: `{\n  "snapshotFiscal": { "nit": "900543210-9", "regimen": "RESPONSABLE_IVA" },\n  "neto": 14254250.00\n}`,
+        qa: { q: "¿Por qué es un Domain Service?", a: "Porque combina reglas de múltiples agregados (Cliente, Sedes, Catálogos) en una sola operación." }
+      },
+      domain_models: {
+        id: "domain_models", name: "Modelos de Dominio Puros", title: "Entidades de Dominio Ricas",
+        phase: "domain", phaseLabel: "Servicios de Dominio", icon: "💎", badgeClass: "badge-domain",
+        desc: "Entidades POJO sin anotaciones JPA: Factura, ItemFacturable, DocumentoAjuste, PagoFactura, ClienteCorporativo, PeriodoFacturacion.",
+        tags: ["Entidades POJO", "Inmutabilidad", "Validaciones de Dominio"],
+        rules: ["Encapsulan sus propios métodos de mutación"],
+        tip: "Garantiza que la lógica de negocio nunca quede acoplada a JPA / Hibernate.",
+        code: `public class Factura {\n    private final UUID id;\n    private EstadoFactura estado;\n    public void anular(String motivo) {\n        this.estado = EstadoFactura.ANULADA;\n    }\n}`,
+        payload: `Factura.java -> Modelo POJO desacoplado`,
+        qa: { q: "¿Por qué no colocar @Entity en dominio?", a: "Para cumplir la independencia tecnológica de la Arquitectura Hexagonal." }
+      },
+      persistence_adapters: {
+        id: "persistence_adapters", name: "Persistence Adapters & Repositories", title: "Adaptadores JPA / PostgreSQL",
+        phase: "adapter", phaseLabel: "Persistencia & Repositorios", icon: "🗄️", badgeClass: "badge-adapter",
+        desc: "Implementan los puertos de salida (FacturaRepositoryPort, ClienteRepositoryPort). Convierten entidades de dominio a Entity JPA con Mappers.",
+        tags: ["FacturaPersistenceAdapter", "Spring Data JPA", "Mappers"],
+        rules: ["Aislamiento total del modelo JPA respecto al modelo de dominio"],
+        tip: "Permite cambiar el motor de persistencia sin tocar una sola línea de lógica de negocio.",
+        code: `@Component\npublic class FacturaPersistenceAdapter implements FacturaRepositoryPort {\n    @Transactional\n    public Factura guardar(Factura f) {\n        return mapper.toDomain(repository.save(mapper.toEntity(f)));\n    }\n}`,
+        payload: `INSERT INTO factura (id, ...) VALUES (...)`,
+        qa: { q: "¿Cómo se maneja la atomicidad?", a: "Mediante anotaciones @Transactional en los adaptadores de persistencia." }
+      },
+      export_adapters: {
+        id: "export_adapters", name: "Export Adapters (SIIGO & PDF)", title: "Adaptadores de Exportación",
+        phase: "adapter", phaseLabel: "Exportadores PDF/Plano", icon: "🖨️", badgeClass: "badge-adapter",
+        desc: "Adaptadores especializados: SiigoFlatFileExportAdapter (genera texto plano delimitado por '|') y OpenPdfFacturaExportAdapter (genera PDF oficial).",
+        tags: ["SiigoExportPort", "OpenPdfPort", "Exportadores Outbound"],
+        rules: ["Generación de archivo plano SIIGO con registros LOTE, FAC, ITM y AJU"],
+        tip: "Implementan puertos de salida outbound, desacoplando la integración de formatos externos.",
+        code: `@Component\npublic class SiigoFlatFileExportAdapter implements SiigoExportPort {\n    public ResultadoExportacionSiigo generarPlanoSiigo(...) {\n        // Formateo de registros LOTE|FAC|ITM|AJU\n    }\n}`,
+        payload: `SIIGO_FACTURACION_20260907.txt`,
+        qa: { q: "¿Cómo se prueba la exportación?", a: "Al implementar interfaces de puertos, se pueden simular con mocks fácilmente." }
+      }
+    };
+
+    const SERVICE_RELATIONSHIPS = [
+      { from: "factura_controller", to: "generar_factura_service", label: "invoca usecase" },
+      { from: "ajuste_pago_controller", to: "ajuste_pago_services", label: "invoca usecases" },
+      { from: "generar_factura_service", to: "calculo_impuestos_domain_service", label: "consolida impuestos" },
+      { from: "generar_factura_service", to: "persistence_adapters", label: "persiste factura" },
+      { from: "calculo_impuestos_domain_service", to: "domain_models", label: "instancia modelos" },
+      { from: "ajuste_pago_services", to: "domain_models", label: "opera dominio" },
+      { from: "ajuste_pago_services", to: "persistence_adapters", label: "persiste notas/pagos" },
+      { from: "factura_controller", to: "export_adapters", label: "solicita PDF/SIIGO" },
+      { from: "export_adapters", to: "persistence_adapters", label: "consulta facturas" }
+    ];
+
+    const SCENARIOS = {
+      scenario_billing: {
+        title: "Facturación Masiva de Periodo (1 NIT : 50 Sedes)",
+        steps: [
+          { nodeId: "periodo_facturacion", serviceNodeId: "factura_controller", title: "Paso 1: Validación de Ciclo Contable Abierto", desc: "Se invoca POST /api/v1/facturas o /lote. El caso de uso verifica que el periodo mensual (ej. 2026-09) se encuentre en estado ABIERTO." },
+          { nodeId: "cliente_corporativo", serviceNodeId: "generar_factura_service", title: "Paso 2: Búsqueda del Maestro del Cliente e Idempotencia", desc: "Se busca el cliente por NIT, extrayendo sus políticas tributarias (Régimen, Retefuente 4%, ReteICA). Se valida que NO exista una factura activa previa." },
+          { nodeId: "sede_suscripcion", serviceNodeId: "generar_factura_service", title: "Paso 3: Extracción de Sedes Operativas Activas", desc: "Se consultan las 50 sedes/enlaces contratados por el cliente corporativo (orígenes SPE, Mega Red, Enlaces)." },
+          { nodeId: "factura", serviceNodeId: "calculo_impuestos_domain_service", title: "Paso 4: Consolidación Impositiva & Snapshot Fiscal", desc: "CalculoImpuestosDomainService calcula bases gravables, IVA 19%, retenciones y congela el Snapshot Fiscal Inmutable en JSONB." },
+          { nodeId: "item_facturable", serviceNodeId: "persistence_adapters", title: "Paso 5: Persistencia Transaccional (Cabecera + 50 Ítems)", desc: "FacturaPersistenceAdapter guarda atómicamente la factura en estado CONSOLIDADA con sus 50 líneas de ítem detalladas." },
+          { nodeId: "archivo_exportado", serviceNodeId: "export_adapters", title: "Paso 6: Generación de Factura PDF y Trazabilidad SIIGO", desc: "Se genera el PDF con código de barras/QR DIAN y se deja la factura lista para el lote plano de exportación ERP SIIGO." }
+        ]
+      },
+      scenario_nc: {
+        title: "Emisión de Nota Crédito DIAN con CUDE",
+        steps: [
+          { nodeId: "factura", serviceNodeId: "ajuste_pago_controller", title: "Paso 1: Solicitud de Nota Crédito", desc: "Se recibe POST /api/v1/documentos-ajuste indicando el ID de la factura original y el motivo de ajuste." },
+          { nodeId: "documento_ajuste", serviceNodeId: "ajuste_pago_services", title: "Paso 2: Construcción del Documento de Ajuste", desc: "EmitirDocumentoAjusteService valida la existencia de la factura y construye la Nota Crédito con concepto DIAN 1." },
+          { nodeId: "item_facturable", serviceNodeId: "persistence_adapters", title: "Paso 3: Enlace con Ítem Original y Persistencia", desc: "Se vincula el item_documento_ajuste al item_facturable afectado y se almacena en BD con estado CONSOLIDADO y código CUDE." }
+        ]
+      },
+      scenario_payment: {
+        title: "Recaudo de Cartera y Certificado de Retención",
+        steps: [
+          { nodeId: "factura", serviceNodeId: "ajuste_pago_controller", title: "Paso 1: Recepción del Recaudo de Cartera", desc: "Se registra el pago recibido por transferencia bancaria mediante POST /api/v1/pagos con referencia y banco." },
+          { nodeId: "pago_factura", serviceNodeId: "ajuste_pago_services", title: "Paso 2: Asentamiento del Abono", desc: "RegistrarPagoService crea el registro de pago_factura en estado APLICADO recalculando el saldo pendiente del cliente." },
+          { nodeId: "certificado_retencion", serviceNodeId: "persistence_adapters", title: "Paso 3: Radicación del Certificado de Retención (1:1)", desc: "Se vincula el certificado_retencion formal con los valores de Retefuente y ReteICA certificados por el cliente." }
+        ]
+      },
+      scenario_staging: {
+        title: "Ingesta Batch Staging desde Sistema de Órdenes",
+        steps: [
+          { nodeId: "archivo_importado", serviceNodeId: "factura_controller", title: "Paso 1: Recepción de Archivo Plano Externo", desc: "El sistema de órdenes (SPE) deposita un archivo plano con 1.250 órdenes. Se registra en archivo_importado con hash MD5." },
+          { nodeId: "archivo_importado_linea", serviceNodeId: "persistence_adapters", title: "Paso 2: Ingesta Resiliente en JSONB Crudo", desc: "Cada fila se guarda en archivo_importado_linea en contenido_crudo JSONB. Las líneas fallidas se marcan con estado ERROR." },
+          { nodeId: "sede_suscripcion", serviceNodeId: "generar_factura_service", title: "Paso 3: Transformación a Sedes y Novedades", desc: "Las líneas válidas aprovisionan nuevas sedes en sede_suscripcion y novedades en novedad_orden." }
+        ]
+      },
+      scenario_siigo: {
+        title: "Generación de Lote Plano para SIIGO ERP",
+        steps: [
+          { nodeId: "periodo_facturacion", serviceNodeId: "factura_controller", title: "Paso 1: Cierre y Solicitud de Exportación", desc: "Contabilidad solicita exportar facturas del periodo 2026-09 mediante POST /api/v1/facturas/periodo/{id}/exportar-siigo." },
+          { nodeId: "factura", serviceNodeId: "export_adapters", title: "Paso 2: Extracción y Formateo Pipe Delimited", desc: "SiigoFlatFileExportAdapter genera las líneas LOTE, FAC, ITM y AJU formateando valores numéricos e identificaciones." },
+          { nodeId: "archivo_exportado", serviceNodeId: "persistence_adapters", title: "Paso 3: Trazabilidad N:M de Exportación", desc: "Se inserta el archivo_exportado y las relaciones en factura_archivo_exportado marcando las facturas como EXPORTADA." }
+        ]
+      }
+    };
+
+    const state = {
+      mode: "db", zoom: 1.0, panX: 60, panY: 80, isPanning: false,
+      startMouseX: 0, startMouseY: 0, selectedNodeId: null, activeFilter: "all",
+      searchQuery: "", motionActive: true, lightTheme: false, simPlaying: false,
+      simScenario: "scenario_billing", simStepIndex: 0, simInterval: null, simSpeed: 1800,
+      particles: []
+    };
+
+    const viewportEl = document.getElementById("viewport-container");
+    const stageEl = document.getElementById("flow-stage");
+    const regionsLayerEl = document.getElementById("stage-regions-layer");
+    const nodesLayerEl = document.getElementById("nodes-layer");
+    const svgEl = document.getElementById("svg-connections");
+    const particleCanvas = document.getElementById("particle-canvas");
+    const particleCtx = particleCanvas.getContext("2d");
+    const minimapCanvas = document.getElementById("minimap-canvas");
+    const minimapCtx = minimapCanvas.getContext("2d");
+    const minimapViewportEl = document.getElementById("minimap-viewport");
+    const inspectorDrawer = document.getElementById("inspector-drawer");
+
+    /**
+     * DYNAMIC POSITION CALCULATOR (Zero-Overlap Guarantee)
+     */
+    function getNodePos(nodeId) {
+      if (state.mode === "combined") {
+        const combinedPositions = {
+          // TOP LANE: MICROSERVICIO SPRING BOOT (y: 130 - 360)
+          factura_controller: { x: 100, y: 130 },
+          ajuste_pago_controller: { x: 100, y: 360 },
+          generar_factura_service: { x: 540, y: 130 },
+          ajuste_pago_services: { x: 540, y: 360 },
+          calculo_impuestos_domain_service: { x: 980, y: 130 },
+          domain_models: { x: 980, y: 360 },
+          persistence_adapters: { x: 1420, y: 130 },
+          export_adapters: { x: 1420, y: 360 },
+
+          // BOTTOM LANE: BASE DE DATOS POSTGRESQL (y: 660 - 1140)
+          archivo_importado: { x: 100, y: 660 },
+          archivo_importado_linea: { x: 100, y: 900 },
+          cliente_corporativo: { x: 540, y: 660 },
+          sede_suscripcion: { x: 540, y: 900 },
+          periodo_facturacion: { x: 540, y: 1140 },
+          factura: { x: 980, y: 660 },
+          item_facturable: { x: 980, y: 900 },
+          documento_ajuste: { x: 1420, y: 660 },
+          pago_factura: { x: 1420, y: 900 },
+          certificado_retencion: { x: 1420, y: 1140 },
+          archivo_exportado: { x: 1860, y: 780 }
+        };
+        if (combinedPositions[nodeId]) return combinedPositions[nodeId];
+      } else if (state.mode === "service") {
+        const servicePositions = {
+          factura_controller: { x: 140, y: 180 },
+          ajuste_pago_controller: { x: 140, y: 520 },
+          generar_factura_service: { x: 600, y: 180 },
+          ajuste_pago_services: { x: 600, y: 520 },
+          calculo_impuestos_domain_service: { x: 1060, y: 180 },
+          domain_models: { x: 1060, y: 520 },
+          persistence_adapters: { x: 1520, y: 180 },
+          export_adapters: { x: 1520, y: 520 }
+        };
+        if (servicePositions[nodeId]) return servicePositions[nodeId];
+      } else {
+        // Mode DB
+        const dbPositions = {
+          archivo_importado: { x: 100, y: 160 },
+          archivo_importado_linea: { x: 100, y: 480 },
+          cliente_corporativo: { x: 540, y: 140 },
+          sede_suscripcion: { x: 540, y: 460 },
+          periodo_facturacion: { x: 540, y: 780 },
+          factura: { x: 980, y: 280 },
+          item_facturable: { x: 980, y: 660 },
+          documento_ajuste: { x: 1420, y: 140 },
+          pago_factura: { x: 1420, y: 480 },
+          certificado_retencion: { x: 1420, y: 800 },
+          archivo_exportado: { x: 1860, y: 440 }
+        };
+        if (dbPositions[nodeId]) return dbPositions[nodeId];
+      }
+      return { x: 100, y: 100 };
+    }
+
+    function getActiveNodesDict() {
+      if (state.mode === "db") return DB_FLOW_NODES;
+      if (state.mode === "service") return SERVICE_FLOW_NODES;
+      return Object.assign({}, DB_FLOW_NODES, SERVICE_FLOW_NODES);
+    }
+
+    function getActiveRelationships() {
+      if (state.mode === "db") return DB_RELATIONSHIPS;
+      if (state.mode === "service") return SERVICE_RELATIONSHIPS;
+      return DB_RELATIONSHIPS.concat(SERVICE_RELATIONSHIPS).concat([
+        { from: "generar_factura_service", to: "factura", label: "crea factura" },
+        { from: "generar_factura_service", to: "sede_suscripcion", label: "lee sedes" },
+        { from: "persistence_adapters", to: "factura", label: "JPA SQL" },
+        { from: "export_adapters", to: "archivo_exportado", label: "escribe plano" }
+      ]);
+    }
+
+    function init() {
+      setupEventListeners();
+      updateFilterBar();
+      renderStage();
+      fitToScreen();
+      initParticles();
+      animateParticles();
+      updateMinimap();
+      updateSimulatorUI();
+    }
+
+    function updateFilterBar() {
+      const filterBar = document.getElementById("filter-bar");
+      filterBar.innerHTML = "";
+      let filters = [];
+      if (state.mode === "db") {
+        filters = [
+          { id: "all", label: "Todas las Fases" },
+          { id: "staging", label: "1. Ingesta Staging" },
+          { id: "catalog", label: "2. Catálogos & Sedes" },
+          { id: "billing", label: "3. Facturación & Snapshots" },
+          { id: "adjust", label: "4. Ajustes DIAN" },
+          { id: "payment", label: "5. Cartera & Tesorería" },
+          { id: "export", label: "6. Integración SIIGO" }
+        ];
+      } else if (state.mode === "service") {
+        filters = [
+          { id: "all", label: "Todas las Capas" },
+          { id: "rest", label: "Adaptadores REST" },
+          { id: "usecase", label: "Casos de Uso" },
+          { id: "domain", label: "Servicios de Dominio" },
+          { id: "adapter", label: "Persistencia & Exportadores" }
+        ];
+      } else {
+        filters = [
+          { id: "all", label: "Vista End-to-End Completa" },
+          { id: "rest", label: "Controladores REST" },
+          { id: "usecase", label: "Casos de Uso" },
+          { id: "billing", label: "Facturación DB" },
+          { id: "export", label: "SIIGO & Exportación" }
+        ];
+      }
+
+      filters.forEach((f, idx) => {
+        const chip = document.createElement("div");
+        chip.className = `filter-chip ${idx === 0 ? "active" : ""}`;
+        chip.dataset.filter = f.id;
+        chip.textContent = f.label;
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          filterByPhase(f.id);
+        });
+        filterBar.appendChild(chip);
+      });
+    }
+
+    function renderStage() {
+      nodesLayerEl.innerHTML = "";
+      regionsLayerEl.innerHTML = "";
+      svgEl.innerHTML = "";
+      const nodes = getActiveNodesDict();
+      renderRegions();
+
+      Object.values(nodes).forEach(node => {
+        const pos = getNodePos(node.id);
+        const card = document.createElement("div");
+        card.className = "flow-card";
+        card.id = `node-${node.id}`;
+        card.style.left = `${pos.x}px`;
+        card.style.top = `${pos.y}px`;
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="header-left">
+              <div class="node-icon">${node.icon || "📄"}</div>
+              <div class="node-title-group">
+                <h3>${node.name}</h3>
+                <p>${node.title}</p>
+              </div>
+            </div>
+            <span class="phase-badge ${node.badgeClass}">${node.phaseLabel}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-desc">${node.desc.substring(0, 110)}...</div>
+            <div class="card-tags">
+              ${node.tags.map(t => `<span class="card-tag ${t.includes('PK') || t.includes('Snapshot') || t.includes('@Rest') ? 'highlight' : ''}">${t}</span>`).join("")}
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectNode(node.id);
+        });
+
+        nodesLayerEl.appendChild(card);
+      });
+
+      renderConnections();
+      resizeCanvas();
+    }
+
+    function renderRegions() {
+      regionsLayerEl.innerHTML = "";
+      if (state.mode === "db") {
+        createRegionBox(60, 90, 380, 750, "FASE 1: INGESTA & STAGING RESILIENTE", "rgba(244, 63, 94, 0.04)", "rgba(244, 63, 94, 0.25)");
+        createRegionBox(500, 70, 400, 890, "FASE 2: TOPOLOGÍA, CLIENTES & SEDES", "rgba(6, 182, 212, 0.04)", "rgba(6, 182, 212, 0.25)");
+        createRegionBox(940, 200, 400, 740, "FASE 3: FACTURACIÓN & SNAPSHOTS", "rgba(99, 102, 241, 0.05)", "rgba(99, 102, 241, 0.3)");
+        createRegionBox(1380, 70, 400, 890, "FASES 4 & 5: AJUSTES, CARTERA & RETENCIONES", "rgba(16, 185, 129, 0.04)", "rgba(16, 185, 129, 0.25)");
+        createRegionBox(1820, 340, 380, 340, "FASE 6: INTEGRACIÓN ERP SIIGO", "rgba(245, 158, 11, 0.04)", "rgba(245, 158, 11, 0.25)");
+      } else if (state.mode === "service") {
+        createRegionBox(100, 110, 400, 680, "CAPA 1: ADAPTADORES DE ENTRADA (REST)", "rgba(59, 130, 246, 0.04)", "rgba(59, 130, 246, 0.25)");
+        createRegionBox(560, 110, 400, 680, "CAPAS 2 & 3: CASOS DE USO / APLICACIÓN", "rgba(99, 102, 241, 0.05)", "rgba(99, 102, 241, 0.3)");
+        createRegionBox(1020, 110, 400, 680, "CAPA 4: DOMAIN SERVICES & REGLAS FISCALES", "rgba(16, 185, 129, 0.04)", "rgba(16, 185, 129, 0.25)");
+        createRegionBox(1480, 110, 400, 680, "CAPA 5 & 6: ADAPTADORES JPA & EXPORTACIÓN", "rgba(245, 158, 11, 0.04)", "rgba(245, 158, 11, 0.25)");
+      } else {
+        // Mode Combined: Two wide horizontal lanes
+        createRegionBox(60, 65, 1720, 500, "CAPA SUPERIOR: MICROSERVICIO SPRING BOOT 3.3 (ARQUITECTURA HEXAGONAL)", "rgba(99, 102, 241, 0.04)", "rgba(99, 102, 241, 0.35)");
+        createRegionBox(60, 600, 2160, 770, "CAPA INFERIOR: MOTOR DE BASE DE DATOS POSTGRESQL 13+ (INGESTA, MODELO & SNAPSHOTS)", "rgba(6, 182, 212, 0.04)", "rgba(6, 182, 212, 0.35)");
+      }
+    }
+
+    function createRegionBox(x, y, w, h, label, bg, border) {
+      const box = document.createElement("div");
+      box.className = "stage-region-box";
+      box.style.left = `${x}px`;
+      box.style.top = `${y}px`;
+      box.style.width = `${w}px`;
+      box.style.height = `${h}px`;
+      box.style.background = bg;
+      box.style.borderColor = border;
+      const lbl = document.createElement("div");
+      lbl.className = "region-label";
+      lbl.textContent = label;
+      lbl.style.borderColor = border;
+      box.appendChild(lbl);
+      regionsLayerEl.appendChild(box);
+    }
+
+    function renderConnections() {
+      svgEl.innerHTML = "";
+      const rels = getActiveRelationships();
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      defs.innerHTML = `
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#6366f1" />
+        </marker>
+        <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#06b6d4" />
+        </marker>
+      `;
+      svgEl.appendChild(defs);
+
+      rels.forEach(rel => {
+        const coords = getRelationshipCoords(rel);
+        if (!coords) return;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${coords.startX} ${coords.startY} C ${coords.cp1x} ${coords.cp1y}, ${coords.cp2x} ${coords.cp2y}, ${coords.endX} ${coords.endY}`);
+        path.setAttribute("class", "flow-line");
+        path.setAttribute("id", `rel-${rel.from}-${rel.to}`);
+        path.setAttribute("marker-end", "url(#arrow)");
+        svgEl.appendChild(path);
+      });
+    }
+
+    function getRelationshipCoords(rel) {
+      const fromCard = document.getElementById(`node-${rel.from}`);
+      const toCard = document.getElementById(`node-${rel.to}`);
+      if (!fromCard || !toCard) return null;
+
+      const nFrom = getNodePos(rel.from);
+      const nTo = getNodePos(rel.to);
+      if (!nFrom || !nTo) return null;
+
+      const cardW = 320;
+      const cardH = fromCard.offsetHeight || 150;
+      const toCardH = toCard.offsetHeight || 150;
+      let startX, startY, endX, endY;
+
+      // Vertical lane transition (Microservice to DB)
+      if (Math.abs(nFrom.y - nTo.y) > 280) {
+        if (nFrom.y < nTo.y) {
+          startX = nFrom.x + cardW / 2;
+          startY = nFrom.y + cardH;
+          endX = nTo.x + cardW / 2;
+          endY = nTo.y;
+        } else {
+          startX = nFrom.x + cardW / 2;
+          startY = nFrom.y;
+          endX = nTo.x + cardW / 2;
+          endY = nTo.y + toCardH;
+        }
+      } else if (nFrom.x + cardW < nTo.x) {
+        // Horizontal left to right
+        startX = nFrom.x + cardW;
+        startY = nFrom.y + cardH / 2;
+        endX = nTo.x;
+        endY = nTo.y + toCardH / 2;
+      } else if (nFrom.x > nTo.x + cardW) {
+        // Horizontal right to left
+        startX = nFrom.x;
+        startY = nFrom.y + cardH / 2;
+        endX = nTo.x + cardW;
+        endY = nTo.y + toCardH / 2;
+      } else {
+        // Same column vertical
+        if (nFrom.y < nTo.y) {
+          startX = nFrom.x + cardW / 2;
+          startY = nFrom.y + cardH;
+          endX = nTo.x + cardW / 2;
+          endY = nTo.y;
+        } else {
+          startX = nFrom.x + cardW / 2;
+          startY = nFrom.y;
+          endX = nTo.x + cardW / 2;
+          endY = nTo.y + toCardH;
+        }
+      }
+
+      let cp1x, cp1y, cp2x, cp2y;
+      if (Math.abs(startY - endY) > Math.abs(startX - endX)) {
+        const dy = Math.abs(endY - startY) * 0.45;
+        cp1x = startX;
+        cp1y = startY + (endY > startY ? dy : -dy);
+        cp2x = endX;
+        cp2y = endY - (endY > startY ? dy : -dy);
+      } else {
+        const dx = Math.abs(endX - startX) * 0.45;
+        cp1x = startX + (endX > startX ? dx : -dx);
+        cp1y = startY;
+        cp2x = endX - (endX > startX ? dx : -dx);
+        cp2y = endY;
+      }
+
+      return { startX, startY, endX, endY, cp1x, cp1y, cp2x, cp2y };
+    }
+
+    function fitToScreen() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const nodes = getActiveNodesDict();
+      const nodeIds = Object.keys(nodes);
+      if (nodeIds.length === 0) return;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      nodeIds.forEach(id => {
+        const p = getNodePos(id);
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x + 320 > maxX) maxX = p.x + 320;
+        if (p.y + 180 > maxY) maxY = p.y + 180;
+      });
+
+      const pad = 100;
+      const totalW = (maxX - minX) + pad * 2;
+      const totalH = (maxY - minY) + pad * 2;
+      const availW = vw - 80;
+      const availH = vh - 160;
+
+      const scale = Math.min(availW / totalW, availH / totalH, 1.05);
+      state.zoom = Math.max(0.42, Math.min(1.0, scale));
+      state.panX = Math.round((vw - (maxX + minX) * state.zoom) / 2);
+      state.panY = Math.round(75 + (availH - (maxY - minY) * state.zoom) / 2 - (minY * state.zoom));
+      updateTransform();
+    }
+
+    function resizeCanvas() {
+      const stageW = 3200;
+      const stageH = 2000;
+      svgEl.setAttribute("width", stageW);
+      svgEl.setAttribute("height", stageH);
+      particleCanvas.width = stageW;
+      particleCanvas.height = stageH;
+    }
+
+    function initParticles() {
+      state.particles = [];
+      const rels = getActiveRelationships();
+      rels.forEach(rel => {
+        for (let i = 0; i < 2; i++) {
+          state.particles.push({
+            rel: rel, t: Math.random(), speed: 0.003 + Math.random() * 0.003,
+            size: 3 + Math.random() * 2, color: Math.random() > 0.5 ? "#06b6d4" : "#6366f1"
+          });
+        }
+      });
+    }
+
+    function animateParticles() {
+      if (!state.motionActive) {
+        particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        requestAnimationFrame(animateParticles);
+        return;
+      }
+      particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+
+      state.particles.forEach(p => {
+        p.t += p.speed;
+        if (p.t > 1) p.t = 0;
+        const coords = getRelationshipCoords(p.rel);
+        if (!coords) return;
+        const t = p.t;
+        const cx = Math.pow(1 - t, 3) * coords.startX + 3 * Math.pow(1 - t, 2) * t * coords.cp1x + 3 * (1 - t) * Math.pow(t, 2) * coords.cp2x + Math.pow(t, 3) * coords.endX;
+        const cy = Math.pow(1 - t, 3) * coords.startY + 3 * Math.pow(1 - t, 2) * t * coords.cp1y + 3 * (1 - t) * Math.pow(t, 2) * coords.cp2y + Math.pow(t, 3) * coords.endY;
+
+        particleCtx.save();
+        particleCtx.beginPath();
+        particleCtx.arc(cx, cy, p.size, 0, Math.PI * 2);
+        particleCtx.fillStyle = p.color;
+        particleCtx.shadowColor = p.color;
+        particleCtx.shadowBlur = 8;
+        particleCtx.fill();
+        particleCtx.restore();
+      });
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    function selectNode(nodeId) {
+      state.selectedNodeId = nodeId;
+      const nodes = getActiveNodesDict();
+      const node = nodes[nodeId];
+      if (!node) return;
+
+      document.querySelectorAll(".flow-card").forEach(c => {
+        c.classList.remove("selected", "highlighted", "dimmed");
+        if (c.id === `node-${nodeId}`) c.classList.add("selected");
+        else c.classList.add("dimmed");
+      });
+
+      const rels = getActiveRelationships();
+      document.querySelectorAll(".flow-line").forEach(l => l.classList.remove("active", "dimmed"));
+
+      rels.forEach(r => {
+        const line = document.getElementById(`rel-${r.from}-${r.to}`);
+        if (!line) return;
+        if (r.from === nodeId || r.to === nodeId) {
+          line.classList.add("active");
+          line.setAttribute("marker-end", "url(#arrow-active)");
+          const otherId = r.from === nodeId ? r.to : r.from;
+          const otherCard = document.getElementById(`node-${otherId}`);
+          if (otherCard) {
+            otherCard.classList.remove("dimmed");
+            otherCard.classList.add("highlighted");
+          }
+        } else {
+          line.classList.add("dimmed");
+          line.setAttribute("marker-end", "url(#arrow)");
+        }
+      });
+
+      document.getElementById("drawer-title").textContent = node.name;
+      document.getElementById("drawer-subtitle").textContent = `${node.title} • ${node.phaseLabel}`;
+      document.getElementById("drawer-desc").textContent = node.desc;
+      document.getElementById("drawer-rules").innerHTML = node.rules.map(r => `<li>${r}</li>`).join("");
+      document.getElementById("drawer-quick-tip").innerHTML = `<strong>💡 Clave para la sustentación:</strong> ${node.tip}`;
+      document.getElementById("drawer-code").textContent = node.code || "// Sin código asociado";
+      document.getElementById("drawer-payload").textContent = node.payload || "{}";
+
+      if (node.qa) {
+        document.getElementById("drawer-qa-q").textContent = node.qa.q;
+        document.getElementById("drawer-qa-a").textContent = node.qa.a;
+      }
+
+      inspectorDrawer.classList.add("open");
+    }
+
+    function clearSelection() {
+      state.selectedNodeId = null;
+      document.querySelectorAll(".flow-card").forEach(c => c.classList.remove("selected", "highlighted", "dimmed"));
+      document.querySelectorAll(".flow-line").forEach(l => {
+        l.classList.remove("active", "dimmed");
+        l.setAttribute("marker-end", "url(#arrow)");
+      });
+      inspectorDrawer.classList.remove("open");
+    }
+
+    function updateSimulatorUI() {
+      const scenario = SCENARIOS[state.simScenario];
+      if (!scenario) return;
+      const step = scenario.steps[state.simStepIndex];
+      document.getElementById("sim-step-title").textContent = step.title;
+      document.getElementById("sim-step-count").textContent = `Paso ${state.simStepIndex + 1}/${scenario.steps.length}`;
+      const pct = ((state.simStepIndex + 1) / scenario.steps.length) * 100;
+      document.getElementById("sim-progress-fill").style.width = `${pct}%`;
+
+      document.querySelectorAll(".flow-card").forEach(c => c.classList.remove("sim-active"));
+      const targetNodeId = state.mode === "service" ? (step.serviceNodeId || step.nodeId) : step.nodeId;
+      const activeCard = document.getElementById(`node-${targetNodeId}`);
+      if (activeCard) {
+        activeCard.classList.add("sim-active");
+        selectNode(targetNodeId);
+        const nData = getNodePos(targetNodeId);
+        if (nData) {
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          state.panX = (vw / 2) - (nData.x * state.zoom) - (160 * state.zoom);
+          state.panY = (vh / 2) - (nData.y * state.zoom) - (70 * state.zoom);
+          updateTransform();
+        }
+      }
+    }
+
+    function nextStep() {
+      const scenario = SCENARIOS[state.simScenario];
+      if (state.simStepIndex < scenario.steps.length - 1) state.simStepIndex++;
+      else state.simStepIndex = 0;
+      updateSimulatorUI();
+    }
+
+    function prevStep() {
+      if (state.simStepIndex > 0) state.simStepIndex--;
+      else {
+        const scenario = SCENARIOS[state.simScenario];
+        state.simStepIndex = scenario.steps.length - 1;
+      }
+      updateSimulatorUI();
+    }
+
+    function togglePlaySim() {
+      state.simPlaying = !state.simPlaying;
+      const playBtn = document.getElementById("sim-play");
+      if (state.simPlaying) {
+        playBtn.textContent = "⏸";
+        playBtn.title = "Pausar simulación";
+        showToast("Simulación en reproducción automática...");
+        state.simInterval = setInterval(nextStep, state.simSpeed);
+      } else {
+        playBtn.textContent = "▶";
+        playBtn.title = "Reproducir simulación";
+        clearInterval(state.simInterval);
+        showToast("Simulación en pausa");
+      }
+    }
+
+    function updateTransform() {
+      stageEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+      updateMinimap();
+    }
+
+    function updateMinimap() {
+      const mw = minimapCanvas.width = 170;
+      const mh = minimapCanvas.height = 105;
+      const stageW = 3000;
+      const stageH = 1800;
+      minimapCtx.clearRect(0, 0, mw, mh);
+      minimapCtx.fillStyle = state.lightTheme ? "#f1f5f9" : "#111622";
+      minimapCtx.fillRect(0, 0, mw, mh);
+
+      const nodes = getActiveNodesDict();
+      const scaleX = mw / stageW;
+      const scaleY = mh / stageH;
+
+      Object.values(nodes).forEach(n => {
+        const pos = getNodePos(n.id);
+        minimapCtx.fillStyle = n.id === state.selectedNodeId ? "#06b6d4" : (state.lightTheme ? "#cbd5e1" : "#1e2538");
+        minimapCtx.fillRect(pos.x * scaleX, pos.y * scaleY, 320 * scaleX, 140 * scaleY);
+      });
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const vx = (-state.panX / state.zoom) * scaleX;
+      const vy = (-state.panY / state.zoom) * scaleY;
+      const vwScaled = (vw / state.zoom) * scaleX;
+      const vhScaled = (vh / state.zoom) * scaleY;
+
+      minimapViewportEl.style.left = `${Math.max(0, vx)}px`;
+      minimapViewportEl.style.top = `${Math.max(0, vy)}px`;
+      minimapViewportEl.style.width = `${Math.min(mw, vwScaled)}px`;
+      minimapViewportEl.style.height = `${Math.min(mh, vhScaled)}px`;
+    }
+
+    function exportToPNG() {
+      showToast("Generando exportación PNG Ultra HD (3200x1800 px)...");
+      const exportCanvas = document.createElement("canvas");
+      const ctx = exportCanvas.getContext("2d");
+      const width = 3200;
+      const height = 1800;
+      exportCanvas.width = width;
+      exportCanvas.height = height;
+
+      const isLight = state.lightTheme;
+      const bg = isLight ? "#f8fafc" : "#0a0d14";
+      const cardBg = isLight ? "#ffffff" : "#131927";
+      const cardBorder = isLight ? "#cbd5e1" : "rgba(255,255,255,0.12)";
+      const headerBg = isLight ? "#e2e8f0" : "#1e2538";
+      const textPrimary = isLight ? "#0f172a" : "#f1f5f9";
+      const textMuted = isLight ? "#64748b" : "#94a3b8";
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const rels = getActiveRelationships();
+      rels.forEach(rel => {
+        const coords = getRelationshipCoords(rel);
+        if (!coords) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(coords.startX, coords.startY);
+        ctx.bezierCurveTo(coords.cp1x, coords.cp1y, coords.cp2x, coords.cp2y, coords.endX, coords.endY);
+        ctx.strokeStyle = "#6366f1";
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
+
+        const angle = Math.atan2(coords.endY - coords.cp2y, coords.endX - coords.cp2x);
+        const arrowLen = 10;
+        ctx.beginPath();
+        ctx.moveTo(coords.endX, coords.endY);
+        ctx.lineTo(coords.endX - arrowLen * Math.cos(angle - Math.PI / 6), coords.endY - arrowLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(coords.endX - arrowLen * Math.cos(angle + Math.PI / 6), coords.endY - arrowLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = "#6366f1";
+        ctx.fill();
+        ctx.restore();
+      });
+
+      const nodes = getActiveNodesDict();
+      Object.values(nodes).forEach(n => {
+        const pos = getNodePos(n.id);
+        const x = pos.x;
+        const y = pos.y;
+        const w = 320;
+        const h = 140;
+
+        ctx.save();
+        ctx.fillStyle = cardBg;
+        ctx.strokeStyle = cardBorder;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = headerBg;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, 40, [12, 12, 0, 0]);
+        ctx.fill();
+
+        ctx.font = "bold 14px 'Fira Code', monospace";
+        ctx.fillStyle = textPrimary;
+        ctx.fillText(n.name, x + 16, y + 26);
+
+        ctx.font = "11.5px 'Inter', sans-serif";
+        ctx.fillStyle = textMuted;
+        ctx.fillText(n.title, x + 16, y + 65);
+
+        ctx.font = "10px 'Fira Code', monospace";
+        ctx.fillStyle = "#06b6d4";
+        ctx.fillText(n.tags.slice(0, 3).join(" • "), x + 16, y + 115);
+        ctx.restore();
+      });
+
+      exportCanvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `diagrama_flujo_${state.mode}_hd.png`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        showToast("¡PNG Ultra HD exportado con éxito!");
+      }, "image/png");
+    }
+
+    function filterByPhase(phase) {
+      state.activeFilter = phase;
+      const nodes = getActiveNodesDict();
+      Object.values(nodes).forEach(n => {
+        const card = document.getElementById(`node-${n.id}`);
+        if (!card) return;
+        if (phase === "all" || n.phase === phase) card.style.display = "block";
+        else card.style.display = "none";
+      });
+      renderConnections();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast-msg");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 3200);
+    }
+
+    function copyCodeContent() {
+      const code = document.getElementById("drawer-code").textContent;
+      navigator.clipboard.writeText(code).then(() => showToast("¡Código copiado al portapapeles!"));
+    }
+
+    function setupEventListeners() {
+      viewportEl.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".flow-card") || e.target.closest(".inspector-drawer") || e.target.closest(".simulator-panel")) return;
+        state.isPanning = true;
+        state.startMouseX = e.clientX - state.panX;
+        state.startMouseY = e.clientY - state.panY;
+        viewportEl.classList.add("panning");
+        clearSelection();
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!state.isPanning) return;
+        state.panX = e.clientX - state.startMouseX;
+        state.panY = e.clientY - state.startMouseY;
+        updateTransform();
+      });
+
+      window.addEventListener("mouseup", () => {
+        state.isPanning = false;
+        viewportEl.classList.remove("panning");
+      });
+
+      viewportEl.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+        const newZoom = Math.min(Math.max(0.3, state.zoom * zoomFactor), 2.2);
+        const rect = viewportEl.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
+        state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
+        state.zoom = newZoom;
+        updateTransform();
+      }, { passive: false });
+
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          state.mode = btn.dataset.mode;
+          updateFilterBar();
+          renderStage();
+          initParticles();
+          fitToScreen();
+          showToast(`Modo cambiado a: ${btn.textContent.trim()}`);
+        });
+      });
+
+      document.getElementById("btn-zoom-in").addEventListener("click", () => { state.zoom = Math.min(2.2, state.zoom * 1.2); updateTransform(); });
+      document.getElementById("btn-zoom-out").addEventListener("click", () => { state.zoom = Math.max(0.3, state.zoom / 1.2); updateTransform(); });
+      document.getElementById("btn-zoom-reset").addEventListener("click", () => { state.zoom = 1.0; state.panX = 60; state.panY = 80; updateTransform(); });
+      document.getElementById("btn-zoom-fit").addEventListener("click", fitToScreen);
+
+      document.getElementById("btn-motion").addEventListener("click", () => {
+        state.motionActive = !state.motionActive;
+        document.getElementById("btn-motion").classList.toggle("active", state.motionActive);
+        showToast(state.motionActive ? "Animación de partículas activada" : "Animación en pausa");
+      });
+
+      document.getElementById("btn-theme").addEventListener("click", () => {
+        state.lightTheme = !state.lightTheme;
+        document.body.classList.toggle("light-theme", state.lightTheme);
+        showToast(state.lightTheme ? "Tema Claro activado" : "Tema Oscuro Cyberpunk activado");
+        updateMinimap();
+      });
+
+      document.getElementById("btn-export-png").addEventListener("click", exportToPNG);
+
+      document.getElementById("sim-scenario-select").addEventListener("change", (e) => {
+        state.simScenario = e.target.value;
+        state.simStepIndex = 0;
+        updateSimulatorUI();
+      });
+
+      document.getElementById("sim-play").addEventListener("click", togglePlaySim);
+      document.getElementById("sim-next").addEventListener("click", nextStep);
+      document.getElementById("sim-prev").addEventListener("click", prevStep);
+      document.getElementById("sim-speed-select").addEventListener("change", (e) => {
+        state.simSpeed = parseInt(e.target.value);
+        if (state.simPlaying) {
+          clearInterval(state.simInterval);
+          state.simInterval = setInterval(nextStep, state.simSpeed);
+        }
+      });
+
+      const searchInput = document.getElementById("search-input");
+      searchInput.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        state.searchQuery = q;
+        if (!q) {
+          document.querySelectorAll(".flow-card").forEach(c => c.style.display = "block");
+          renderConnections();
+          return;
+        }
+        const nodes = getActiveNodesDict();
+        let firstMatch = null;
+        Object.values(nodes).forEach(n => {
+          const card = document.getElementById(`node-${n.id}`);
+          const match = n.name.toLowerCase().includes(q) || n.title.toLowerCase().includes(q) || n.desc.toLowerCase().includes(q);
+          if (match) {
+            card.style.display = "block";
+            if (!firstMatch) firstMatch = n;
+          } else {
+            card.style.display = "none";
+          }
+        });
+        renderConnections();
+        if (firstMatch && q.length >= 3) selectNode(firstMatch.id);
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+        } else if (e.key === "Escape") {
+          clearSelection();
+          document.getElementById("qa-modal").classList.remove("open");
+        }
+      });
+
+      document.querySelectorAll(".drawer-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".drawer-tab").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById(`pane-${tab.dataset.tab}`).classList.add("active");
+        });
+      });
+
+      document.getElementById("btn-close-drawer").addEventListener("click", clearSelection);
+
+      const modal = document.getElementById("qa-modal");
+      document.getElementById("btn-qa-modal").addEventListener("click", () => modal.classList.add("open"));
+      document.getElementById("btn-close-modal").addEventListener("click", () => modal.classList.remove("open"));
+      document.querySelectorAll(".qa-question").forEach(q => {
+        q.addEventListener("click", () => q.parentElement.classList.toggle("expanded"));
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

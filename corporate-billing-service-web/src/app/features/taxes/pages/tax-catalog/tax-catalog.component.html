@@ -1,0 +1,280 @@
+<div class="taxes-page">
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-title">Catálogo General de Impuestos y Retenciones</h1>
+      <p class="page-subtitle">Conceptos que el cliente puede seleccionar al pagar. El cliente escribe el porcentaje de cada retención; aquí se define el máximo permitido. Los pagos registrados conservan el porcentaje con que se liquidaron.</p>
+    </div>
+    <div class="page-header__actions">
+      <button class="btn btn-outline" (click)="loadValidities()">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <mat-icon>add_circle_outline</mat-icon> Nuevo Concepto
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <app-error-banner [message]="errorMessage()!" (retry)="loadValidities()"></app-error-banner>
+  }
+
+  <!-- Filtros Rápidos -->
+  <app-ui-card [elevated]="true" class="filters-card">
+    <div class="filters-row">
+      <div class="form-group flex-1">
+        <label class="form-label">Filtrar por Concepto</label>
+        <select class="form-control" [(ngModel)]="filterCode">
+          <option value="">Todos los Conceptos</option>
+          <option value="RETEFUENTE">ReteFuente</option>
+          <option value="RETEICA">ReteICA</option>
+          <option value="RETEIVA">ReteIVA</option>
+          <option value="ESTAMPILLA">Estampilla</option>
+        </select>
+      </div>
+
+      <div class="filter-toggle">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="filterOnlyCurrent" />
+          <span>Solo vigentes y programadas</span>
+        </label>
+      </div>
+    </div>
+    <p class="text-xs text-muted catalog-help">
+      <strong>Editar</strong> corrige el concepto tal como está (nombre, porcentaje máximo, base, fechas).
+      <strong>Nueva versión</strong> registra un cambio normativo desde una fecha: cierra la vigencia actual el día anterior y conserva el histórico.
+    </p>
+  </app-ui-card>
+
+  <!-- Tabla de Vigencias -->
+  <app-ui-card [elevated]="true">
+    @if (loading()) {
+      <div class="loading-state">
+        <app-ui-spinner message="Cargando catálogo tributario..."></app-ui-spinner>
+      </div>
+    } @else if (filteredValidities.length === 0) {
+      <div class="empty-state">
+        <mat-icon>tune</mat-icon>
+        <p>No se encontraron conceptos tributarios con los filtros actuales.</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Nombre</th>
+              <th>Clasificación</th>
+              <th>Municipio</th>
+              <th class="text-right">% Máximo</th>
+              <th class="text-right">Base Mínima</th>
+              <th>Vigente Desde</th>
+              <th>Vigente Hasta</th>
+              <th>Versión</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of filteredValidities; track v.id) {
+              <tr [class.row-inactive]="stateOf(v) === 'INACTIVA' || stateOf(v) === 'CERRADA'">
+                <td class="font-bold text-accent">{{ v.conceptCode }}</td>
+                <td class="font-medium">{{ v.nombre || v.conceptCode }}</td>
+                <td>{{ v.classification || 'General' }}</td>
+                <td>{{ v.municipality || 'Nacional' }}</td>
+                <td class="text-right font-mono font-bold">{{ v.porcentajeMaximo }}%</td>
+                <td class="text-right font-mono">{{ v.minimumBase | copCurrency }}</td>
+                <td class="text-xs text-muted">{{ v.validFrom | appDate }}</td>
+                <td class="text-xs text-muted">{{ v.validTo ? (v.validTo | appDate) : 'Sin fecha de fin' }}</td>
+                <td>
+                  <span class="version-badge">V{{ v.numeroVersion }}</span>
+                </td>
+                <td>
+                  <app-ui-badge [variant]="stateVariant(stateOf(v))">{{ stateOf(v) }}</app-ui-badge>
+                </td>
+                <td class="text-center">
+                  <div class="action-buttons">
+                    <button class="btn btn-outline btn-sm" (click)="openEditModal(v)" title="Corregir este concepto">
+                      <mat-icon>edit</mat-icon> Editar
+                    </button>
+                    @if (stateOf(v) === 'VIGENTE') {
+                      <button class="btn btn-outline btn-sm" (click)="openVersionModal(v)"
+                              title="Cambio normativo desde una fecha: cierra esta vigencia y crea la siguiente versión">
+                        <mat-icon>history</mat-icon> Nueva Versión
+                      </button>
+                    }
+                    @if (v.active) {
+                      <button class="icon-btn text-danger" (click)="deactivateValidity(v.id)" title="Desactivar vigencia">
+                        <mat-icon>block</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-ui-card>
+
+  <!-- Modal Crear / Editar Concepto -->
+  @if (showFormModal()) {
+    <app-ui-modal
+      [title]="isEditing ? 'Editar Concepto Tributario' : 'Nuevo Concepto Tributario'"
+      [isOpen]="showFormModal()"
+      (closed)="closeFormModal()"
+    >
+      <div class="modal-body-content">
+        @if (isEditing) {
+          <p class="text-xs text-muted mb-3">
+            Los cambios se aplican a esta vigencia (V{{ editingValidity?.numeroVersion }}) para las próximas liquidaciones.
+            Los pagos ya registrados conservan los valores con que se liquidaron.
+          </p>
+        }
+        <div class="form-grid-modal">
+          <div class="form-group">
+            <label class="form-label required">Tipo de Impuesto</label>
+            <select class="form-control" [(ngModel)]="formConceptCode" [disabled]="isEditing">
+              <option value="RETEFUENTE">ReteFuente</option>
+              <option value="RETEICA">ReteICA</option>
+              <option value="RETEIVA">ReteIVA</option>
+              <option value="ESTAMPILLA">Estampilla</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Nombre / Etiqueta Visible</label>
+            <input
+              type="text"
+              class="form-control"
+              maxlength="100"
+              placeholder="Ej. ReteFuente 4% Servicios..."
+              [(ngModel)]="formName"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Clasificación</label>
+            <select class="form-control" [(ngModel)]="formClassification">
+              <option value="">General (todas)</option>
+              <option value="INTERNET">Internet</option>
+              <option value="SOFTWARE">Software</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Municipio (ReteICA / Estampillas)</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ej. Pasto, Ipiales... (vacío = nacional)"
+              [(ngModel)]="formMunicipality"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Porcentaje máximo permitido (%)</label>
+            <input
+              type="number"
+              step="0.0001"
+              min="0.0001"
+              max="100"
+              class="form-control"
+              [(ngModel)]="formPercentage"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Base Mínima ($ COP)</label>
+            <input
+              type="number"
+              min="0"
+              class="form-control"
+              [(ngModel)]="formMinBase"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">Vigente Desde</label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="formValidFrom"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vigente Hasta</label>
+            <input
+              type="date"
+              class="form-control"
+              [min]="formValidFrom"
+              [(ngModel)]="formValidTo"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div modal-footer class="modal-actions">
+        <button class="btn btn-outline" (click)="closeFormModal()" [disabled]="isSaving()">Cancelar</button>
+        <button class="btn btn-primary" (click)="submitForm()" [disabled]="isSaving() || !formValid">
+          {{ isSaving() ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Concepto') }}
+        </button>
+      </div>
+    </app-ui-modal>
+  }
+
+  <!-- Modal Versionamiento -->
+  @if (showVersionModal()) {
+    <app-ui-modal
+      title="Nueva Versión por Cambio Normativo"
+      [isOpen]="showVersionModal()"
+      (closed)="closeVersionModal()"
+    >
+      <div class="modal-body-content">
+        <p class="text-sm text-muted">
+          Concepto: <strong>{{ selectedValidityForVersion?.nombre || selectedValidityForVersion?.conceptCode }}</strong> (Versión actual: V{{ selectedValidityForVersion?.numeroVersion }})
+        </p>
+        <p class="text-xs text-muted mb-3">
+          La versión actual quedará cerrada el día anterior a la fecha de efectividad y se creará la versión siguiente.
+          Si solo necesita corregir un dato de la versión actual, use <strong>Editar</strong>.
+        </p>
+
+        <div class="form-group mt-2">
+          <label class="form-label required">Nuevo porcentaje máximo (%)</label>
+          <input
+            type="number"
+            step="0.01"
+            class="form-control"
+            [(ngModel)]="versionPercentage"
+          />
+        </div>
+
+        <div class="form-group mt-2">
+          <label class="form-label required">Nueva Base Mínima ($ COP)</label>
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="versionMinBase"
+          />
+        </div>
+
+        <div class="form-group mt-2">
+          <label class="form-label required">Fecha de Efectividad</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="versionEffectiveFrom"
+          />
+        </div>
+      </div>
+
+      <div modal-footer class="modal-actions">
+        <button class="btn btn-outline" (click)="closeVersionModal()" [disabled]="isProcessingVersion()">Cancelar</button>
+        <button class="btn btn-primary" (click)="submitNewVersion()" [disabled]="isProcessingVersion()">
+          {{ isProcessingVersion() ? 'Versionando...' : 'Aplicar Nueva Versión' }}
+        </button>
+      </div>
+    </app-ui-modal>
+  }
+</div>

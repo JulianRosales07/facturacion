@@ -1,0 +1,140 @@
+server:
+  port: 8080
+  # Detrás de nginx: la IP del cliente (auditoría) sale de X-Forwarded-For solo si el proxy es de red interna.
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:native}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: corporate-billing-service
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:postgres}
+
+logging:
+  level:
+    root: INFO
+    com.sistemaspalacios.billing: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+billing:
+  payments:
+    # Política predeterminada para pagos generales: FIFO (periodo de servicio más antiguo primero)
+    default-allocation-policy: ${BILLING_PAYMENT_ALLOCATION_POLICY:FIFO}
+
+siigo:
+  carpeta-compartida:
+    path: ${SIIGO_CARPETA_COMPARTIDA_PATH:./storage/siigo_compartida}
+  cartera:
+    # El saldo del corte de cartera de Siigo es la fuente de verdad (Sprint 13).
+    # Si una factura vigente NO aparece en el corte, ¿se asume saldo cero?
+    # Por defecto NO: un extracto parcial marcaría cientos de facturas como pagadas.
+    # Activar solo cuando se confirme que el archivo siempre trae la cartera completa.
+    tratar-ausencia-como-saldo-cero: ${SIIGO_CARTERA_AUSENCIA_SALDO_CERO:false}
+  pdf:
+    local-path: ${SIIGO_PDF_LOCAL_PATH:./storage/siigo-pdfs}
+  sync:
+    # Alcance: consumir facturas emitidas. Módulos anteriores solo por activación expresa.
+    confirmar-lotes-salientes: ${SIIGO_CONFIRMAR_LOTES_SALIENTES:false}
+    consumir-cartera: ${SIIGO_CONSUMIR_CARTERA:false}
+    antiguedad-minima-segundos: ${SIIGO_ARCHIVO_EDAD_MINIMA:60}
+    cron: ${SIIGO_SYNC_CRON:0 0 * * * *}
+
+auth:
+  issuer-uri: ${AUTH_ISSUER_URI:https://qa.sistemaspalacios.com}
+  jwk-set-uri: ${AUTH_JWKS_URI:https://qa.sistemaspalacios.com/oauth2/jwks}
+  audience: ${AUTH_AUDIENCE:corporate-billing-service}
+
+# Administrador inicial (rol SUPER_ADMIN). Sin contraseña: inicia sesión en el microservicio de autenticación.
+access:
+  initial-admin:
+    username: ${INITIAL_ADMIN_USERNAME:}
+    email: ${INITIAL_ADMIN_EMAIL:}
+    password: ${INITIAL_ADMIN_PASSWORD:}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:4300,http://localhost:3000,http://localhost:5173,https://panel.sistemaspalacios.com,https://pasarela.sistemaspalacios.com}
+
+
+---
+# Perfil Postgres para Base de Datos Real
+spring:
+  config:
+    activate:
+      on-profile: postgres
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/V1__esquema_inicial?stringtype=unspecified}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1193051330 Jr}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    validate-on-migrate: false
+
+---
+# Perfil Docker para Contenedores
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/facturacion?stringtype=unspecified}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+
+ordenes:
+  base-url: ${ORDENES_BASE_URL:http://host.docker.internal:8081}
+  api-key: ${ORDENES_API_KEY:dev-token}
+  timeout-ms: ${ORDENES_TIMEOUT_MS:5000}
+  reintentos: ${ORDENES_REINTENTOS:3}
+
+storage:
+  files-path: ${STORAGE_SHARED_FILES_PATH:/app/storage/files}
+

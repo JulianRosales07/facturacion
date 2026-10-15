@@ -1,0 +1,33 @@
+<div class="layout">
+  <!-- Full-Width Top Navbar -->
+  <app-topbar></app-topbar>
+
+  <div class="layout__body">
+    <!-- Desktop / Fixed Sidebar -->
+    <div class="layout__sidebar-desktop" [class.layout__sidebar-desktop--collapsed]="isSidebarCollapsed()">
+      <app-sidebar [collapsed]="isSidebarCollapsed()" (toggleCollapse)="toggleSidebar()"></app-sidebar>
+    </div>
+
+    <!-- Mobile Drawer Overlay & Sidebar -->
+    @if (isMobileDrawerOpen()) {
+      <div
+        class="layout__drawer-backdrop"
+        role="button"
+        tabindex="0"
+        aria-label="Cerrar menú lateral"
+        (click)="closeMobileDrawer()"
+        (keydown.escape)="closeMobileDrawer()"
+      ></div>
+      <div class="layout__drawer">
+        <app-sidebar [collapsed]="false" (navigate)="closeMobileDrawer()"></app-sidebar>
+      </div>
+    }
+
+    <!-- Main Content Area -->
+    <main class="layout__main">
+      <div class="layout__container">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

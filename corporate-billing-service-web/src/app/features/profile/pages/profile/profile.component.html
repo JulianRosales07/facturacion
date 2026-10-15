@@ -1,0 +1,208 @@
+<div class="profile-page">
+  <!-- Resumen -->
+  <section class="card hero">
+    <div class="hero__top">
+      <div class="hero__identity">
+        @if (currentUser()?.avatarUrl && !avatarFailed()) {
+          <img class="hero__avatar" [src]="currentUser()!.avatarUrl" [alt]="displayName()" (error)="avatarFailed.set(true)">
+        } @else {
+          <div class="hero__avatar hero__avatar--initials" aria-hidden="true">{{ initials() }}</div>
+        }
+        <div class="hero__text">
+          <span class="eyebrow">Perfil personal</span>
+          <h1 class="hero__name">{{ displayName() }}</h1>
+          <p class="hero__subtitle">Mantén tu información al día para facilitar la recuperación de la cuenta, el contacto y la seguridad.</p>
+          <div class="hero__chips">
+            <span class="chip chip--accent">{{ currentUser()?.email || 'Sin correo' }}</span>
+            <span class="chip">{{ documentLabel() }}</span>
+            <span class="chip" [class.chip--ok]="otpEnabled()">{{ otpEnabled() ? 'OTP activo' : 'OTP pendiente' }}</span>
+          </div>
+        </div>
+      </div>
+      @if (!isEditing()) {
+        <button type="button" class="btn btn--dark" (click)="startEditing()">Editar perfil</button>
+      }
+    </div>
+
+    <div class="stats">
+      <article class="stat">
+        <span class="stat__label">Completitud</span>
+        <strong class="stat__value stat__value--big">{{ completeness() }}%</strong>
+        <div class="progress" role="progressbar" [attr.aria-valuenow]="completeness()" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress__bar" [style.width.%]="completeness()"></div>
+        </div>
+        <p class="stat__hint">Cuanto más completo esté tu perfil, más sencilla será la gestión del acceso y del soporte.</p>
+      </article>
+      <article class="stat">
+        <span class="stat__label">Contacto</span>
+        <strong class="stat__value">{{ hasPhone() ? currentUser()!.phone : 'Pendiente' }}</strong>
+        <p class="stat__hint">{{ hasPhone() ? 'Teléfono disponible para el contacto.' : 'Completa tu teléfono para facilitar el contacto.' }}</p>
+      </article>
+      <article class="stat">
+        <span class="stat__label">Pendientes</span>
+        <strong class="stat__value stat__value--big">{{ pendingFields().length }}</strong>
+        <p class="stat__hint">
+          {{ pendingFields().length ? 'Campos por completar: ' + pendingFields().join(', ') : 'No tienes campos por completar.' }}
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <div class="layout">
+    <!-- Detalles -->
+    <section class="card details">
+      <header class="card__header">
+        <div>
+          <h2 class="card__title">Detalles de Usuario</h2>
+          <p class="card__subtitle">Edita tus datos principales, información de contacto y ubicación desde una sola vista.</p>
+        </div>
+        <span class="badge" [class.badge--active]="isEditing()">{{ isEditing() ? 'Editando' : 'Solo lectura' }}</span>
+      </header>
+
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate>
+        <fieldset class="group">
+          <legend class="group__title">Identidad</legend>
+          <p class="group__subtitle">Datos base para identificar la cuenta.</p>
+          <div class="grid">
+            <label class="field">
+              <span class="field__label">Nombre</span>
+              <input class="field__input" formControlName="firstName" autocomplete="given-name" [class.field__input--error]="invalid(profileForm, 'firstName')">
+              @if (invalid(profileForm, 'firstName')) { <small class="field__error">Ingresa tu nombre.</small> }
+            </label>
+            <label class="field">
+              <span class="field__label">Apellido</span>
+              <input class="field__input" formControlName="lastName" autocomplete="family-name" [class.field__input--error]="invalid(profileForm, 'lastName')">
+              @if (invalid(profileForm, 'lastName')) { <small class="field__error">Ingresa tu apellido.</small> }
+            </label>
+            <label class="field">
+              <span class="field__label">Tipo de Documento</span>
+              <select class="field__input field__select" formControlName="documentType">
+                <option value="">Seleccione un Tipo de Documento</option>
+                @for (type of documentTypes; track type.code) {
+                  <option [value]="type.code">{{ type.label }}</option>
+                }
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">Documento</span>
+              <input class="field__input" formControlName="documentNumber" inputmode="numeric" [class.field__input--error]="invalid(profileForm, 'documentNumber')">
+              @if (invalid(profileForm, 'documentNumber')) { <small class="field__error">Entre 4 y 20 caracteres, sin espacios.</small> }
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="group__title">Contacto</legend>
+          <p class="group__subtitle">Canales que usaremos para las notificaciones y la recuperación de la cuenta.</p>
+          <div class="grid">
+            <label class="field">
+              <span class="field__label">Correo electrónico</span>
+              <input class="field__input" formControlName="email" type="email">
+              <small class="field__hint">Este dato proviene de tu cuenta principal y no puede modificarse aquí.</small>
+            </label>
+            <label class="field">
+              <span class="field__label">Teléfono</span>
+              <input class="field__input" formControlName="phone" type="tel" autocomplete="tel" [class.field__input--error]="invalid(profileForm, 'phone')">
+              @if (invalid(profileForm, 'phone')) { <small class="field__error">Ingresa un teléfono válido.</small> }
+            </label>
+            <label class="field">
+              <span class="field__label">Fecha nacimiento</span>
+              <input class="field__input" formControlName="birthDate" type="date">
+            </label>
+          </div>
+        </fieldset>
+
+        @if (isEditing()) {
+          <div class="actions">
+            <button type="button" class="btn btn--ghost" (click)="cancelEditing()">Cancelar</button>
+            <button type="submit" class="btn btn--dark">Guardar cambios</button>
+          </div>
+        }
+      </form>
+    </section>
+
+    <!-- Estado y sugerencias -->
+    <aside class="side">
+      <section class="card side__card">
+        <h3 class="side__title">Estado del perfil</h3>
+        <p class="side__text">Tu nombre visible es <strong>{{ displayName() }}</strong>.</p>
+        @if (pendingFields().length) {
+          <p class="side__text">Completa <strong>{{ pendingFields().join(', ') }}</strong> para cerrar el perfil.</p>
+        } @else {
+          <p class="side__text">Tu perfil está completo.</p>
+        }
+      </section>
+      <section class="card side__card">
+        <h3 class="side__title">Sugerencias</h3>
+        <ul class="checklist">
+          @for (item of suggestions(); track item.label) {
+            <li class="checklist__item" [class.checklist__item--done]="item.done">{{ item.label }}</li>
+          }
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Seguridad -->
+  <section class="card security">
+    <header class="card__header">
+      <div>
+        <h2 class="card__title">Seguridad de la Cuenta</h2>
+        <p class="card__subtitle">Administra tu contraseña y activa la verificación mediante código OTP para reforzar el acceso.</p>
+      </div>
+      <span class="badge badge--plain" [class.badge--active]="otpEnabled()">{{ otpEnabled() ? 'OTP activo' : 'OTP inactivo' }}</span>
+    </header>
+
+    <div class="otp">
+      <div>
+        <strong class="otp__title">Doble factor de autenticación</strong>
+        <p class="otp__text">Cuando esté activo, el inicio de sesión pedirá un código OTP después de validar tus credenciales.</p>
+        @if (!hasPhone()) {
+          <p class="otp__warning">Debes agregar un número de celular de WhatsApp en tu perfil para habilitar el OTP.</p>
+        }
+      </div>
+      <button type="button" class="switch" role="switch" [attr.aria-checked]="otpEnabled()" [class.switch--on]="otpEnabled()"
+              [disabled]="!hasPhone()" (click)="toggleOtp()" aria-label="Doble factor de autenticación">
+        <span class="switch__thumb"></span>
+      </button>
+    </div>
+
+    <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" novalidate class="grid security__grid">
+      <label class="field">
+        <span class="field__label">Usuario</span>
+        <input class="field__input" [value]="currentUser()?.email || currentUser()?.username || ''" disabled>
+      </label>
+      <label class="field">
+        <span class="field__label">Estado OTP</span>
+        <input class="field__input" [value]="otpEnabled() ? 'Activado' : 'Desactivado'" disabled>
+      </label>
+      <label class="field">
+        <span class="field__label">Contraseña actual</span>
+        <input class="field__input" type="password" formControlName="currentPassword" placeholder="Ingresa tu contraseña actual"
+               autocomplete="current-password" [class.field__input--error]="invalid(passwordForm, 'currentPassword')">
+      </label>
+      <p class="security__rule">Mínimo 8 caracteres, una mayúscula, una minúscula y un número.</p>
+      @if (isEditingPassword()) {
+        <label class="field">
+          <span class="field__label">Nueva contraseña</span>
+          <input class="field__input" type="password" formControlName="newPassword" autocomplete="new-password"
+                 [class.field__input--error]="invalid(passwordForm, 'newPassword')">
+          @if (invalid(passwordForm, 'newPassword')) { <small class="field__error">No cumple los requisitos.</small> }
+        </label>
+        <label class="field">
+          <span class="field__label">Confirmar contraseña</span>
+          <input class="field__input" type="password" formControlName="confirmPassword" autocomplete="new-password"
+                 [class.field__input--error]="invalid(passwordForm, 'confirmPassword')">
+        </label>
+      }
+      <div class="actions security__actions">
+        @if (isEditingPassword()) {
+          <button type="button" class="btn btn--ghost" (click)="cancelPasswordEdit()">Cancelar</button>
+          <button type="submit" class="btn btn--dark">Guardar contraseña</button>
+        } @else {
+          <button type="button" class="btn btn--dark" (click)="startPasswordEdit()">Editar contraseña</button>
+        }
+      </div>
+    </form>
+  </section>
+</div>

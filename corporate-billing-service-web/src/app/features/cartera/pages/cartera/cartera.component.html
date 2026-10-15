@@ -1,0 +1,155 @@
+<div class="cartera-page">
+  <div class="page-header">
+    <div class="page-header__info">
+      <h1 class="page-title">Cartera Siigo y Conciliación</h1>
+      <p class="page-subtitle">El saldo de Siigo es la fuente de verdad. Conciliación y detección de diferencias con el cálculo local (Sprint 13).</p>
+    </div>
+    <div class="page-header__actions">
+      <button class="btn btn-outline" (click)="loadData()">
+        <mat-icon>refresh</mat-icon> Actualizar
+      </button>
+      <button class="btn btn-primary" (click)="syncNow()" [disabled]="isSyncing()">
+        <mat-icon [class.spin-icon]="isSyncing()">sync</mat-icon> Sincronizar Corte Ahora
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <app-error-banner [message]="errorMessage()!" (retry)="loadData()"></app-error-banner>
+  }
+
+  <!-- Resumen del Corte -->
+  <div class="stats-grid">
+    <app-ui-card [elevated]="true">
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <mat-icon>calendar_today</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Fecha del Último Corte Ingerido</span>
+          <span class="stat-value">{{ cutoffDate() ? (cutoffDate() | appDate) : 'Sin corte registrado' }}</span>
+        </div>
+      </div>
+    </app-ui-card>
+
+    <app-ui-card [elevated]="true">
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <mat-icon>difference</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Discrepancias de Saldo</span>
+          <span class="stat-value font-mono">{{ discrepancies().length }}</span>
+        </div>
+      </div>
+    </app-ui-card>
+
+    <app-ui-card [elevated]="true">
+      <div class="stat-card">
+        <div class="stat-icon error">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">Filas Pendientes de Resolver</span>
+          <span class="stat-value font-mono">{{ unresolvedRows().length }}</span>
+        </div>
+      </div>
+    </app-ui-card>
+  </div>
+
+  <!-- Pestañas de Vista -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.tab-active]="activeTab === 'reconciliation'" (click)="activeTab = 'reconciliation'">
+      <mat-icon>compare_arrows</mat-icon> Conciliación de Saldos ({{ discrepancies().length }})
+    </button>
+    <button class="tab-btn" [class.tab-active]="activeTab === 'unresolved'" (click)="activeTab = 'unresolved'">
+      <mat-icon>warning</mat-icon> Pendientes de Resolver ({{ unresolvedRows().length }})
+    </button>
+  </div>
+
+  <!-- Contenido según pestaña -->
+  @if (loading()) {
+    <div class="loading-state">
+      <app-ui-spinner message="Cargando datos de conciliación de cartera..."></app-ui-spinner>
+    </div>
+  } @else if (activeTab === 'reconciliation') {
+    <app-ui-card [elevated]="true">
+      @if (discrepancies().length === 0) {
+        <div class="empty-state">
+          <mat-icon class="text-success">check_circle</mat-icon>
+          <h3>Cartera 100% Conciliada</h3>
+          <p>No se encontraron diferencias de saldo entre el corte de Siigo y el cálculo del microservicio.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Factura</th>
+                <th>NIT del Cliente</th>
+                <th class="text-right">Saldo Siigo (Oficial)</th>
+                <th class="text-right">Saldo Calculado Local</th>
+                <th class="text-right">Diferencia</th>
+                <th>Interpretación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of discrepancies(); track d.invoiceNumber) {
+                <tr>
+                  <td class="font-mono font-bold">{{ d.invoiceNumber }}</td>
+                  <td class="font-mono text-xs">{{ d.clientNit }}</td>
+                  <td class="text-right font-mono font-bold text-accent">{{ d.saldoSiigo | copCurrency }}</td>
+                  <td class="text-right font-mono text-muted">{{ d.saldoCalculado | copCurrency }}</td>
+                  <td class="text-right font-mono font-bold" [class.text-danger]="(d.diferencia || 0) > 0" [class.text-warning]="(d.diferencia || 0) < 0">
+                    {{ ((d.diferencia || 0) > 0 ? '+' : '') + (d.diferencia | copCurrency) }}
+                  </td>
+                  <td>
+                    @if ((d.diferencia || 0) > 0) {
+                      <span class="text-xs text-danger font-medium">Siigo reporta mayor saldo pendiente</span>
+                    } @else {
+                      <span class="text-xs text-warning font-medium">Posible recaudo directo en Siigo</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-ui-card>
+  } @else {
+    <app-ui-card [elevated]="true">
+      @if (unresolvedRows().length === 0) {
+        <div class="empty-state">
+          <mat-icon class="text-success">check_circle</mat-icon>
+          <p>No hay filas pendientes de resolver en el último corte de cartera.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Línea</th>
+                <th>Documento</th>
+                <th>NIT Archivo</th>
+                <th>Saldo Reportado</th>
+                <th>Motivo de No Aplicación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of unresolvedRows(); track $index) {
+                <tr>
+                  <td>{{ row.numeroLinea || $index + 1 }}</td>
+                  <td class="font-mono">{{ row.numeroDocumento || row.documentNumber }}</td>
+                  <td class="font-mono text-xs">{{ row.nitArchivo || row.fileNit }}</td>
+                  <td class="font-mono">{{ row.saldo || row.balance | copCurrency }}</td>
+                  <td class="text-danger font-medium">{{ row.motivoError || 'Factura no encontrada o discrepancia de NIT' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-ui-card>
+  }
+</div>
